@@ -1,6 +1,12 @@
-import { updateClassPeriod } from "@/app/actions/classes";
+import {
+    getClassRoster,
+    inviteStudentToClass,
+    updateClassPeriod,
+} from "@/app/actions/classes";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
@@ -26,6 +32,8 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ id
     if (error || !classData) {
         notFound();
     }
+
+    const roster = await getClassRoster(id);
 
     // Server action wrapper for updating period
     async function advancePeriod() {
@@ -144,16 +152,62 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ id
                                 Student Roster
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
-                                <div className="grid grid-cols-4 p-4 bg-muted/50 text-sm font-medium text-muted-foreground">
-                                    <div className="col-span-2">Name</div>
-                                    <div>Team</div>
-                                    <div>Role</div>
+                        <CardContent className="space-y-6">
+                            <form action={inviteStudentToClass} className="grid gap-3 md:grid-cols-4">
+                                <input type="hidden" name="class_id" value={id} />
+                                <Input
+                                    name="email"
+                                    type="email"
+                                    placeholder="student@example.com"
+                                    required
+                                    className="md:col-span-2"
+                                />
+                                <select
+                                    name="affiliation"
+                                    defaultValue="USA"
+                                    className="h-9 rounded-md border bg-transparent px-3 text-sm"
+                                >
+                                    <option value="USA">USA</option>
+                                    <option value="China">China</option>
+                                </select>
+                                <Input
+                                    name="interest_block"
+                                    placeholder="Interest group"
+                                    className="md:col-span-2"
+                                />
+                                <Button type="submit" className="md:col-span-2">Invite Student</Button>
+                            </form>
+
+                            <div className="rounded-md border overflow-hidden">
+                                <div className="grid grid-cols-12 p-4 bg-muted/50 text-sm font-medium text-muted-foreground">
+                                    <div className="col-span-4">Student</div>
+                                    <div className="col-span-2">Affiliation</div>
+                                    <div className="col-span-3">Interest Group</div>
+                                    <div className="col-span-3">Status</div>
                                 </div>
-                                <div className="p-8 text-center text-muted-foreground text-sm">
-                                    No students enrolled yet.
-                                </div>
+                                {roster.length === 0 ? (
+                                    <div className="p-8 text-center text-muted-foreground text-sm">
+                                        No students invited yet.
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {roster.map((entry) => (
+                                            <div key={entry.email} className="grid grid-cols-12 p-4 text-sm border-t items-center">
+                                                <div className="col-span-4">
+                                                    <p className="font-medium">{entry.full_name ?? "Pending Account"}</p>
+                                                    <p className="text-muted-foreground text-xs">{entry.email}</p>
+                                                </div>
+                                                <div className="col-span-2">{entry.affiliation}</div>
+                                                <div className="col-span-3">{entry.interest_group ?? "-"}</div>
+                                                <div className="col-span-3">
+                                                    <Badge variant={entry.status === "account_created" ? "default" : "secondary"}>
+                                                        {entry.status === "account_created" ? "Account Created" : "Pending Invite"}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

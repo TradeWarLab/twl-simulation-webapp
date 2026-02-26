@@ -81,6 +81,37 @@ create policy "Instructors can manage enrollments." on public.students_classes
     )
   );
 
+-- Track invitations so instructors can invite students before signup.
+create table public.class_invites (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references public.classes not null,
+  invited_by uuid references public.users not null,
+  email text not null,
+  affiliation text check (affiliation in ('USA', 'China')) not null,
+  interest_block text,
+  status text check (status in ('pending', 'account_created')) default 'pending',
+  invited_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(class_id, email)
+);
+
+alter table public.class_invites enable row level security;
+
+create policy "Instructors can view invites for their own classes." on public.class_invites
+  for select using (
+    exists (
+      select 1 from public.classes
+      where id = class_invites.class_id and instructor_id = auth.uid()
+    )
+  );
+
+create policy "Instructors can manage invites for their own classes." on public.class_invites
+  for all using (
+    exists (
+      select 1 from public.classes
+      where id = class_invites.class_id and instructor_id = auth.uid()
+    )
+  );
+
 -- Create briefings table
 create table public.briefings (
   id uuid default gen_random_uuid() primary key,
