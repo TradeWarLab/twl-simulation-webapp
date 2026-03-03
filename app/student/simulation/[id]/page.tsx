@@ -3,8 +3,17 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SimulationRealtimeProvider } from "@/components/simulation-realtime-provider";
+import { Suspense } from "react";
 
-export default async function SimulationPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SimulationPage({ params }: { params: Promise<{ id: string }> }) {
+    return (
+        <Suspense fallback={<div className="container mx-auto p-4">Loading simulation…</div>}>
+            <SimulationPageInner params={params} />
+        </Suspense>
+    );
+}
+
+async function SimulationPageInner({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();

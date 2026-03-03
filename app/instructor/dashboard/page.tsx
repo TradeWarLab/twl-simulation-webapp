@@ -5,8 +5,23 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
 
-export default async function InstructorDashboard() {
+export default function InstructorDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto p-8">
+          <p className="text-center text-muted-foreground">Loading instructor dashboard…</p>
+        </div>
+      }
+    >
+      <InstructorDashboardInner />
+    </Suspense>
+  );
+}
+
+async function InstructorDashboardInner() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

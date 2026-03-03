@@ -4,8 +4,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
 
-export default async function StudentDashboard() {
+// Render a synchronous component that immediately shows a fallback while
+// the inner async component performs per-request I/O (supabase, etc.). This
+// avoids the "Uncached data was accessed outside of <Suspense>" error.
+export default function StudentDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto p-8">
+          <p className="text-center text-muted-foreground">Loading your dashboard…</p>
+        </div>
+      }
+    >
+      <StudentDashboardInner />
+    </Suspense>
+  );
+}
+
+async function StudentDashboardInner() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
