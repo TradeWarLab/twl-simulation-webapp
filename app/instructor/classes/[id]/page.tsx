@@ -10,10 +10,35 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 
-export default async function ClassDetailPage({ params }: { params: Promise<{ id: string }> }) {
+// To satisfy Next.js cache component requirements we wrap the real
+// rendering logic in a `<Suspense>` boundary. any uncached async
+// operations (database queries, `connection()` call, etc.) now happen in
+// `ClassDetailPageInner` so the outer page can show a fallback while the
+// data is being fetched. without this you get the blocking-route warning:
+// "Uncached data was accessed outside of <Suspense>".
+
+export default function ClassDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    return (
+        <Suspense
+            fallback={
+                <div className="container mx-auto p-8">
+                    <p className="text-center text-muted-foreground">Loading class details…</p>
+                </div>
+            }
+        >
+            {/* inner component is async and holds all the awaits */}
+            <ClassDetailPageInner params={params} />
+        </Suspense>
+    );
+}
+
+// keep the existing logic here but move it into a separate async
+// component to avoid uncached data at the top level of the default export
+async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }> }) {
     await connection();
     const { id } = await params;
     const supabase = await createClient();
