@@ -156,6 +156,42 @@ create policy "Messages are viewable by channel members." on public.messages
 create policy "Users can insert messages." on public.messages
   for insert with check (auth.uid() = sender_id);
 
+-- Create trade_items table
+create table public.trade_items (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references public.classes not null,
+  team_id uuid references public.teams not null,
+  name text not null,
+  value numeric default 0 not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(class_id, team_id, name)
+);
+
+alter table public.trade_items enable row level security;
+
+create policy "Trade items viewable by class." on public.trade_items
+  for select using (true);
+
+create policy "Teams can update their own trade items." on public.trade_items
+  for update using (
+    exists (
+      select 1 from public.students_classes
+      where student_id = auth.uid() and team_id = trade_items.team_id
+    )
+    and exists (
+        select 1 from public.classes
+        where id = trade_items.class_id and current_period < 3
+    )
+  );
+  
+create policy "Instructors can insert trade items." on public.trade_items
+  for all using (
+    exists (
+      select 1 from public.classes
+      where id = trade_items.class_id and instructor_id = auth.uid()
+    )
+  );
+
 -- Create negotiation_actions table
 create table public.negotiation_actions (
   id uuid default gen_random_uuid() primary key,
