@@ -1,0 +1,267 @@
+"use client";
+
+import { TradeProposal } from "@/lib/types/domain";
+import { TradeItem } from "@/app/actions/trade";
+import { createTradeProposal } from "@/app/actions/trade-controller";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useTransition } from "react";
+
+type ProposalBuilderProps = {
+    classId: string;
+    myTeamId: string;
+    opponentTeamId: string;
+    myTeamItems: TradeItem[];
+    opponentTeamItems: TradeItem[];
+    myTeamCountry: string;
+    opponentTeamCountry: string;
+    proposals: TradeProposal[];
+    onProposalSelect: (proposal: TradeProposal) => void;
+};
+
+export function TradeProposalBuilder({
+    classId,
+    myTeamId,
+    opponentTeamId,
+    myTeamItems,
+    opponentTeamItems,
+    myTeamCountry,
+    opponentTeamCountry,
+    proposals,
+    onProposalSelect,
+}: ProposalBuilderProps) {
+    const [selectedOffered, setSelectedOffered] = useState<Set<string>>(new Set());
+    const [selectedRequested, setSelectedRequested] = useState<Set<string>>(new Set());
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
+    const [showBuilder, setShowBuilder] = useState(false);
+
+    const toggleItem = (
+        itemId: string,
+        set: Set<string>,
+        setter: React.Dispatch<React.SetStateAction<Set<string>>>
+    ) => {
+        const next = new Set(set);
+        if (next.has(itemId)) next.delete(itemId);
+        else next.add(itemId);
+        setter(next);
+    };
+
+    const handleSubmit = () => {
+        setError(null);
+        const offered = myTeamItems
+            .filter((item) => selectedOffered.has(item.id))
+            .map((item) => ({ item_id: item.id, name: item.name, value: item.value }));
+        const requested = opponentTeamItems
+            .filter((item) => selectedRequested.has(item.id))
+            .map((item) => ({ item_id: item.id, name: item.name, value: item.value }));
+
+        startTransition(async () => {
+            const result = await createTradeProposal(
+                classId,
+                myTeamId,
+                opponentTeamId,
+                offered,
+                requested
+            );
+            if (result.error) {
+                setError(result.error);
+            } else {
+                setSelectedOffered(new Set());
+                setSelectedRequested(new Set());
+                setShowBuilder(false);
+            }
+        });
+    };
+
+    const statusColors: Record<string, string> = {
+        pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+        approved: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+        rejected: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+        executed: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    };
+
+    return (
+        <div className="flex flex-col h-full gap-3">
+            {/* Toggle Builder */}
+            {!showBuilder && (
+                <Button
+                    onClick={() => setShowBuilder(true)}
+                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md"
+                >
+                    + New Trade Proposal
+                </Button>
+            )}
+
+            {/* Builder Panel */}
+            {showBuilder && (
+                <div className="rounded-lg border bg-white dark:bg-slate-950 p-4 space-y-4 shadow-sm animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex justify-between items-center">
+                        <h4 className="font-semibold text-sm">Create Trade Proposal</h4>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowBuilder(false)}
+                            className="h-7 text-xs"
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* Items You Offer */}
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                                🤝 You Offer ({myTeamCountry})
+                            </p>
+                            <div className="space-y-1.5">
+                                {myTeamItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() =>
+                                            toggleItem(item.id, selectedOffered, setSelectedOffered)
+                                        }
+                                        className={`w-full text-left text-xs px-3 py-2 rounded-md border transition-all duration-150 ${
+                                            selectedOffered.has(item.id)
+                                                ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 ring-1 ring-indigo-500/30"
+                                                : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                                        }`}
+                                    >
+                                        <span className="font-medium">{item.name}</span>
+                                        <span className="float-right text-muted-foreground">
+                                            {item.value} pts
+                                        </span>
+                                    </button>
+                                ))}
+                                {myTeamItems.length === 0 && (
+                                    <p className="text-xs text-muted-foreground italic">No items</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Items You Request */}
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                                📥 You Request ({opponentTeamCountry})
+                            </p>
+                            <div className="space-y-1.5">
+                                {opponentTeamItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() =>
+                                            toggleItem(
+                                                item.id,
+                                                selectedRequested,
+                                                setSelectedRequested
+                                            )
+                                        }
+                                        className={`w-full text-left text-xs px-3 py-2 rounded-md border transition-all duration-150 ${
+                                            selectedRequested.has(item.id)
+                                                ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 ring-1 ring-purple-500/30"
+                                                : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                                        }`}
+                                    >
+                                        <span className="font-medium">{item.name}</span>
+                                        <span className="float-right text-muted-foreground">
+                                            {item.value} pts
+                                        </span>
+                                    </button>
+                                ))}
+                                {opponentTeamItems.length === 0 && (
+                                    <p className="text-xs text-muted-foreground italic">No items</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
+                            {error}
+                        </p>
+                    )}
+
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={
+                            isPending ||
+                            (selectedOffered.size === 0 && selectedRequested.size === 0)
+                        }
+                        className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                    >
+                        {isPending ? "Submitting…" : "Submit Proposal"}
+                    </Button>
+                </div>
+            )}
+
+            {/* Proposals List */}
+            <div className="flex-1 min-h-0">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                    Trade Proposals ({proposals.length})
+                </p>
+                <ScrollArea className="h-full">
+                    <div className="space-y-2 pr-2">
+                        {proposals.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-8 italic">
+                                No proposals yet. Create one to start negotiating!
+                            </p>
+                        ) : (
+                            proposals.map((proposal) => (
+                                <button
+                                    key={proposal.id}
+                                    onClick={() => onProposalSelect(proposal)}
+                                    className="w-full text-left p-3 rounded-lg border bg-white dark:bg-slate-950 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-sm"
+                                >
+                                    <div className="flex justify-between items-start mb-1.5">
+                                        <span className="text-xs font-semibold">
+                                            {proposal.proposing_team?.country} →{" "}
+                                            {proposal.receiving_team?.country}
+                                        </span>
+                                        <Badge
+                                            variant="secondary"
+                                            className={`text-[10px] ${statusColors[proposal.status] ?? ""}`}
+                                        >
+                                            {proposal.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="text-[11px] text-muted-foreground">
+                                        <span>
+                                            Offers {(proposal.offered_items ?? []).length} item
+                                            {(proposal.offered_items ?? []).length !== 1
+                                                ? "s"
+                                                : ""}
+                                        </span>
+                                        <span className="mx-1">·</span>
+                                        <span>
+                                            Requests{" "}
+                                            {(proposal.requested_items ?? []).length} item
+                                            {(proposal.requested_items ?? []).length !== 1
+                                                ? "s"
+                                                : ""}
+                                        </span>
+                                    </div>
+                                    {proposal.vote_summary && proposal.status === "pending" && (
+                                        <div className="mt-1.5 flex items-center gap-1.5">
+                                            <div className="h-1.5 flex-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                                                    style={{
+                                                        width: `${proposal.vote_summary.total_members > 0 ? (proposal.vote_summary.votes_cast / proposal.vote_summary.total_members) * 100 : 0}%`,
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                                {proposal.vote_summary.votes_cast}/
+                                                {proposal.vote_summary.total_members} voted
+                                            </span>
+                                        </div>
+                                    )}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </ScrollArea>
+            </div>
+        </div>
+    );
+}

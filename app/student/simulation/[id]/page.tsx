@@ -8,6 +8,9 @@ import { getMessages } from "@/app/actions/chat";
 import { ChatPanel } from "@/components/chat-panel";
 import { getTeamTradeItems } from "@/app/actions/trade";
 import { TradeItemsPanel } from "@/components/trade-items-panel";
+import { getTradeProposals, getScoreboard } from "@/app/actions/trade-controller";
+import { NegotiationController } from "@/components/negotiation-controller";
+import { Scoreboard } from "@/components/scoreboard";
 
 export default function SimulationPage({ params }: { params: Promise<{ id: string }> }) {
     return (
@@ -37,7 +40,7 @@ async function SimulationPageInner({ params }: { params: Promise<{ id: string }>
         .single();
 
     if (error || !enrollment) {
-        notFound(); // Or redirect to dashboard with unauthorized message
+        notFound();
     }
 
     const { classes: classData, teams: teamData } = enrollment;
@@ -50,9 +53,33 @@ async function SimulationPageInner({ params }: { params: Promise<{ id: string }>
     const teamChannel = `team_${teamRecord?.country?.toLowerCase() || 'unassigned'}`;
     const initialMessages = await getMessages(id, teamChannel);
 
-    // Fetch initial trade items
+    // Fetch initial trade items for my team
     const tradeItems = teamRecord ? await getTeamTradeItems(id, teamRecord.id) : [];
-    const isTradeLocked = classRecord.current_period >= 3; // Locked starting in Period 3 (Negotiation)
+    const isTradeLocked = classRecord.current_period >= 3;
+
+    // Fetch opponent team info and items for negotiation
+    let opponentTeamId = "";
+    let opponentTeamCountry = "";
+    let opponentTeamItems: Awaited<ReturnType<typeof getTeamTradeItems>> = [];
+
+    if (teamRecord) {
+        const { data: opponentTeam } = await supabase
+            .from("teams")
+            .select("id, country")
+            .eq("class_id", id)
+            .neq("id", teamRecord.id)
+            .single();
+
+        if (opponentTeam) {
+            opponentTeamId = opponentTeam.id;
+            opponentTeamCountry = opponentTeam.country;
+            opponentTeamItems = await getTeamTradeItems(id, opponentTeam.id);
+        }
+    }
+
+    // Fetch trade proposals and scoreboard
+    const proposals = await getTradeProposals(id);
+    const scores = await getScoreboard(id);
 
     return (
         <div className="container mx-auto p-4 h-screen flex flex-col">
@@ -75,8 +102,11 @@ async function SimulationPageInner({ params }: { params: Promise<{ id: string }>
             </header>
 
             <main className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
-                {/* Left Panel: Info, Briefing & Trade Items */}
+                {/* Left Panel: Scoreboard, Briefing & Trade Items */}
                 <div className="h-full flex flex-col gap-4">
+                    {/* Scoreboard */}
+                    <Scoreboard initialScores={scores} />
+
                     <Card className="flex-1 flex flex-col min-h-0">
                         <CardHeader className="py-3 shrink-0">
                             <CardTitle className="text-md">Briefing & Resources</CardTitle>
@@ -96,21 +126,29 @@ async function SimulationPageInner({ params }: { params: Promise<{ id: string }>
                     </div>
                 </div>
 
-                {/* Center Panel: Main Action Area (Negotiation Table / Video) */}
+                {/* Center Panel: Action Center (Negotiation Controller) */}
                 <Card className="md:col-span-1 h-full flex flex-col">
                     <CardHeader className="py-3 shrink-0">
                         <CardTitle className="text-md">Action Center</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 rounded-md m-2">
+                    <CardContent className="flex-1 overflow-y-auto p-3">
                         {classRecord.current_period === 1 && (
                             <div className="flex items-center justify-center h-full text-muted-foreground">
                                 Documentary Placeholder
                             </div>
                         )}
-                        {classRecord.current_period === 3 && (
-                            <div className="flex items-center justify-center h-full text-muted-foreground">
-                                Negotiation Table (Drag & Drop Asks)
-                            </div>
+                        {classRecord.current_period === 3 && teamRecord && (
+                            <NegotiationController
+                                classId={id}
+                                currentUserId={user.id}
+                                myTeamId={teamRecord.id}
+                                opponentTeamId={opponentTeamId}
+                                myTeamCountry={teamRecord.country}
+                                opponentTeamCountry={opponentTeamCountry}
+                                myTeamItems={tradeItems}
+                                opponentTeamItems={opponentTeamItems}
+                                initialProposals={proposals}
+                            />
                         )}
                         {classRecord.current_period !== 1 && classRecord.current_period !== 3 && (
                             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -133,4 +171,3 @@ async function SimulationPageInner({ params }: { params: Promise<{ id: string }>
         </div>
     );
 }
-

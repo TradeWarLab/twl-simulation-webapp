@@ -76,6 +76,56 @@ export function SimulationRealtimeProvider({ classId }: { classId: string }) {
                     router.refresh();
                 }
             )
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "trade_proposals",
+                    filter: `class_id=eq.${classId}`,
+                },
+                () => {
+                    console.log("Trade proposal changed, refreshing...");
+                    router.refresh();
+                }
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "trade_votes",
+                },
+                () => {
+                    console.log("Trade vote changed, refreshing...");
+                    router.refresh();
+                }
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "votes",
+                },
+                () => {
+                    console.log("Vote cast, refreshing...");
+                    router.refresh();
+                }
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "team_scores",
+                    filter: `class_id=eq.${classId}`,
+                },
+                () => {
+                    console.log("Score updated, refreshing...");
+                    router.refresh();
+                }
+            )
             .subscribe();
 
         return () => {
