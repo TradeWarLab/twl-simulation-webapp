@@ -89,18 +89,7 @@ export function SimulationRealtimeProvider({ classId }: { classId: string }) {
                     router.refresh();
                 }
             )
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "trade_votes",
-                },
-                () => {
-                    console.log("Trade vote changed, refreshing...");
-                    router.refresh();
-                }
-            )
+
             .on(
                 "postgres_changes",
                 {
