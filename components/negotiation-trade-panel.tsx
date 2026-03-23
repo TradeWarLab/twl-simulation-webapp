@@ -10,7 +10,7 @@ import {
     type DragEndEvent,
     type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { createTradeProposal } from "@/app/actions/trade-proposals";
+import { createTradeProposal } from "@/app/actions/trade-controller";
 import type { TradeProposalItem, TeamCountry } from "@/lib/types/domain";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -255,7 +255,7 @@ export function NegotiationTradePanel({
         }
 
         startTransition(async () => {
-            const result = await createTradeProposal(classId, myTeamId, offered, requested);
+            const result = await createTradeProposal(classId, myTeamId, opponentTeamId, offered, requested);
             if (result.error) {
                 setSubmitError(result.error);
             } else {

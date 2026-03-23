@@ -1,6 +1,6 @@
 "use client";
 
-import { voteOnProposal } from "@/app/actions/trade-proposals";
+import { submitVote } from "@/app/actions/trade-controller";
 import type { TradeProposal, TeamCountry } from "@/lib/types/domain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export function TradeProposalCard({ proposal, currentUserId, classId, myTeamId }
 
     function handleVote(vote: "approve" | "reject") {
         startTransition(async () => {
-            await voteOnProposal(proposal.id, classId, vote);
+            await submitVote(proposal.id, vote);
         });
     }
 
