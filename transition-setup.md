@@ -33,5 +33,3 @@ The Trade War Simulation is built as a full-stack, real-time web application.
 ### Infrastructure
 - **Database, Auth & Real-time (Supabase)**: We use **Supabase** (PostgreSQL) for managed Authentication, database tables, and real-time subscriptions (web sockets). The application applies Row Level Security (RLS) to enforce data privileges between 'instructors' and 'students'.
 - **Hosting & Deployment (Vercel)**: The Next.js application is designed to be deployed using **Vercel**, enabling edge computing, fast SSR, and zero-configuration framework integration.
-
-> I used [`bun`](https://bun.com) as my toolkit (replaced node.js, npm, etc.), but it should be completely cross-compatible with `npm` if you'd prefer that for some reason.
