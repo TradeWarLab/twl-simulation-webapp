@@ -206,6 +206,7 @@ export async function getClassRoster(classId: string): Promise<ClassRosterEntry[
   const { data: enrollments, error: enrollmentError } = await supabase
     .from("students_classes")
     .select(`
+      student_id,
       interest_block,
       joined_at,
       users (
@@ -230,6 +231,7 @@ export async function getClassRoster(classId: string): Promise<ClassRosterEntry[
 
       rosterMap.set(email.toLowerCase(), {
         email: email,
+        user_id: en.student_id,
         full_name: userRecord?.full_name ?? null,
         affiliation: (teamRecord?.country as TeamCountry) || "USA",
         interest_group: en.interest_block,

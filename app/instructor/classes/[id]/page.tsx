@@ -179,29 +179,34 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <form action={inviteStudentToClass} className="grid gap-3 md:grid-cols-4">
+                            <form action={inviteStudentToClass} className="flex flex-col xl:flex-row gap-3 items-stretch xl:items-center">
                                 <input type="hidden" name="class_id" value={id} />
                                 <Input
                                     name="email"
                                     type="email"
                                     placeholder="student@example.com"
                                     required
-                                    className="md:col-span-2"
+                                    className="flex-1"
                                 />
                                 <select
                                     name="affiliation"
                                     defaultValue="USA"
-                                    className="h-9 rounded-md border bg-transparent px-3 text-sm"
+                                    className="h-9 rounded-md border bg-background px-3 text-sm min-w-[120px]"
                                 >
-                                    <option value="USA">USA</option>
-                                    <option value="China">China</option>
+                                    <option value="USA">🇺🇸 Team USA</option>
+                                    <option value="China">🇨🇳 Team China</option>
                                 </select>
-                                <Input
+                                <select
                                     name="interest_block"
-                                    placeholder="Interest group"
-                                    className="md:col-span-2"
-                                />
-                                <Button type="submit" className="md:col-span-2">Invite Student</Button>
+                                    defaultValue="Economy"
+                                    className="h-9 rounded-md border bg-background px-3 text-sm min-w-[150px]"
+                                >
+                                    <option value="Economy">Economy</option>
+                                    <option value="National Security">National Security</option>
+                                    <option value="Technology">Technology</option>
+                                    <option value="Environment">Environment</option>
+                                </select>
+                                <Button type="submit" className="whitespace-nowrap">Invite Student</Button>
                             </form>
 
                             <div className="rounded-md border overflow-hidden">
