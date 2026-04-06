@@ -1,118 +1,178 @@
 "use client";
 import { useState, useEffect } from "react";
 
-// OPTION 6: "THINK TANK"
-// Stark black & white. Heavy grid. No-nonsense academic/policy institute aesthetic.
-// Inspired by CFR, RAND, Brookings. Serious, institutional, credible.
-
-const STATS = [
-  { value: "145%", label: "US Tariffs on Chinese Goods" },
-  { value: "$688B", label: "Annual Bilateral Trade Volume" },
-  { value: "40+", label: "Affected Industrial Sectors" },
-  { value: "2.4B", label: "People Affected Globally" },
-];
-
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [hoverLogin, setHoverLogin] = useState(false);
   const [hoverSignup, setHoverSignup] = useState(false);
+  const [focusLogin, setFocusLogin] = useState(false);
+  const [focusSignup, setFocusSignup] = useState(false);
+  const [focusCta, setFocusCta] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
-  useEffect(() => { setTimeout(() => setMounted(true), 80); }, []);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const applyPref = () => setReducedMotion(mq.matches);
+    applyPref();
+    if (mq.addEventListener) mq.addEventListener("change", applyPref);
+    else mq.addListener(applyPref);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", applyPref);
+      else mq.removeListener(applyPref);
+    };
+  }, []);
+
+  useEffect(() => {
+    const delay = reducedMotion ? 0 : 80;
+    const t = setTimeout(() => setMounted(true), delay);
+    return () => clearTimeout(t);
+  }, [reducedMotion]);
 
   return (
-    <div style={{
+    <div
+      className="home-shell"
+      style={{
       minHeight: "100vh",
       background: "#fff",
-      fontFamily: "'Times New Roman', Times, serif",
-      display: "flex", flexDirection: "column",
+      fontFamily: "'Palatino Linotype', Palatino, 'Times New Roman', serif",
+      display: "flex",
+      flexDirection: "column",
       color: "#0a0a0a",
     }}>
 
       {/* Nav — thick border bottom */}
-      <nav style={{
+      <nav
+        className="home-nav"
+        style={{
         borderBottom: "3px solid #0a0a0a",
-        padding: "0 0 0 0",
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
+        padding: "0",
       }}>
-        <div style={{
-          padding: "20px 40px",
-          borderRight: "3px solid #0a0a0a",
-          display: "flex", alignItems: "center", gap: "12px",
+        <div
+          className="home-nav-inner"
+          style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          alignItems: "center",
+          minWidth: 0,
         }}>
-          <span style={{
-            fontFamily: "'Helvetica Neue', Arial, sans-serif",
-            fontSize: "17px", fontWeight: "900",
-            letterSpacing: "-0.5px",
+          <div
+            className="home-nav-logo"
+            style={{
+            padding: "20px 40px",
+            borderRight: "3px solid #0a0a0a",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            minWidth: 0,
           }}>
-            TRADE WAR LAB
-          </span>
-        </div>
-        <div style={{
-          padding: "20px 40px",
-          display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0px",
-        }}>
-          <a href="/auth/login"
-            onMouseEnter={() => setHoverLogin(true)}
-            onMouseLeave={() => setHoverLogin(false)}
-            style={{
-              padding: "10px 28px",
-              fontSize: "12px",
+            <span style={{
               fontFamily: "'Helvetica Neue', Arial, sans-serif",
-              fontWeight: "700", letterSpacing: "1px",
-              textDecoration: "none", textTransform: "uppercase",
-              color: hoverLogin ? "#fff" : "#0a0a0a",
-              background: hoverLogin ? "#0a0a0a" : "transparent",
-              border: "2px solid #0a0a0a",
-              transition: "all 0.15s",
-              marginRight: "12px",
+              fontSize: "17px",
+              fontWeight: "900",
+              letterSpacing: "-0.5px",
+              overflowWrap: "break-word",
             }}>
-            Log In
-          </a>
-          <a href="/auth/sign-up"
-            onMouseEnter={() => setHoverSignup(true)}
-            onMouseLeave={() => setHoverSignup(false)}
+              TRADE WAR LAB
+            </span>
+          </div>
+          <div
+            className="home-nav-actions"
             style={{
-              padding: "10px 28px",
-              fontSize: "12px",
-              fontFamily: "'Helvetica Neue', Arial, sans-serif",
-              fontWeight: "700", letterSpacing: "1px",
-              textDecoration: "none", textTransform: "uppercase",
-              background: hoverSignup ? "#0a0a0a" : "#0a0a0a",
-              border: "2px solid #0a0a0a",
-              color: "#fff",
-              transition: "all 0.15s",
-              opacity: hoverSignup ? 0.8 : 1,
-            }}>
-            Sign Up
-          </a>
+            padding: "20px 40px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: "12px",
+            minWidth: 0,
+          }}>
+            <a
+              href="/auth/login"
+              onMouseEnter={() => setHoverLogin(true)}
+              onMouseLeave={() => setHoverLogin(false)}
+              onFocus={() => setFocusLogin(true)}
+              onBlur={() => setFocusLogin(false)}
+              style={{
+                padding: "10px 28px",
+                minHeight: "44px",
+                fontSize: "12px",
+                fontFamily: "'Helvetica Neue', Arial, sans-serif",
+                fontWeight: "700",
+                letterSpacing: "1px",
+                textDecoration: "none",
+                textTransform: "uppercase",
+                color: hoverLogin ? "#fff" : "#0a0a0a",
+                background: hoverLogin ? "#0a0a0a" : "transparent",
+                border: "2px solid #0a0a0a",
+                transition: "all 0.15s",
+                outline: focusLogin ? "3px solid #0a0a0a" : "none",
+                outlineOffset: "2px",
+              }}
+            >
+              Log In
+            </a>
+            <a
+              href="/auth/sign-up"
+              onMouseEnter={() => setHoverSignup(true)}
+              onMouseLeave={() => setHoverSignup(false)}
+              onFocus={() => setFocusSignup(true)}
+              onBlur={() => setFocusSignup(false)}
+              style={{
+                padding: "10px 28px",
+                minHeight: "44px",
+                fontSize: "12px",
+                fontFamily: "'Helvetica Neue', Arial, sans-serif",
+                fontWeight: "700",
+                letterSpacing: "1px",
+                textDecoration: "none",
+                textTransform: "uppercase",
+                background: "#0a0a0a",
+                border: "2px solid #0a0a0a",
+                color: "#fff",
+                transition: "all 0.15s",
+                opacity: hoverSignup ? 0.8 : 1,
+                outline: focusSignup ? "3px solid #0a0a0a" : "none",
+                outlineOffset: "2px",
+              }}
+            >
+              Sign Up
+            </a>
+          </div>
         </div>
       </nav>
 
       {/* Hero grid */}
-      <main style={{
+      <main
+        className="home-main"
+        style={{
         flex: 1,
         display: "grid",
         gridTemplateRows: "1fr auto",
         opacity: mounted ? 1 : 0,
         transform: mounted ? "none" : "translateY(12px)",
-        transition: "all 0.6s ease",
+        transition: reducedMotion ? "none" : "all 0.6s ease",
       }}>
-        {/* Top section: 2 col */}
-        <div style={{
+        {/* Top section: centered */}
+        <div
+          className="home-hero-wrap"
+          style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "1fr",
           borderBottom: "3px solid #0a0a0a",
         }}>
-          {/* Left: big text */}
-          <div style={{
-            padding: "64px 40px",
-            borderRight: "3px solid #0a0a0a",
+          <div
+            className="home-hero"
+            style={{
+            padding: "72px 40px",
             display: "flex", flexDirection: "column", justifyContent: "space-between",
+            alignItems: "center", textAlign: "center",
           }}>
-            <div>
+            <div className="home-hero-inner" style={{ maxWidth: "760px", width: "100%" }}>
               {/* Kicker */}
-              <div style={{
+              <div
+                className="home-kicker"
+                style={{
                 fontFamily: "'Helvetica Neue', Arial, sans-serif",
                 fontSize: "10px", fontWeight: "700",
                 letterSpacing: "4px", color: "#888",
@@ -128,22 +188,26 @@ export default function Home() {
                 lineHeight: 0.97,
                 margin: "0 0 40px 0",
                 letterSpacing: "-1.5px",
+                overflowWrap: "break-word",
+                hyphens: "auto",
               }}>
-                Modeling<br />
-                the New<br />
-                <em>Cold Trade<br />War.</em>
+                Modeling the<br />
+                <em>New Trade War.</em>
               </h1>
 
               <div style={{
                 width: "56px", height: "3px", background: "#0a0a0a",
-                marginBottom: "32px",
+                margin: "0 auto 32px auto",
               }} />
 
               <p style={{
                 fontSize: "16px", lineHeight: 1.75, color: "#333",
-                maxWidth: "400px",
+                maxWidth: "520px",
+                margin: "0 auto",
                 fontFamily: "'Helvetica Neue', Arial, sans-serif",
                 fontWeight: "400",
+                overflowWrap: "break-word",
+                hyphens: "auto",
               }}>
                 An interactive simulation environment for researchers,
                 students, and policy professionals studying the economic
@@ -152,107 +216,68 @@ export default function Home() {
             </div>
 
             {/* CTA */}
-            <div style={{ marginTop: "48px" }}>
-              <a href="/auth/sign-up" style={{
+            <div className="home-cta-wrap" style={{ marginTop: "48px" }}>
+              <a
+                className="home-cta"
+                href="/auth/sign-up"
+                onFocus={() => setFocusCta(true)}
+                onBlur={() => setFocusCta(false)}
+                style={{
                 display: "inline-block",
                 background: "#0a0a0a", color: "#fff",
                 padding: "18px 48px",
+                minHeight: "48px",
                 fontSize: "12px", letterSpacing: "3px", fontWeight: "700",
                 textDecoration: "none", textTransform: "uppercase",
                 fontFamily: "'Helvetica Neue', Arial, sans-serif",
+                outline: focusCta ? "3px solid #0a0a0a" : "none",
+                outlineOffset: "3px",
               }}>
                 Begin Simulation →
               </a>
             </div>
           </div>
-
-          {/* Right: abstract graphic */}
-          <div style={{
-            padding: "64px 40px",
-            display: "flex", flexDirection: "column", justifyContent: "space-between",
-            background: "#fafafa",
-          }}>
-            {/* Abstract tension diagram */}
-            <div>
-              <div style={{
-                fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                fontSize: "10px", fontWeight: "700", letterSpacing: "3px",
-                color: "#888", marginBottom: "24px", textTransform: "uppercase",
-              }}>
-                Strategic Tension Model
-              </div>
-
-              {/* US vs China bar */}
-              <div style={{ marginBottom: "32px" }}>
-                {[
-                  { label: "UNITED STATES", pct: 72, note: "Economic output leverage" },
-                  { label: "CHINA", pct: 88, note: "Manufacturing concentration" },
-                  { label: "INTERDEPENDENCE", pct: 61, note: "Bilateral dependency index" },
-                  { label: "ESCALATION RISK", pct: 87, note: "Current tension index" },
-                ].map((item, i) => (
-                  <div key={i} style={{ marginBottom: "20px" }}>
-                    <div style={{
-                      display: "flex", justifyContent: "space-between",
-                      fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                      fontSize: "10px", marginBottom: "6px",
-                    }}>
-                      <span style={{ fontWeight: "700", letterSpacing: "2px", textTransform: "uppercase" }}>{item.label}</span>
-                      <span style={{ color: "#888" }}>{item.pct}%</span>
-                    </div>
-                    <div style={{ height: "6px", background: "#e5e5e5", position: "relative" }}>
-                      <div style={{
-                        height: "100%", width: `${item.pct}%`,
-                        background: i === 3 ? "#0a0a0a" : "#0a0a0a",
-                        opacity: i === 3 ? 1 : 0.7 - i * 0.1,
-                      }} />
-                    </div>
-                    <div style={{
-                      fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                      fontSize: "9px", color: "#aaa", marginTop: "4px",
-                    }}>{item.note}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{
-                border: "1px solid #e5e5e5",
-                padding: "20px",
-                fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                fontSize: "11px", color: "#888", lineHeight: 1.6,
-              }}>
-                Simulate escalation paths, negotiation outcomes, and third-party
-                spillover effects across 40+ economic sectors.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stat row at bottom */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-        }}>
-          {STATS.map((s, i) => (
-            <div key={i} style={{
-              padding: "32px 40px",
-              borderRight: i < STATS.length - 1 ? "3px solid #0a0a0a" : "none",
-            }}>
-              <div style={{
-                fontSize: "clamp(24px, 3vw, 36px)",
-                fontWeight: "700",
-                letterSpacing: "-1px",
-                marginBottom: "6px",
-              }}>{s.value}</div>
-              <div style={{
-                fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                fontSize: "10px", color: "#888",
-                letterSpacing: "1px", textTransform: "uppercase",
-                lineHeight: 1.5,
-              }}>{s.label}</div>
-            </div>
-          ))}
         </div>
       </main>
+
+      <style jsx>{`
+        @media (max-width: 900px) {
+          .home-nav-inner {
+            grid-template-columns: 1fr;
+            text-align: center;
+          }
+          .home-nav-logo {
+            border-right: none;
+            border-bottom: 3px solid #0a0a0a;
+            justify-content: center;
+          }
+          .home-nav-actions {
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 16px 32px 20px;
+          }
+        }
+        @media (max-width: 640px) {
+          .home-nav-logo {
+            padding: 18px 24px;
+          }
+          .home-hero {
+            padding: 56px 24px;
+          }
+          .home-kicker {
+            fontSize: 11px;
+            letterSpacing: 3px;
+          }
+          .home-cta-wrap {
+            width: 100%;
+          }
+          .home-cta {
+            width: 100%;
+            text-align: center;
+            padding: 16px 24px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

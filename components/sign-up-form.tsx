@@ -22,6 +22,7 @@ export function SignUpForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInstructor, setIsInstructor] = useState(false);
 
   async function clientAction(formData: FormData) {
     setIsLoading(true);
@@ -105,8 +106,29 @@ export function SignUpForm({
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="role" name="role" value="instructor" className="h-4 w-4" />
+              { !isInstructor && (
+                <div className="grid gap-2 mt-2">
+                  <Label htmlFor="class_code">Class Code (Optional)</Label>
+                  <Input
+                    id="class_code"
+                    name="class_code"
+                    type="text"
+                    placeholder="e.g. TWL-A42B39"
+                  />
+                  <p className="text-xs text-muted-foreground">Join a class immediately with a code provided by your instructor.</p>
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2 mt-2">
+                <input 
+                  type="checkbox" 
+                  id="role" 
+                  name="role" 
+                  value="instructor" 
+                  checked={isInstructor}
+                  onChange={(e) => setIsInstructor(e.target.checked)}
+                  className="h-4 w-4" 
+                />
                 <Label htmlFor="role">Sign up as Instructor?</Label>
               </div>
 

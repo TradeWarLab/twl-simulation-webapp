@@ -64,6 +64,7 @@ export function createChainableBuilder(response: MockResponse = { data: null, er
 
 export type MockSupabaseClient = {
   from: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
   auth: {
     getUser: ReturnType<typeof vi.fn>;
     signInWithPassword: ReturnType<typeof vi.fn>;
@@ -85,6 +86,7 @@ export function createMockSupabaseClient(): MockSupabaseClient {
       }
       return builders.get(table)!;
     }),
+    rpc: vi.fn(),
     auth: {
       getUser: vi.fn().mockResolvedValue({
         data: { user: { id: "user-1", email: "test@test.com" } },

@@ -36,6 +36,7 @@ export type ClassRosterEntry = {
   affiliation: TeamCountry;
   interest_group: string | null;
   status: InviteStatus;
+  joined_at: string | null;
 };
 
 // ─── Trade Controller Types ─────────────────────────────

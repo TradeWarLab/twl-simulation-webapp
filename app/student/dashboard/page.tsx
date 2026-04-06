@@ -1,5 +1,6 @@
-import { getStudentClasses } from "@/app/actions/classes";
+import { getStudentClasses, enrollStudentByCode } from "@/app/actions/classes";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -52,7 +53,7 @@ async function StudentDashboardInner() {
           {enrolledClasses.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">You are not enrolled in any simulations yet.</p>
-              <p className="text-sm text-muted-foreground">Wait for your instructor to add you.</p>
+              <p className="text-sm text-muted-foreground">Wait for your instructor to add you or enter a class code below.</p>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -71,6 +72,22 @@ async function StudentDashboardInner() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Join a Class</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={async (formData: FormData) => {
+            "use server";
+            const code = formData.get("class_code") as string;
+            if (code) await enrollStudentByCode(code.trim());
+          }} className="flex max-w-sm items-center gap-2">
+            <Input name="class_code" placeholder="Enter Class Code (e.g. TWL-A42B39)" required />
+            <Button type="submit">Join</Button>
+          </form>
         </CardContent>
       </Card>
     </div>

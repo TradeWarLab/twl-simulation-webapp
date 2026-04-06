@@ -7,6 +7,7 @@ import {
   getInstructorClasses,
   getStudentClasses,
   updateClassPeriod,
+  enrollStudentByCode,
 } from "@/app/actions/classes";
 
 
@@ -29,12 +30,16 @@ describe("Class Actions", () => {
 
       await createClass(formData);
 
-      expect(insertMock).toHaveBeenCalledWith({
+      expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
         name: "History 101",
         instructor_id: "instructor-1",
         status: "active",
         current_period: 0,
-      });
+      }));
+      // Check that class_code and normalized_name are generated
+      const callArgs = insertMock.mock.calls[0][0];
+      expect(callArgs.class_code).toMatch(/^TWL-[A-Z0-9]{6}$/);
+      expect(callArgs.normalized_name).toBe("history-101");
     });
 
     it("aborts if no user", async () => {
@@ -59,6 +64,25 @@ describe("Class Actions", () => {
 
       expect(updateMock).toHaveBeenCalledWith({ current_period: 3 });
       expect(eqMock).toHaveBeenCalledWith("id", "cls-1");
+      expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe("enrollStudentByCode", () => {
+    it("enrolls a student when a valid code is provided", async () => {
+      mockClient.auth.getUser.mockResolvedValue({
+        data: { user: { id: "stu-1" } },
+      });
+
+      // Mock rpc call
+      const rpcMock = vi.fn().mockResolvedValue({ error: null });
+      mockClient.rpc = rpcMock;
+
+      const result = await enrollStudentByCode("TWL-TEST");
+
+      expect(rpcMock).toHaveBeenCalledWith("enroll_student", {
+        p_class_code: "TWL-TEST",
+      });
       expect(result).toEqual({ success: true });
     });
   });

@@ -43,6 +43,7 @@ export async function signUp(formData: FormData) {
   const password = formData.get("password") as string;
   const full_name = formData.get("full_name") as string;
   const role = formData.get("role") as string || "student"; // Default to student
+  const class_code = formData.get("class_code") as string | null;
 
   const supabase = await createClient();
 
@@ -53,6 +54,7 @@ export async function signUp(formData: FormData) {
       data: {
         full_name,
         role,
+        class_code: class_code || null,
       },
       emailRedirectTo: `${origin}/auth/callback`,
     },

@@ -12,6 +12,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { ClassCodeCopyButton } from "@/components/class-code-copy";
 
 
 // To satisfy Next.js cache component requirements we wrap the real
@@ -51,7 +52,7 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
         .from("classes")
         .select("*")
         .eq("id", id)
-        .eq("instructor_id", user.id)
+        .eq("instructor_id", user!.id)
         .single();
 
     if (error || !classData) {
@@ -205,10 +206,11 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
 
                             <div className="rounded-md border overflow-hidden">
                                 <div className="grid grid-cols-12 p-4 bg-muted/50 text-sm font-medium text-muted-foreground">
-                                    <div className="col-span-4">Student</div>
+                                    <div className="col-span-3">Student</div>
                                     <div className="col-span-2">Affiliation</div>
-                                    <div className="col-span-3">Interest Group</div>
-                                    <div className="col-span-3">Status</div>
+                                    <div className="col-span-2">Interest Group</div>
+                                    <div className="col-span-3">Joined At</div>
+                                    <div className="col-span-2">Status</div>
                                 </div>
                                 {roster.length === 0 ? (
                                     <div className="p-8 text-center text-muted-foreground text-sm">
@@ -218,15 +220,18 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                                     <div>
                                         {roster.map((entry) => (
                                             <div key={entry.email} className="grid grid-cols-12 p-4 text-sm border-t items-center">
-                                                <div className="col-span-4">
+                                                <div className="col-span-3">
                                                     <p className="font-medium">{entry.full_name ?? "Pending Account"}</p>
                                                     <p className="text-muted-foreground text-xs">{entry.email}</p>
                                                 </div>
                                                 <div className="col-span-2">{entry.affiliation}</div>
-                                                <div className="col-span-3">{entry.interest_group ?? "-"}</div>
-                                                <div className="col-span-3">
+                                                <div className="col-span-2">{entry.interest_group ?? "-"}</div>
+                                                <div className="col-span-3 text-xs text-muted-foreground">
+                                                    {entry.joined_at ? new Date(entry.joined_at).toLocaleDateString() : "-"}
+                                                </div>
+                                                <div className="col-span-2">
                                                     <Badge variant={entry.status === "account_created" ? "default" : "secondary"}>
-                                                        {entry.status === "account_created" ? "Account Created" : "Pending Invite"}
+                                                        {entry.status === "account_created" ? "Enrolled" : "Pending Invite"}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -245,17 +250,23 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                             <CardTitle>Quick Actions</CardTitle>
                         </CardHeader>
                         <CardContent className="grid gap-2">
-                            <Button variant="outline" className="justify-start gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>
-                                Upload Briefing
+                            <Button variant="outline" className="justify-start gap-2" asChild>
+                                <Link href={`/instructor/classes/${id}/briefings`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>
+                                    Upload Briefing
+                                </Link>
                             </Button>
-                            <Button variant="outline" className="justify-start gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                                Manage Teams
+                            <Button variant="outline" className="justify-start gap-2" asChild>
+                                <Link href={`/instructor/classes/${id}/teams`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                    Manage Teams
+                                </Link>
                             </Button>
-                            <Button variant="outline" className="justify-start gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                                View Negotiation Log
+                            <Button variant="outline" className="justify-start gap-2" asChild>
+                                <Link href={`/instructor/classes/${id}/log`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                                    View Negotiation Log
+                                </Link>
                             </Button>
                         </CardContent>
                     </Card>
@@ -266,10 +277,8 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-2 p-3 bg-slate-200 dark:bg-slate-700 rounded-md border font-mono text-sm">
-                                <span className="flex-1 truncate select-all text-slate-900 dark:text-slate-100">{id}</span>
-                                <Button size="icon" variant="ghost" className="h-6 w-6">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
-                                </Button>
+                                <span className="flex-1 truncate select-all text-slate-900 dark:text-slate-100">{classData.class_code ?? "Unavailable"}</span>
+                                <ClassCodeCopyButton code={classData.class_code ?? ""} />
                             </div>
                         </CardContent>
                     </Card>

@@ -17,6 +17,19 @@ function isValidAffiliation(value: string): value is TeamCountry {
   return VALID_AFFILIATIONS.includes(value as TeamCountry);
 }
 
+function generateClassCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No 0/O, 1/I
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `TWL-${code}`;
+}
+
+function normalizeName(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 async function ensureInstructorOwnsClass(
   classId: string,
   userId: string,
@@ -45,6 +58,8 @@ export async function createClass(formData: FormData): Promise<void> {
 
   const { error } = await supabase.from("classes").insert({
     name,
+    class_code: generateClassCode(),
+    normalized_name: normalizeName(name),
     instructor_id: user.id,
     status: "active",
     current_period: 0,
@@ -184,98 +199,99 @@ export async function getClassRoster(classId: string): Promise<ClassRosterEntry[
   const ownsClass = await ensureInstructorOwnsClass(classId, user.id);
   if (!ownsClass) return [];
 
+  // Map to store combined roster entries by lowercase email
+  const rosterMap = new Map<string, ClassRosterEntry>();
+
+  // 1. Fetch direct enrollments from students_classes
+  const { data: enrollments, error: enrollmentError } = await supabase
+    .from("students_classes")
+    .select(`
+      interest_block,
+      joined_at,
+      users (
+        email,
+        full_name
+      ),
+      teams (
+        country
+      )
+    `)
+    .eq("class_id", classId);
+
+  if (enrollmentError) {
+    console.error("Error fetching enrollments:", enrollmentError);
+  } else if (enrollments) {
+    for (const en of enrollments) {
+      const userRecord = Array.isArray(en.users) ? en.users[0] : en.users;
+      const teamRecord = Array.isArray(en.teams) ? en.teams[0] : en.teams;
+      
+      const email = userRecord?.email;
+      if (!email) continue;
+
+      rosterMap.set(email.toLowerCase(), {
+        email: email,
+        full_name: userRecord?.full_name ?? null,
+        affiliation: (teamRecord?.country as TeamCountry) || "USA",
+        interest_group: en.interest_block,
+        status: "account_created",
+        joined_at: en.joined_at,
+      });
+    }
+  }
+
+  // 2. Fetch invites and add any that aren't already enrolled
   const { data: invites, error: inviteError } = await supabase
     .from("class_invites")
     .select("email, affiliation, interest_block, status, invited_at")
-    .eq("class_id", classId)
-    .order("invited_at", { ascending: false });
+    .eq("class_id", classId);
 
-  if (inviteError || !invites) {
-    if (inviteError) {
-      console.error("Error fetching class invites:", inviteError);
-    }
-    return [];
-  }
-
-  const typedInvites = invites as ClassInviteRow[];
-  if (typedInvites.length === 0) {
-    return [];
-  }
-
-  const emails = typedInvites.map((invite) => invite.email);
-
-  const { data: users, error: userError } = await supabase
-    .from("users")
-    .select("id, email, full_name")
-    .in("email", emails);
-
-  if (userError) {
-    console.error("Error fetching invited users:", userError);
-    return typedInvites.map((invite) => ({
-      email: invite.email,
-      full_name: null,
-      affiliation: invite.affiliation,
-      interest_group: invite.interest_block,
-      status: "pending",
-    }));
-  }
-
-  const usersByEmail = new Map(
-    (users ?? []).map((entry) => [entry.email?.toLowerCase(), entry] as const),
-  );
-
-  const userIds = (users ?? []).map((entry) => entry.id);
-
-  const enrollmentByUserId = new Map<
-    string,
-    { team_country: TeamCountry | null; interest_block: string | null }
-  >();
-
-  if (userIds.length > 0) {
-    const { data: enrollments, error: enrollmentError } = await supabase
-      .from("students_classes")
-      .select(
-        `
-          student_id,
-          interest_block,
-          teams (
-            country
-          )
-        `,
-      )
-      .eq("class_id", classId)
-      .in("student_id", userIds);
-
-    if (enrollmentError) {
-      console.error("Error fetching enrollments for roster:", enrollmentError);
-    } else {
-      for (const enrollment of enrollments ?? []) {
-        const teamRecord = Array.isArray(enrollment.teams)
-          ? enrollment.teams[0]
-          : enrollment.teams;
-
-        enrollmentByUserId.set(enrollment.student_id as string, {
-          team_country: (teamRecord?.country as TeamCountry | undefined) ?? null,
-          interest_block: (enrollment.interest_block as string | null) ?? null,
+  if (inviteError) {
+    console.error("Error fetching class invites:", inviteError);
+  } else if (invites) {
+    for (const invite of invites) {
+      const lowerEmail = invite.email.toLowerCase();
+      // Only add to roster if they haven't enrolled yet
+      if (!rosterMap.has(lowerEmail)) {
+        rosterMap.set(lowerEmail, {
+          email: invite.email,
+          full_name: null,
+          affiliation: invite.affiliation as TeamCountry,
+          interest_group: invite.interest_block,
+          status: "pending",
+          joined_at: null,
         });
       }
     }
   }
 
-  return typedInvites.map((invite) => {
-    const matchedUser = usersByEmail.get(invite.email.toLowerCase());
-    const enrollment = matchedUser
-      ? enrollmentByUserId.get(matchedUser.id)
-      : undefined;
-
-    return {
-      email: invite.email,
-      full_name: matchedUser?.full_name ?? null,
-      affiliation: enrollment?.team_country ?? invite.affiliation,
-      interest_group: enrollment?.interest_block ?? invite.interest_block,
-      status: matchedUser ? "account_created" : "pending",
-    };
+  return Array.from(rosterMap.values()).sort((a, b) => {
+    // Sort by joined or invited time (newest first placeholder)
+    return a.email.localeCompare(b.email);
   });
+}
+
+export async function enrollStudentByCode(classCode: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Not logged in" };
+
+  const { error } = await supabase.rpc("enroll_student", {
+    p_class_code: classCode
+  });
+
+  if (error) {
+    if (error.message.includes('already enrolled')) {
+       return { error: "You are already enrolled in this class" };
+    }
+    if (error.message.includes('Invalid class code')) {
+       return { error: "Invalid class code" };
+    }
+    return { error: "Failed to enroll" };
+  }
+  
+  revalidatePath("/student/dashboard");
+  return { success: true };
 }
 
 export async function getInstructorClasses(): Promise<ClassSummary[]> {

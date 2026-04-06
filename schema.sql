@@ -25,6 +25,8 @@ create table public.classes (
   id uuid default gen_random_uuid() primary key,
   instructor_id uuid references public.users not null,
   name text not null,
+  normalized_name text not null,
+  class_code text not null unique,
   status text check (status in ('active', 'archived')) default 'active',
   current_period int default 0, -- 0=Setup, 1=Watch, 2=Debate, 3=Negotiation, 4=Reflection
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -318,10 +320,64 @@ create policy "System can manage scores." on public.team_scores
 -- Function to handle new user signup (trigger)
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  v_class_id uuid;
 begin
   insert into public.users (id, full_name, role, email)
   values (new.id, new.raw_user_meta_data->>'full_name', coalesce(new.raw_user_meta_data->>'role', 'student'), new.email);
+  
+  if new.raw_user_meta_data->>'class_code' is not null then
+    select id into v_class_id from public.classes where upper(class_code) = upper(trim(new.raw_user_meta_data->>'class_code'));
+    if v_class_id is not null then
+      insert into public.students_classes (student_id, class_id)
+      values (new.id, v_class_id)
+      on conflict do nothing;
+
+      -- Update any pending invite
+      update public.class_invites 
+      set status = 'account_created' 
+      where class_id = v_class_id and lower(email) = lower(new.email);
+    end if;
+  end if;
+
   return new;
+end;
+$$ language plpgsql security definer;
+
+-- RPC function for secure POST-signup enrollment bypassing RLS
+create or replace function public.enroll_student(p_class_code text)
+returns void as $$
+declare
+  v_class_id uuid;
+  v_user_email text;
+  v_student_id uuid;
+begin
+  v_student_id := auth.uid();
+  if v_student_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select id into v_class_id from public.classes 
+  where upper(class_code) = upper(trim(p_class_code));
+
+  if v_class_id is null then
+    raise exception 'Invalid class code';
+  end if;
+
+  -- Verify user isn't already enrolled
+  if exists (select 1 from public.students_classes where student_id = v_student_id and class_id = v_class_id) then
+    raise exception 'You are already enrolled in this class';
+  end if;
+
+  select email into v_user_email from public.users where id = v_student_id;
+
+  insert into public.students_classes (student_id, class_id)
+  values (v_student_id, v_class_id);
+
+  update public.class_invites 
+  set status = 'account_created' 
+  where class_id = v_class_id and lower(email) = lower(v_user_email);
+
 end;
 $$ language plpgsql security definer;
 
