@@ -8,7 +8,7 @@
   ```
 
   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
-
+ 
 ## For the Next Developer 
  
 ### Architecture Overview
