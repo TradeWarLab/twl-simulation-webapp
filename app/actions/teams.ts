@@ -130,3 +130,64 @@ export async function updateInviteInterest(
     revalidatePath(`/instructor/classes/${classId}/teams`);
     return { success: true };
 }
+
+export async function removeStudentFromClass(
+    classId: string,
+    email: string,
+    userId?: string
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Not logged in" };
+
+    const { data: classRow, error: classError } = await supabase
+        .from("classes")
+        .select("id")
+        .eq("id", classId)
+        .eq("instructor_id", user.id)
+        .single();
+
+    if (classError || !classRow) {
+        return { error: "Unauthorized" };
+    }
+
+    let resolvedUserId = userId ?? null;
+
+    if (!resolvedUserId) {
+        const { data: foundUser } = await supabase
+            .from("users")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+        resolvedUserId = foundUser?.id ?? null;
+    }
+
+    if (resolvedUserId) {
+        const { error: enrollmentError } = await supabase
+            .from("students_classes")
+            .delete()
+            .eq("class_id", classId)
+            .eq("student_id", resolvedUserId);
+
+        if (enrollmentError) {
+            console.error("Failed to remove student enrollment:", enrollmentError);
+            return { error: "Failed to remove student enrollment" };
+        }
+    }
+
+    const { error: inviteError } = await supabase
+        .from("class_invites")
+        .delete()
+        .eq("class_id", classId)
+        .eq("email", email.toLowerCase());
+
+    if (inviteError) {
+        console.error("Failed to remove class invite:", inviteError);
+        return { error: "Failed to remove class invite" };
+    }
+
+    revalidatePath(`/instructor/classes/${classId}`);
+    revalidatePath(`/instructor/classes/${classId}/teams`);
+    return { success: true };
+}

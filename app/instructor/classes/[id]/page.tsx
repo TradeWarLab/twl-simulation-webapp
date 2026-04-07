@@ -3,6 +3,7 @@ import {
     inviteStudentToClass,
     updateClassPeriod,
 } from "@/app/actions/classes";
+import { removeStudentFromClass } from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,8 +194,8 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                                     defaultValue="USA"
                                     className="h-9 rounded-md border bg-background px-3 text-sm min-w-[120px]"
                                 >
-                                    <option value="USA">🇺🇸 Team USA</option>
-                                    <option value="China">🇨🇳 Team China</option>
+                                    <option value="USA">Team USA</option>
+                                    <option value="China">Team China</option>
                                 </select>
                                 <select
                                     name="interest_block"
@@ -215,7 +216,8 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                                     <div className="col-span-2">Affiliation</div>
                                     <div className="col-span-2">Interest Group</div>
                                     <div className="col-span-3">Joined At</div>
-                                    <div className="col-span-2">Status</div>
+                                    <div className="col-span-1">Status</div>
+                                    <div className="col-span-1 text-right">Actions</div>
                                 </div>
                                 {roster.length === 0 ? (
                                     <div className="p-8 text-center text-muted-foreground text-sm">
@@ -234,10 +236,22 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                                                 <div className="col-span-3 text-xs text-muted-foreground">
                                                     {entry.joined_at ? new Date(entry.joined_at).toLocaleDateString() : "-"}
                                                 </div>
-                                                <div className="col-span-2">
+                                                <div className="col-span-1">
                                                     <Badge variant={entry.status === "account_created" ? "default" : "secondary"}>
                                                         {entry.status === "account_created" ? "Enrolled" : "Pending Invite"}
                                                     </Badge>
+                                                </div>
+                                                <div className="col-span-1 text-right">
+                                                    <form
+                                                        action={async () => {
+                                                            "use server";
+                                                            await removeStudentFromClass(id, entry.email, entry.user_id);
+                                                        }}
+                                                    >
+                                                        <Button type="submit" variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                                            Remove
+                                                        </Button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         ))}

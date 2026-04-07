@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { ClassRosterEntry } from "@/lib/types/domain";
-import { updateStudentTeam, updateInviteAffiliation } from "@/app/actions/teams";
+import { updateStudentTeam, updateInviteAffiliation, removeStudentFromClass } from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
 
 export function ManageTeamsClient({ classId, initialRoster }: { classId: string, initialRoster: ClassRosterEntry[] }) {
@@ -63,6 +63,23 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
         });
     };
 
+    const handleRemoveStudent = async (entry: ClassRosterEntry) => {
+        const confirmed = window.confirm(`Remove ${entry.email} from this class?`);
+        if (!confirmed) return;
+
+        const previousRoster = [...roster];
+        setRoster((r) => r.filter((st) => st.email !== entry.email));
+
+        startTransition(async () => {
+            const res = await removeStudentFromClass(classId, entry.email, entry.user_id);
+            if (res.error) {
+                console.error("Rollback", res.error);
+                setRoster(previousRoster);
+                alert(`Failed to remove ${entry.email}: ${res.error}`);
+            }
+        });
+    };
+
     return (
         <div className="rounded-md border overflow-hidden">
             <div className="grid grid-cols-12 p-4 bg-muted/50 text-sm font-medium text-muted-foreground">
@@ -70,7 +87,8 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
                 <div className="col-span-3">Assigned Team</div>
                 <div className="col-span-2">Interest Group</div>
                 <div className="col-span-2">Status</div>
-                <div className="col-span-2 text-right">Joined / Invited</div>
+                <div className="col-span-1 text-right">Joined</div>
+                <div className="col-span-1 text-right">Actions</div>
             </div>
             
             {roster.length === 0 ? (
@@ -97,8 +115,8 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
                                     disabled={isPending}
                                 >
                                     <option value="" disabled>Unassigned</option>
-                                    <option value="USA">🇺🇸 Team USA</option>
-                                    <option value="China">🇨🇳 Team China</option>
+                                    <option value="USA">Team USA</option>
+                                    <option value="China">Team China</option>
                                 </select>
                             </div>
                             
@@ -123,8 +141,18 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
                                 </Badge>
                             </div>
                             
-                            <div className="col-span-2 text-right text-xs text-muted-foreground">
+                            <div className="col-span-1 text-right text-xs text-muted-foreground">
                                 {entry.joined_at ? new Date(entry.joined_at).toLocaleDateString() : "-"}
+                            </div>
+                            <div className="col-span-1 text-right">
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveStudent(entry)}
+                                    disabled={isPending}
+                                    className="text-xs text-destructive hover:underline disabled:opacity-50"
+                                >
+                                    Remove
+                                </button>
                             </div>
                         </div>
                     ))}

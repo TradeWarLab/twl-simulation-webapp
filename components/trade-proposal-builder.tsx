@@ -2,11 +2,11 @@
 
 import { TradeProposal } from "@/lib/types/domain";
 import { TradeItem } from "@/app/actions/trade";
-import { createTradeProposal } from "@/app/actions/trade-controller";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { TradeOfferDndBuilder } from "@/components/trade-offer-dnd-builder";
 
 type ProposalBuilderProps = {
     classId: string;
@@ -31,49 +31,7 @@ export function TradeProposalBuilder({
     proposals,
     onProposalSelect,
 }: ProposalBuilderProps) {
-    const [selectedOffered, setSelectedOffered] = useState<Set<string>>(new Set());
-    const [selectedRequested, setSelectedRequested] = useState<Set<string>>(new Set());
-    const [isPending, startTransition] = useTransition();
-    const [error, setError] = useState<string | null>(null);
     const [showBuilder, setShowBuilder] = useState(false);
-
-    const toggleItem = (
-        itemId: string,
-        set: Set<string>,
-        setter: React.Dispatch<React.SetStateAction<Set<string>>>
-    ) => {
-        const next = new Set(set);
-        if (next.has(itemId)) next.delete(itemId);
-        else next.add(itemId);
-        setter(next);
-    };
-
-    const handleSubmit = () => {
-        setError(null);
-        const offered = myTeamItems
-            .filter((item) => selectedOffered.has(item.id))
-            .map((item) => ({ item_id: item.id, name: item.name, value: item.value }));
-        const requested = opponentTeamItems
-            .filter((item) => selectedRequested.has(item.id))
-            .map((item) => ({ item_id: item.id, name: item.name, value: item.value }));
-
-        startTransition(async () => {
-            const result = await createTradeProposal(
-                classId,
-                myTeamId,
-                opponentTeamId,
-                offered,
-                requested
-            );
-            if (result.error) {
-                setError(result.error);
-            } else {
-                setSelectedOffered(new Set());
-                setSelectedRequested(new Set());
-                setShowBuilder(false);
-            }
-        });
-    };
 
     const statusColors: Record<string, string> = {
         pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
@@ -109,88 +67,16 @@ export function TradeProposalBuilder({
                         </Button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        {/* Items You Offer */}
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground mb-2">
-                                🤝 You Offer ({myTeamCountry})
-                            </p>
-                            <div className="space-y-1.5">
-                                {myTeamItems.map((item) => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() =>
-                                            toggleItem(item.id, selectedOffered, setSelectedOffered)
-                                        }
-                                        className={`w-full text-left text-xs px-3 py-2 rounded-md border transition-all duration-150 ${
-                                            selectedOffered.has(item.id)
-                                                ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 ring-1 ring-indigo-500/30"
-                                                : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                                        }`}
-                                    >
-                                        <span className="font-medium">{item.name}</span>
-                                        <span className="float-right text-muted-foreground">
-                                            {item.value} pts
-                                        </span>
-                                    </button>
-                                ))}
-                                {myTeamItems.length === 0 && (
-                                    <p className="text-xs text-muted-foreground italic">No items</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Items You Request */}
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground mb-2">
-                                📥 You Request ({opponentTeamCountry})
-                            </p>
-                            <div className="space-y-1.5">
-                                {opponentTeamItems.map((item) => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() =>
-                                            toggleItem(
-                                                item.id,
-                                                selectedRequested,
-                                                setSelectedRequested
-                                            )
-                                        }
-                                        className={`w-full text-left text-xs px-3 py-2 rounded-md border transition-all duration-150 ${
-                                            selectedRequested.has(item.id)
-                                                ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 ring-1 ring-purple-500/30"
-                                                : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                                        }`}
-                                    >
-                                        <span className="font-medium">{item.name}</span>
-                                        <span className="float-right text-muted-foreground">
-                                            {item.value} pts
-                                        </span>
-                                    </button>
-                                ))}
-                                {opponentTeamItems.length === 0 && (
-                                    <p className="text-xs text-muted-foreground italic">No items</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {error && (
-                        <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
-                            {error}
-                        </p>
-                    )}
-
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={
-                            isPending ||
-                            (selectedOffered.size === 0 && selectedRequested.size === 0)
-                        }
-                        className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-                    >
-                        {isPending ? "Submitting…" : "Submit Proposal"}
-                    </Button>
+                    <TradeOfferDndBuilder
+                        classId={classId}
+                        myTeamId={myTeamId}
+                        opponentTeamId={opponentTeamId}
+                        myTeamItems={myTeamItems}
+                        opponentTeamItems={opponentTeamItems}
+                        myTeamCountry={myTeamCountry}
+                        opponentTeamCountry={opponentTeamCountry}
+                        onSubmitted={() => setShowBuilder(false)}
+                    />
                 </div>
             )}
 
