@@ -10,7 +10,7 @@
   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
 
 ## For the Next Developer 
-
+ 
 ### Architecture Overview
 The Trade War Simulation is built as a full-stack, real-time web application.
 - **Frontend / Routing**: Utilizes **Next.js (App Router)** for all client and server-side routing, built on React 19.
