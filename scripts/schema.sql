@@ -1,26 +1,50 @@
--- Create a table for public profiles linked to auth.users
+-- ╔══════════════════════════════════════════════════════════════════════╗
+-- ║  TWL Simulation — Master Schema                                    ║
+-- ║  Run this against a fresh Supabase project to recreate everything. ║
+-- ╚══════════════════════════════════════════════════════════════════════╝
+
+
+-- ──────────────────────────────────────────────
+-- 0. Role Permissions
+-- ──────────────────────────────────────────────
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
+
+-- Future tables automatically inherit these grants
+alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated;
+alter default privileges in schema public grant usage, select on sequences to anon, authenticated;
+
+
+-- ──────────────────────────────────────────────
+-- 1. Users (mirrors auth.users)
+-- ──────────────────────────────────────────────
+
 create table public.users (
   id uuid references auth.users not null primary key,
   full_name text,
   email text,
   role text check (role in ('instructor', 'student')) default 'student',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamptz default now() not null
 );
 
--- Enable Row Level Security (RLS)
 alter table public.users enable row level security;
 
--- Create policies for users
-create policy "Public profiles are viewable by everyone." on public.users
-  for select using (true);
+create policy "Public profiles are viewable by everyone."
+  on public.users for select using (true);
 
-create policy "Users can insert their own profile." on public.users
-  for insert with check (auth.uid() = id);
+create policy "Users can insert their own profile."
+  on public.users for insert with check (auth.uid() = id);
 
-create policy "Users can update own profile." on public.users
-  for update using (auth.uid() = id);
+create policy "Users can update own profile."
+  on public.users for update using (auth.uid() = id);
 
--- Create classes table
+
+-- ──────────────────────────────────────────────
+-- 2. Classes
+-- ──────────────────────────────────────────────
+
 create table public.classes (
   id uuid default gen_random_uuid() primary key,
   instructor_id uuid references public.users not null,
@@ -28,62 +52,83 @@ create table public.classes (
   normalized_name text not null,
   class_code text not null unique,
   status text check (status in ('active', 'archived')) default 'active',
-  current_period int default 0, -- 0=Setup, 1=Watch, 2=Debate, 3=Negotiation, 4=Reflection
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  current_period int default 0,  -- 0=Setup, 1=Watch, 2=Debate, 3=Negotiation, 4=Reflection
+  created_at timestamptz default now() not null
 );
 
--- Enable RLS for classes
 alter table public.classes enable row level security;
 
--- Classes policies
-create policy "Classes are viewable by everyone." on public.classes
-  for select using (true); -- Or restrict to enrolled students/instructors
+create policy "Classes are viewable by everyone."
+  on public.classes for select using (true);
 
-create policy "Instructors can create classes." on public.classes
-  for insert with check (auth.uid() = instructor_id);
+create policy "Instructors can create classes."
+  on public.classes for insert with check (auth.uid() = instructor_id);
 
-create policy "Instructors can update their own classes." on public.classes
-  for update using (auth.uid() = instructor_id);
+create policy "Instructors can update their own classes."
+  on public.classes for update using (auth.uid() = instructor_id);
 
--- Create teams table
+
+-- ──────────────────────────────────────────────
+-- 3. Teams (USA / China per class)
+-- ──────────────────────────────────────────────
+
 create table public.teams (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   country text check (country in ('USA', 'China')) not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  created_at timestamptz default now() not null,
   unique(class_id, country)
 );
 
 alter table public.teams enable row level security;
 
-create policy "Teams are viewable by everyone in the class." on public.teams
-  for select using (true); -- refine later
+create policy "Teams are viewable by everyone in the class."
+  on public.teams for select using (true);
 
--- Create students_classes (enrollment) table
+create policy "Instructors can manage teams."
+  on public.teams for all using (
+    exists (
+      select 1 from public.classes
+      where id = teams.class_id and instructor_id = auth.uid()
+    )
+  );
+
+
+-- ──────────────────────────────────────────────
+-- 4. Student Enrollment
+-- ──────────────────────────────────────────────
+
 create table public.students_classes (
   id uuid default gen_random_uuid() primary key,
   student_id uuid references public.users not null,
   class_id uuid references public.classes not null,
   team_id uuid references public.teams,
-  interest_block text, -- 'Economy', 'Security', etc.
-  joined_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  interest_block text,  -- 'Economy', 'National Security', 'Technology', 'Environment', 'Nationalism'
+  joined_at timestamptz default now() not null,
   unique(student_id, class_id)
 );
 
 alter table public.students_classes enable row level security;
 
-create policy "Enrollments are viewable by everyone in the class." on public.students_classes
-  for select using (true);
+create policy "Enrollments are viewable by everyone in the class."
+  on public.students_classes for select using (true);
 
-create policy "Instructors can manage enrollments." on public.students_classes
-  for all using (
+create policy "Students can insert their own enrollment."
+  on public.students_classes for insert with check (auth.uid() = student_id);
+
+create policy "Instructors can manage enrollments."
+  on public.students_classes for all using (
     exists (
       select 1 from public.classes
       where id = students_classes.class_id and instructor_id = auth.uid()
     )
   );
 
--- Track invitations so instructors can invite students before signup.
+
+-- ──────────────────────────────────────────────
+-- 5. Class Invites (pre-signup invitations)
+-- ──────────────────────────────────────────────
+
 create table public.class_invites (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
@@ -92,252 +137,315 @@ create table public.class_invites (
   affiliation text check (affiliation in ('USA', 'China')) not null,
   interest_block text,
   status text check (status in ('pending', 'account_created')) default 'pending',
-  invited_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  invited_at timestamptz default now() not null,
   unique(class_id, email)
 );
 
 alter table public.class_invites enable row level security;
 
-create policy "Instructors can view invites for their own classes." on public.class_invites
-  for select using (
+create policy "Instructors can view invites for their own classes."
+  on public.class_invites for select using (
     exists (
       select 1 from public.classes
       where id = class_invites.class_id and instructor_id = auth.uid()
     )
   );
 
-create policy "Instructors can manage invites for their own classes." on public.class_invites
-  for all using (
+create policy "Instructors can manage invites for their own classes."
+  on public.class_invites for all using (
     exists (
       select 1 from public.classes
       where id = class_invites.class_id and instructor_id = auth.uid()
     )
   );
 
--- Create briefings table
+
+-- ──────────────────────────────────────────────
+-- 6. Briefings (instructor-uploaded documents)
+-- ──────────────────────────────────────────────
+
 create table public.briefings (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   title text not null,
-  content text, -- Can be a URL, markdown text, or local path
-  file_url text, -- For uploaded PDF paths
+  content text,             -- Optional notes / markdown / URL
+  file_url text,            -- Path to uploaded PDF
   target_role text check (target_role in ('USA', 'China', 'All')),
-  interest_group text, -- e.g., 'Economy', 'National Security'
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  interest_group text,      -- e.g. 'Economy', 'National Security', 'Nationalism'
+  created_at timestamptz default now() not null
 );
 
 alter table public.briefings enable row level security;
 
-create policy "Briefings are viewable by target audience." on public.briefings
-  for select using (
-    -- Logic to check if user is in the target team or is instructor
-    true -- simplifying for initial setup
-  );
+create policy "Briefings are viewable by target audience."
+  on public.briefings for select using (true);
 
-create policy "Instructors can manage briefings." on public.briefings
-  for all using (
+create policy "Instructors can manage briefings."
+  on public.briefings for all using (
     exists (
       select 1 from public.classes
       where id = briefings.class_id and instructor_id = auth.uid()
     )
   );
 
--- Create messages table (for chat)
+
+-- ──────────────────────────────────────────────
+-- 7. Messages (real-time chat)
+-- ──────────────────────────────────────────────
+
 create table public.messages (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   sender_id uuid references public.users not null,
-  channel text not null, -- 'global', 'team_usa', 'team_china', 'negotiation'
+  channel text not null,  -- 'global', 'team_usa', 'team_china'
   content text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamptz default now() not null
 );
 
 alter table public.messages enable row level security;
 
-create policy "Messages are viewable by channel members." on public.messages
-  for select using (true); -- simplify for now
+create policy "Messages are viewable by channel members."
+  on public.messages for select using (true);
 
-create policy "Users can insert messages." on public.messages
-  for insert with check (auth.uid() = sender_id);
+create policy "Users can insert messages."
+  on public.messages for insert with check (auth.uid() = sender_id);
 
--- Create trade_items table
+
+-- ──────────────────────────────────────────────
+-- 8. Trade Items (negotiation inventory)
+-- ──────────────────────────────────────────────
+
 create table public.trade_items (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   team_id uuid references public.teams not null,
   name text not null,
   value numeric default 0 not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  created_at timestamptz default now() not null,
   unique(class_id, team_id, name)
 );
 
 alter table public.trade_items enable row level security;
 
-create policy "Trade items viewable by class." on public.trade_items
-  for select using (true);
+create policy "Trade items viewable by class."
+  on public.trade_items for select using (true);
 
-create policy "Teams can update their own trade items." on public.trade_items
-  for update using (
+create policy "Teams can update their own trade items."
+  on public.trade_items for update using (
     exists (
       select 1 from public.students_classes
       where student_id = auth.uid() and team_id = trade_items.team_id
     )
     and exists (
-        select 1 from public.classes
-        where id = trade_items.class_id and current_period < 3
+      select 1 from public.classes
+      where id = trade_items.class_id and current_period < 3
     )
   );
-  
-create policy "Instructors can insert trade items." on public.trade_items
-  for all using (
+
+create policy "Instructors can manage trade items."
+  on public.trade_items for all using (
     exists (
       select 1 from public.classes
       where id = trade_items.class_id and instructor_id = auth.uid()
     )
   );
 
--- Create negotiation_actions table
+
+-- ──────────────────────────────────────────────
+-- 9. Negotiation Actions (individual asks/concessions)
+-- ──────────────────────────────────────────────
+
 create table public.negotiation_actions (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
-  team_id uuid references public.teams not null, -- Who proposed it
+  team_id uuid references public.teams not null,
   type text check (type in ('ask', 'concession', 'official_request')) not null,
   status text check (status in ('pending', 'accepted', 'declined', 'draft')) default 'draft',
-  details jsonb, -- Flexible structure for the content of the ask/concession
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  details jsonb,
+  bundle_id uuid,  -- FK added after negotiation_bundles is created
+  created_at timestamptz default now() not null
 );
 
 alter table public.negotiation_actions enable row level security;
 
-create policy "Negotiation actions viewable by class." on public.negotiation_actions
-  for select using (true);
+create policy "Negotiation actions viewable by class."
+  on public.negotiation_actions for select using (true);
 
-create policy "Teams can manage their own drafts." on public.negotiation_actions
-  for all using (
+create policy "Teams can manage their own drafts."
+  on public.negotiation_actions for all using (
     exists (
-        select 1 from public.students_classes
-        where student_id = auth.uid() and team_id = negotiation_actions.team_id
+      select 1 from public.students_classes
+      where student_id = auth.uid() and team_id = negotiation_actions.team_id
     )
   );
 
--- Create negotiation_bundles table (for bundling requests)
+
+-- ──────────────────────────────────────────────
+-- 10. Negotiation Bundles (grouped proposals)
+-- ──────────────────────────────────────────────
+
 create table public.negotiation_bundles (
-    id uuid default gen_random_uuid() primary key,
-    class_id uuid references public.classes not null,
-    proposing_team_id uuid references public.teams not null,
-    status text check (status in ('proposed', 'accepted', 'declined')) default 'proposed',
-    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references public.classes not null,
+  proposing_team_id uuid references public.teams not null,
+  status text check (status in ('proposed', 'accepted', 'declined')) default 'proposed',
+  created_at timestamptz default now() not null
 );
 
 alter table public.negotiation_bundles enable row level security;
 
+-- Now add the FK from negotiation_actions → negotiation_bundles
+alter table public.negotiation_actions
+  add constraint negotiation_actions_bundle_id_fkey
+  foreign key (bundle_id) references public.negotiation_bundles(id);
+
+
 -- ──────────────────────────────────────────────
--- Trade Proposals & Voting System
+-- 11. Trade Proposals (formal offer + counter-offer)
 -- ──────────────────────────────────────────────
 
-
-
--- Add bundle_id to negotiation_actions to link them
-alter table public.negotiation_actions add column bundle_id uuid references public.negotiation_bundles;
-
--- Create trade_proposals table
 create table public.trade_proposals (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   proposing_team_id uuid references public.teams not null,
   receiving_team_id uuid references public.teams not null,
-  offered_items jsonb not null,    -- [{item_id, name, value}]
-  requested_items jsonb not null,  -- [{item_id, name, value}]
+  offered_items jsonb not null,     -- [{item_id, name, value}]
+  requested_items jsonb not null,   -- [{item_id, name, value}]
   status text check (status in ('pending', 'approved', 'rejected', 'executed')) default 'pending',
   created_by uuid references public.users not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamptz default now() not null
 );
 
 alter table public.trade_proposals enable row level security;
 
-create policy "Trade proposals viewable by class." on public.trade_proposals
-  for select using (true);
+create policy "Trade proposals viewable by class."
+  on public.trade_proposals for select using (true);
 
-create policy "Team members can create proposals." on public.trade_proposals
-  for insert with check (
+create policy "Team members can create proposals."
+  on public.trade_proposals for insert with check (
     exists (
       select 1 from public.students_classes
       where student_id = auth.uid() and team_id = trade_proposals.proposing_team_id
     )
   );
 
-create policy "System can update proposal status." on public.trade_proposals
-  for update using (
+create policy "Class members can update proposal status."
+  on public.trade_proposals for update using (
     exists (
       select 1 from public.students_classes
       where student_id = auth.uid() and class_id = trade_proposals.class_id
     )
   );
 
--- Create votes table
+
+-- ──────────────────────────────────────────────
+-- 12. Votes (per-student vote on trade proposals)
+-- ──────────────────────────────────────────────
+
 create table public.votes (
   id uuid default gen_random_uuid() primary key,
   proposal_id uuid references public.trade_proposals not null,
   user_id uuid references public.users not null,
   team_id uuid references public.teams not null,
   vote text check (vote in ('approve', 'reject')) not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  created_at timestamptz default now() not null,
   unique(proposal_id, user_id)
 );
 
 alter table public.votes enable row level security;
 
-create policy "Votes viewable by class members." on public.votes
-  for select using (true);
+create policy "Votes viewable by class members."
+  on public.votes for select using (true);
 
-create policy "Users can cast their own vote." on public.votes
-  for insert with check (auth.uid() = user_id);
+create policy "Users can cast their own vote."
+  on public.votes for insert with check (auth.uid() = user_id);
 
-create policy "Users can update their own vote." on public.votes
-  for update using (auth.uid() = user_id);
+create policy "Users can update their own vote."
+  on public.votes for update using (auth.uid() = user_id);
 
--- Create team_scores table
+
+-- ──────────────────────────────────────────────
+-- 13. Team Scores
+-- ──────────────────────────────────────────────
+
 create table public.team_scores (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   team_id uuid references public.teams not null,
   score numeric default 0 not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamptz default now() not null,
   unique(class_id, team_id)
 );
 
 alter table public.team_scores enable row level security;
 
-create policy "Scores viewable by everyone." on public.team_scores
-  for select using (true);
+create policy "Scores viewable by everyone."
+  on public.team_scores for select using (true);
 
-create policy "System can manage scores." on public.team_scores
-  for all using (
+create policy "Class members can manage scores."
+  on public.team_scores for all using (
     exists (
       select 1 from public.students_classes
       where student_id = auth.uid() and class_id = team_scores.class_id
     )
   );
 
--- Function to handle new user signup (trigger)
+
+-- ══════════════════════════════════════════════
+-- FUNCTIONS & TRIGGERS
+-- ══════════════════════════════════════════════
+
+
+-- ──────────────────────────────────────────────
+-- handle_new_user: auto-create profile row on signup
+-- Also auto-enrolls if a class_code was provided during registration
+-- ──────────────────────────────────────────────
+
 create or replace function public.handle_new_user()
 returns trigger as $$
 declare
   v_class_id uuid;
+  v_target_team_id uuid;
+  v_target_country text;
+  v_target_interest text;
 begin
+  -- Create the public.users row
   insert into public.users (id, full_name, role, email)
-  values (new.id, new.raw_user_meta_data->>'full_name', coalesce(new.raw_user_meta_data->>'role', 'student'), new.email);
-  
+  values (
+    new.id,
+    new.raw_user_meta_data->>'full_name',
+    coalesce(new.raw_user_meta_data->>'role', 'student'),
+    new.email
+  );
+
+  -- If a class_code was passed at signup, auto-enroll
   if new.raw_user_meta_data->>'class_code' is not null then
-    select id into v_class_id from public.classes where upper(class_code) = upper(trim(new.raw_user_meta_data->>'class_code'));
+    select id into v_class_id
+    from public.classes
+    where upper(class_code) = upper(trim(new.raw_user_meta_data->>'class_code'));
+
     if v_class_id is not null then
-      insert into public.students_classes (student_id, class_id)
-      values (new.id, v_class_id)
+      -- Check for a matching invite to inherit team/interest
+      select affiliation, interest_block
+      into v_target_country, v_target_interest
+      from public.class_invites
+      where class_id = v_class_id and lower(email) = lower(new.email)
+      order by invited_at desc
+      limit 1;
+
+      if v_target_country is not null then
+        select id into v_target_team_id
+        from public.teams
+        where class_id = v_class_id and country = v_target_country
+        limit 1;
+      end if;
+
+      insert into public.students_classes (student_id, class_id, team_id, interest_block)
+      values (new.id, v_class_id, v_target_team_id, v_target_interest)
       on conflict do nothing;
 
-      -- Update any pending invite
-      update public.class_invites 
-      set status = 'account_created' 
+      update public.class_invites
+      set status = 'account_created'
       where class_id = v_class_id and lower(email) = lower(new.email);
     end if;
   end if;
@@ -346,7 +454,12 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- RPC function for secure POST-signup enrollment bypassing RLS
+
+-- ──────────────────────────────────────────────
+-- enroll_student: RPC for post-signup enrollment via class code
+-- Respects prior invites for team/interest-group assignment
+-- ──────────────────────────────────────────────
+
 create or replace function public.enroll_student(p_class_code text)
 returns void as $$
 declare
@@ -362,31 +475,31 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  select id into v_class_id from public.classes 
+  select id into v_class_id
+  from public.classes
   where upper(class_code) = upper(trim(p_class_code));
 
   if v_class_id is null then
     raise exception 'Invalid class code';
   end if;
 
-  -- Verify user isn't already enrolled
   if exists (select 1 from public.students_classes where student_id = v_student_id and class_id = v_class_id) then
     raise exception 'You are already enrolled in this class';
   end if;
 
   select email into v_user_email from public.users where id = v_student_id;
 
-  -- See if there was a previous invite to get their pre-assigned affiliation and interest block
-  select affiliation, interest_block 
+  -- Check for a matching invite to inherit team/interest
+  select affiliation, interest_block
   into v_target_country, v_target_interest
-  from public.class_invites 
+  from public.class_invites
   where class_id = v_class_id and lower(email) = lower(v_user_email)
-  order by invited_at desc 
+  order by invited_at desc
   limit 1;
 
-  -- Find the team ID corresponding to the target country (if any)
   if v_target_country is not null then
-    select id into v_target_team_id from public.teams 
+    select id into v_target_team_id
+    from public.teams
     where class_id = v_class_id and country = v_target_country
     limit 1;
   end if;
@@ -394,16 +507,28 @@ begin
   insert into public.students_classes (student_id, class_id, team_id, interest_block)
   values (v_student_id, v_class_id, v_target_team_id, v_target_interest);
 
-  update public.class_invites 
-  set status = 'account_created' 
+  update public.class_invites
+  set status = 'account_created'
   where class_id = v_class_id and lower(email) = lower(v_user_email);
-
 end;
 $$ language plpgsql security definer;
 
--- Trigger for new user
+
+-- ──────────────────────────────────────────────
+-- Trigger: fire handle_new_user on auth signup
+-- ──────────────────────────────────────────────
+
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
 
+-- ══════════════════════════════════════════════
+-- Supabase Realtime (enable for live subscriptions)
+-- ══════════════════════════════════════════════
+
+alter publication supabase_realtime add table public.messages;
+alter publication supabase_realtime add table public.trade_proposals;
+alter publication supabase_realtime add table public.votes;
+alter publication supabase_realtime add table public.team_scores;
+alter publication supabase_realtime add table public.classes;
