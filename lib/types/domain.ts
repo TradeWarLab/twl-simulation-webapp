@@ -34,7 +34,7 @@ export type ClassRosterEntry = {
   user_id?: string;
   email: string;
   full_name: string | null;
-  affiliation: TeamCountry;
+  affiliation: TeamCountry | null;
   interest_group: string | null;
   status: InviteStatus;
   joined_at: string | null;

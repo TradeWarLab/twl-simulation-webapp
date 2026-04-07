@@ -13,20 +13,32 @@ export async function updateStudentTeam(
 
     if (!user) return { error: "Not logged in" };
 
-    // Find the class team by country
+    // Find the class team by country, auto-create if missing
     let newTeamId = null;
     if (newTeamCountry) {
-        const { data: teamData, error: teamError } = await supabase
+        const { data: teamData } = await supabase
             .from("teams")
             .select("id")
             .eq("class_id", classId)
             .eq("country", newTeamCountry)
-            .single();
+            .maybeSingle();
 
-        if (teamError || !teamData) {
-            return { error: `Team ${newTeamCountry} not found for this class` };
+        if (teamData?.id) {
+            newTeamId = teamData.id;
+        } else {
+            // Team doesn't exist yet — create it on the fly
+            const { data: createdTeam, error: createError } = await supabase
+                .from("teams")
+                .insert({ class_id: classId, country: newTeamCountry })
+                .select("id")
+                .single();
+
+            if (createError || !createdTeam) {
+                console.error("Error auto-creating team:", createError);
+                return { error: `Failed to create Team ${newTeamCountry}` };
+            }
+            newTeamId = createdTeam.id;
         }
-        newTeamId = teamData.id;
     }
 
     const { error } = await supabase

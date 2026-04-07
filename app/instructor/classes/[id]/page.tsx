@@ -268,6 +268,12 @@ async function ClassDetailPageInner({ params }: { params: Promise<{ id: string }
                                 </Link>
                             </Button>
                             <Button variant="outline" className="justify-start gap-2" asChild>
+                                <Link href={`/instructor/classes/${id}/items`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2v16z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
+                                    Manage Trade Items
+                                </Link>
+                            </Button>
+                            <Button variant="outline" className="justify-start gap-2" asChild>
                                 <Link href={`/instructor/classes/${id}/log`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                                     View Negotiation Log

@@ -61,15 +61,43 @@ export function BriefingForm({ classId }: { classId: string }) {
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="content" className="text-sm font-medium">Content or Reference URL</label>
+                        <label htmlFor="interest_group" className="text-sm font-medium">Target Interest Group</label>
+                        <select 
+                            name="interest_group" 
+                            defaultValue="All" 
+                            disabled={isPending}
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <option value="All">All Groups</option>
+                            <option value="Economy">Economy</option>
+                            <option value="National Security">National Security</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Environment">Environment</option>
+                            <option value="Nationalism">Nationalism</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="content" className="text-sm font-medium">Notes & Reference URL</label>
                         <textarea 
                             id="content" 
                             name="content" 
-                            placeholder="Enter notes, background info, or a link to a Google Doc..." 
-                            required 
+                            placeholder="Enter notes, background info, or a link to a Google Doc... (Optional if uploading a file)" 
                             className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={isPending}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="file" className="text-sm font-medium">Upload PDF Document</label>
+                        <Input 
+                            id="file" 
+                            name="file" 
+                            type="file" 
+                            accept=".pdf,application/pdf"
+                            disabled={isPending} 
+                        />
+                        <p className="text-xs text-muted-foreground">Optional. A PDF file to distribute to the target audience.</p>
                     </div>
 
                     <Button type="submit" disabled={isPending}>

@@ -92,10 +92,11 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
                             <div className="col-span-3 pr-4">
                                 <select 
                                     className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                    value={entry.affiliation}
+                                    value={entry.affiliation ?? ""}
                                     onChange={(e) => handleAffiliationChange(entry, e.target.value as "USA" | "China")}
                                     disabled={isPending}
                                 >
+                                    <option value="" disabled>Unassigned</option>
                                     <option value="USA">🇺🇸 Team USA</option>
                                     <option value="China">🇨🇳 Team China</option>
                                 </select>
@@ -112,6 +113,7 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
                                     <option value="National Security">National Security</option>
                                     <option value="Technology">Technology</option>
                                     <option value="Environment">Environment</option>
+                                    <option value="Nationalism">Nationalism</option>
                                 </select>
                             </div>
                             

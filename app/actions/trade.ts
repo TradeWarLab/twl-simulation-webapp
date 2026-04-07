@@ -78,3 +78,44 @@ export async function initializeTradeItems(classId: string, teamId: string, item
     revalidatePath(`/instructor/classes/${classId}`);
     return { success: true };
 }
+
+export async function createTradeItem(classId: string, teamId: string, name: string, value: number) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Unauthorized" };
+
+    const { error } = await supabase
+        .from("trade_items")
+        .insert({ class_id: classId, team_id: teamId, name, value });
+
+    if (error) {
+        console.error("Error creating trade item:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath(`/instructor/classes/${classId}/items`);
+    revalidatePath(`/student/simulation/${classId}`);
+    return { success: true };
+}
+
+export async function deleteTradeItem(classId: string, itemId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Unauthorized" };
+
+    const { error } = await supabase
+        .from("trade_items")
+        .delete()
+        .eq("id", itemId);
+
+    if (error) {
+        console.error("Error deleting trade item:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath(`/instructor/classes/${classId}/items`);
+    revalidatePath(`/student/simulation/${classId}`);
+    return { success: true };
+}

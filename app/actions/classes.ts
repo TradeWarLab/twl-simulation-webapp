@@ -56,18 +56,28 @@ export async function createClass(formData: FormData): Promise<void> {
     return;
   }
 
-  const { error } = await supabase.from("classes").insert({
+  const { data: classData, error } = await supabase.from("classes").insert({
     name,
     class_code: generateClassCode(),
     normalized_name: normalizeName(name),
     instructor_id: user.id,
     status: "active",
     current_period: 0,
-  });
+  }).select("id").single();
 
-  if (error) {
+  if (error || !classData) {
     console.error("Error creating class:", error);
     return;
+  }
+  
+  // Automatically create USA and China teams for the new class
+  const { error: teamsError } = await supabase.from("teams").insert([
+    { class_id: classData.id, country: "USA" },
+    { class_id: classData.id, country: "China" }
+  ]);
+  
+  if (teamsError) {
+    console.error("Error generating base teams:", teamsError);
   }
 
   revalidatePath("/instructor/classes");
@@ -233,7 +243,7 @@ export async function getClassRoster(classId: string): Promise<ClassRosterEntry[
         email: email,
         user_id: en.student_id,
         full_name: userRecord?.full_name ?? null,
-        affiliation: (teamRecord?.country as TeamCountry) || "USA",
+        affiliation: (teamRecord?.country as TeamCountry) || null,
         interest_group: en.interest_block,
         status: "account_created",
         joined_at: en.joined_at,

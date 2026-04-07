@@ -119,8 +119,10 @@ create table public.briefings (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   title text not null,
-  content text, -- Can be a URL or markdown text
+  content text, -- Can be a URL, markdown text, or local path
+  file_url text, -- For uploaded PDF paths
   target_role text check (target_role in ('USA', 'China', 'All')),
+  interest_group text, -- e.g., 'Economy', 'National Security'
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -351,6 +353,9 @@ declare
   v_class_id uuid;
   v_user_email text;
   v_student_id uuid;
+  v_target_team_id uuid;
+  v_target_country text;
+  v_target_interest text;
 begin
   v_student_id := auth.uid();
   if v_student_id is null then
@@ -371,8 +376,23 @@ begin
 
   select email into v_user_email from public.users where id = v_student_id;
 
-  insert into public.students_classes (student_id, class_id)
-  values (v_student_id, v_class_id);
+  -- See if there was a previous invite to get their pre-assigned affiliation and interest block
+  select affiliation, interest_block 
+  into v_target_country, v_target_interest
+  from public.class_invites 
+  where class_id = v_class_id and lower(email) = lower(v_user_email)
+  order by invited_at desc 
+  limit 1;
+
+  -- Find the team ID corresponding to the target country (if any)
+  if v_target_country is not null then
+    select id into v_target_team_id from public.teams 
+    where class_id = v_class_id and country = v_target_country
+    limit 1;
+  end if;
+
+  insert into public.students_classes (student_id, class_id, team_id, interest_block)
+  values (v_student_id, v_class_id, v_target_team_id, v_target_interest);
 
   update public.class_invites 
   set status = 'account_created' 
