@@ -10,104 +10,106 @@ import { vi } from "vitest";
 // resolve to the configured response.
 
 type MockResponse = {
-  data: unknown;
-  error: null | { message: string };
+	data: unknown;
+	error: null | { message: string };
 };
 
-export function createChainableBuilder(response: MockResponse = { data: null, error: null }) {
-  const builder: Record<string, unknown> = {};
+export function createChainableBuilder(
+	response: MockResponse = { data: null, error: null },
+) {
+	const builder: Record<string, unknown> = {};
 
-  const chainMethods = [
-    "select",
-    "insert",
-    "update",
-    "upsert",
-    "delete",
-    "eq",
-    "neq",
-    "in",
-    "is",
-    "gt",
-    "lt",
-    "gte",
-    "lte",
-    "like",
-    "ilike",
-    "order",
-    "limit",
-    "range",
-    "filter",
-    "not",
-    "or",
-    "match",
-    "textSearch",
-  ];
+	const chainMethods = [
+		"select",
+		"insert",
+		"update",
+		"upsert",
+		"delete",
+		"eq",
+		"neq",
+		"in",
+		"is",
+		"gt",
+		"lt",
+		"gte",
+		"lte",
+		"like",
+		"ilike",
+		"order",
+		"limit",
+		"range",
+		"filter",
+		"not",
+		"or",
+		"match",
+		"textSearch",
+	];
 
-  for (const method of chainMethods) {
-    builder[method] = vi.fn().mockReturnValue(builder);
-  }
+	for (const method of chainMethods) {
+		builder[method] = vi.fn().mockReturnValue(builder);
+	}
 
-  // Terminal methods that return the response
-  builder.single = vi.fn().mockResolvedValue(response);
-  builder.maybeSingle = vi.fn().mockResolvedValue(response);
+	// Terminal methods that return the response
+	builder.single = vi.fn().mockResolvedValue(response);
+	builder.maybeSingle = vi.fn().mockResolvedValue(response);
 
-  // Make the builder itself thenable (for queries without single/maybeSingle)
-  builder.then = vi.fn((resolve: (value: MockResponse) => void) => {
-    resolve(response);
-    return Promise.resolve(response);
-  });
+	// Make the builder itself thenable (for queries without single/maybeSingle)
+	builder.then = vi.fn((resolve: (value: MockResponse) => void) => {
+		resolve(response);
+		return Promise.resolve(response);
+	});
 
-  return builder;
+	return builder;
 }
 
 // ─── Mock Supabase Client Factory ───────────────────────────
 
 export type MockSupabaseClient = {
-  from: ReturnType<typeof vi.fn>;
-  rpc: ReturnType<typeof vi.fn>;
-  auth: {
-    getUser: ReturnType<typeof vi.fn>;
-    signInWithPassword: ReturnType<typeof vi.fn>;
-    signUp: ReturnType<typeof vi.fn>;
-    signOut: ReturnType<typeof vi.fn>;
-    getClaims: ReturnType<typeof vi.fn>;
-  };
-  _builders: Map<string, ReturnType<typeof createChainableBuilder>>;
-  _mockTable: (table: string, response: MockResponse) => void;
+	from: ReturnType<typeof vi.fn>;
+	rpc: ReturnType<typeof vi.fn>;
+	auth: {
+		getUser: ReturnType<typeof vi.fn>;
+		signInWithPassword: ReturnType<typeof vi.fn>;
+		signUp: ReturnType<typeof vi.fn>;
+		signOut: ReturnType<typeof vi.fn>;
+		getClaims: ReturnType<typeof vi.fn>;
+	};
+	_builders: Map<string, ReturnType<typeof createChainableBuilder>>;
+	_mockTable: (table: string, response: MockResponse) => void;
 };
 
 export function createMockSupabaseClient(): MockSupabaseClient {
-  const builders = new Map<string, ReturnType<typeof createChainableBuilder>>();
+	const builders = new Map<string, ReturnType<typeof createChainableBuilder>>();
 
-  const mockClient: MockSupabaseClient = {
-    from: vi.fn((table: string) => {
-      if (!builders.has(table)) {
-        builders.set(table, createChainableBuilder());
-      }
-      return builders.get(table)!;
-    }),
-    rpc: vi.fn(),
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: "user-1", email: "test@test.com" } },
-      }),
-      signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
-      signUp: vi.fn().mockResolvedValue({
-        data: { user: { id: "user-1" }, session: null },
-        error: null,
-      }),
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-      getClaims: vi.fn().mockResolvedValue({
-        data: { claims: { sub: "user-1" } },
-      }),
-    },
-    _builders: builders,
-    _mockTable: (table: string, response: MockResponse) => {
-      builders.set(table, createChainableBuilder(response));
-    },
-  };
+	const mockClient: MockSupabaseClient = {
+		from: vi.fn((table: string) => {
+			if (!builders.has(table)) {
+				builders.set(table, createChainableBuilder());
+			}
+			return builders.get(table)!;
+		}),
+		rpc: vi.fn(),
+		auth: {
+			getUser: vi.fn().mockResolvedValue({
+				data: { user: { id: "user-1", email: "test@test.com" } },
+			}),
+			signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
+			signUp: vi.fn().mockResolvedValue({
+				data: { user: { id: "user-1" }, session: null },
+				error: null,
+			}),
+			signOut: vi.fn().mockResolvedValue({ error: null }),
+			getClaims: vi.fn().mockResolvedValue({
+				data: { claims: { sub: "user-1" } },
+			}),
+		},
+		_builders: builders,
+		_mockTable: (table: string, response: MockResponse) => {
+			builders.set(table, createChainableBuilder(response));
+		},
+	};
 
-  return mockClient;
+	return mockClient;
 }
 
 export const mockClient = createMockSupabaseClient();
@@ -117,10 +119,10 @@ export const mockClient = createMockSupabaseClient();
  * Since Next.js `redirect()` throws, we simulate that behavior.
  */
 export class RedirectError extends Error {
-  public url: string;
-  constructor(url: string) {
-    super(`NEXT_REDIRECT: ${url}`);
-    this.name = "RedirectError";
-    this.url = url;
-  }
+	public url: string;
+	constructor(url: string) {
+		super(`NEXT_REDIRECT: ${url}`);
+		this.name = "RedirectError";
+		this.url = url;
+	}
 }

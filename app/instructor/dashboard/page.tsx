@@ -8,75 +8,89 @@ import { createClient } from "@/lib/supabase/server";
 import { Suspense } from "react";
 
 export default function InstructorDashboard() {
-  return (
-    <Suspense
-      fallback={
-        <div className="container mx-auto p-8">
-          <p className="text-center text-muted-foreground">Loading instructor dashboard…</p>
-        </div>
-      }
-    >
-      <InstructorDashboardInner />
-    </Suspense>
-  );
+	return (
+		<Suspense
+			fallback={
+				<div className="container mx-auto p-8">
+					<p className="text-center text-muted-foreground">
+						Loading instructor dashboard…
+					</p>
+				</div>
+			}
+		>
+			<InstructorDashboardInner />
+		</Suspense>
+	);
 }
 
 async function InstructorDashboardInner() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth/login");
-  }
+	if (!user) {
+		redirect("/auth/login");
+	}
 
-  const classes = await getInstructorClasses();
+	const classes = await getInstructorClasses();
 
-  return (
-    <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Instructor Dashboard</h1>
-        <div className="text-sm text-muted-foreground">
-          Logged in as: {user.email}
-        </div>
-      </div>
+	return (
+		<div className="container mx-auto p-8">
+			<div className="flex justify-between items-center mb-8">
+				<h1 className="text-3xl font-bold">Instructor Dashboard</h1>
+				<div className="text-sm text-muted-foreground">
+					Logged in as: {user.email}
+				</div>
+			</div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New Class</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={createClass} className="flex gap-4">
-              <Input name="name" placeholder="Class Name (e.g. Spring 2026)" required />
-              <Button type="submit">Create</Button>
-            </form>
-          </CardContent>
-        </Card>
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+				<Card>
+					<CardHeader>
+						<CardTitle>Create New Class</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<form action={createClass} className="flex gap-4">
+							<Input
+								name="name"
+								placeholder="Class Name (e.g. Spring 2026)"
+								required
+							/>
+							<Button type="submit">Create</Button>
+						</form>
+					</CardContent>
+				</Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Classes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {classes.length === 0 ? (
-              <p className="text-muted-foreground">No classes created yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {classes.map((cls) => (
-                  <li key={cls.id} className="border p-4 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition">
-                    <Link href={`/instructor/classes/${cls.id}`} className="flex justify-between items-center">
-                      <span className="font-medium">{cls.name}</span>
-                      <span className="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                        {cls.status}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+				<Card>
+					<CardHeader>
+						<CardTitle>Your Classes</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{classes.length === 0 ? (
+							<p className="text-muted-foreground">No classes created yet.</p>
+						) : (
+							<ul className="space-y-2">
+								{classes.map((cls) => (
+									<li
+										key={cls.id}
+										className="border p-4 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+									>
+										<Link
+											href={`/instructor/classes/${cls.id}`}
+											className="flex justify-between items-center"
+										>
+											<span className="font-medium">{cls.name}</span>
+											<span className="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+												{cls.status}
+											</span>
+										</Link>
+									</li>
+								))}
+							</ul>
+						)}
+					</CardContent>
+				</Card>
+			</div>
+		</div>
+	);
 }
