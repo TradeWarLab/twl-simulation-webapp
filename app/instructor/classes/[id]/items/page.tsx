@@ -1,11 +1,11 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ManageItemsClient } from "@/components/manage-items-client";
 import { getTeamTradeItems } from "@/app/actions/trade";
+import { ManageItemsClient } from "@/components/manage-items-client";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
 export default function ItemsDashboardPage({
 	params,

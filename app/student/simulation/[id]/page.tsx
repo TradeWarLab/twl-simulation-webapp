@@ -1,21 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { SimulationRealtimeProvider } from "@/components/simulation-realtime-provider";
 import { Suspense } from "react";
+import { getStudentBriefings } from "@/app/actions/briefings";
 import { getMessages } from "@/app/actions/chat";
-import { ChatPanel } from "@/components/chat-panel";
 import { getTeamTradeItems } from "@/app/actions/trade";
-import { TradeItemsPanel } from "@/components/trade-items-panel";
 import {
-	getTradeProposals,
 	getScoreboard,
+	getTradeProposals,
 } from "@/app/actions/trade-controller";
+import { ChatPanel } from "@/components/chat-panel";
 import { NegotiationController } from "@/components/negotiation-controller";
 import { Scoreboard } from "@/components/scoreboard";
-import { getStudentBriefings } from "@/app/actions/briefings";
+import { SimulationRealtimeProvider } from "@/components/simulation-realtime-provider";
+import { TradeItemsPanel } from "@/components/trade-items-panel";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/server";
 
 export default function SimulationPage({
 	params,

@@ -1,10 +1,10 @@
 "use client";
 
+import { useTransition } from "react";
 import { submitVote } from "@/app/actions/trade-controller";
-import type { TradeProposal, TeamCountry } from "@/lib/types/domain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useTransition } from "react";
+import type { TeamCountry, TradeProposal } from "@/lib/types/domain";
 
 type Props = {
 	proposal: TradeProposal;

@@ -1,10 +1,10 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import { createBriefing } from "@/app/actions/briefings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { createBriefing } from "@/app/actions/briefings";
-import { useState, useTransition } from "react";
 
 export function BriefingForm({ classId }: { classId: string }) {
 	const [isPending, startTransition] = useTransition();

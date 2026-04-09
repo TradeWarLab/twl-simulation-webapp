@@ -1,9 +1,9 @@
 "use client";
 
-import { Message, sendMessage } from "@/app/actions/chat";
+import { useEffect, useRef, useState } from "react";
+import { type Message, sendMessage } from "@/app/actions/chat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ChatPanel({

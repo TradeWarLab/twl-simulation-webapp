@@ -1,11 +1,11 @@
-import { getInstructorClasses, createClass } from "@/app/actions/classes";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { createClass, getInstructorClasses } from "@/app/actions/classes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Suspense } from "react";
 
 export default function InstructorDashboard() {
 	return (

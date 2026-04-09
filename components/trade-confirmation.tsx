@@ -1,8 +1,8 @@
 "use client";
 
-import { TradeProposal } from "@/lib/types/domain";
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import type { TradeProposal } from "@/lib/types/domain";
 
 type TradeConfirmationProps = {
 	proposal: TradeProposal;

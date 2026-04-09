@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import { promises as fs } from "fs";
+import { revalidatePath } from "next/cache";
 import path from "path";
-import { Briefing } from "@/lib/types/domain";
+import { createClient } from "@/lib/supabase/server";
+import type { Briefing } from "@/lib/types/domain";
 
 export async function createBriefing(classId: string, formData: FormData) {
 	const supabase = await createClient();

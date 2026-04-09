@@ -1,7 +1,7 @@
 "use client";
 
-import { TeamScore } from "@/lib/types/domain";
 import { useEffect, useState } from "react";
+import type { TeamScore } from "@/lib/types/domain";
 
 type ScoreboardProps = {
 	initialScores: TeamScore[];

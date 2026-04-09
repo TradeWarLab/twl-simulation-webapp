@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockClient } from "../helpers/supabase-mock";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createClass,
-	inviteStudentToClass,
+	enrollStudentByCode,
 	getClassRoster,
 	getInstructorClasses,
 	getStudentClasses,
+	inviteStudentToClass,
 	updateClassPeriod,
-	enrollStudentByCode,
 } from "@/app/actions/classes";
+import { mockClient } from "../helpers/supabase-mock";
 
 describe("Class Actions", () => {
 	beforeEach(() => {

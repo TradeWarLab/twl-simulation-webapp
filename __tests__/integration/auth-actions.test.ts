@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { login, signUp, signOut } from "@/app/actions/auth";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { login, signOut, signUp } from "@/app/actions/auth";
 import { mockClient } from "../helpers/supabase-mock";
 
 describe("Auth Actions", () => {

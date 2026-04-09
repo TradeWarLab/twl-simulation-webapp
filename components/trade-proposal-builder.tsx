@@ -1,12 +1,12 @@
 "use client";
 
-import { TradeProposal } from "@/lib/types/domain";
-import { TradeItem } from "@/app/actions/trade";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import type { TradeItem } from "@/app/actions/trade";
 import { TradeOfferDndBuilder } from "@/components/trade-offer-dnd-builder";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { TradeProposal } from "@/lib/types/domain";
 
 type ProposalBuilderProps = {
 	classId: string;

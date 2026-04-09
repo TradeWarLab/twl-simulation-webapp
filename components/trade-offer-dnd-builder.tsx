@@ -1,28 +1,28 @@
 "use client";
 
 import {
-	DndContext,
-	DragOverlay,
 	closestCenter,
-	useDraggable,
-	useDroppable,
+	DndContext,
 	type DragEndEvent,
+	DragOverlay,
 	type DragStartEvent,
 	type UniqueIdentifier,
+	useDraggable,
+	useDroppable,
 } from "@dnd-kit/core";
 import {
+	type ReactNode,
 	useEffect,
 	useMemo,
 	useState,
 	useTransition,
-	type ReactNode,
 } from "react";
-import { createTradeProposal } from "@/app/actions/trade-controller";
-import type { TradeProposalItem } from "@/lib/types/domain";
 import type { TradeItem } from "@/app/actions/trade";
+import { createTradeProposal } from "@/app/actions/trade-controller";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/lib/supabase/client";
+import type { TradeProposalItem } from "@/lib/types/domain";
 
 type Side = "my" | "opponent";
 type ContainerId =

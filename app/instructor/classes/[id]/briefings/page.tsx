@@ -1,19 +1,19 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { BriefingForm } from "@/components/briefing-form";
 import { getClassBriefings } from "@/app/actions/briefings";
+import { BriefingForm } from "@/components/briefing-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardHeader,
 	CardTitle,
-	CardDescription,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
 export default function BriefingsDashboardPage({
 	params,

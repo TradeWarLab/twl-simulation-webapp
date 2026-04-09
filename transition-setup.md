@@ -29,6 +29,7 @@ The Trade War Simulation is built as a full-stack, real-time web application.
 - **Drag & Drop**: @dnd-kit/core & @dnd-kit/sortable
 - **Testing Engine**: Vitest & React Testing Library
 - **Package Manager**: [bun](https://bun.com) (e.g., `bun run dev`, `bun test`)
+- **Formatter/Linter**: [biome](https://biomejs.dev) (replaces eslint, prettier, etc.) optional but I like it
 
 ### Infrastructure
 - **Database, Auth & Real-time (Supabase)**: We use **Supabase** (PostgreSQL) for managed Authentication, database tables, and real-time subscriptions (web sockets). The application applies Row Level Security (RLS) to enforce data privileges between 'instructors' and 'students'.

@@ -1,13 +1,13 @@
-import { getClassRoster, updateClassPeriod } from "@/app/actions/classes";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { getClassRoster, updateClassPeriod } from "@/app/actions/classes";
 import { ClassCodeCopyButton } from "@/components/class-code-copy";
 import { StudentRoster } from "@/components/student-roster";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/server";
 
 export default function ClassDetailPage({
 	params,

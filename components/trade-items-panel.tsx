@@ -1,9 +1,9 @@
 "use client";
 
-import { TradeItem, updateTradeItemValue } from "@/app/actions/trade";
+import { useEffect, useState, useTransition } from "react";
+import { type TradeItem, updateTradeItemValue } from "@/app/actions/trade";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEffect, useState, useTransition } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 

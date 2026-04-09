@@ -1,10 +1,10 @@
 "use client";
 
-import { LogEvent } from "@/app/actions/log";
-import { Card, CardContent } from "@/components/ui/card";
+import { Download } from "lucide-react";
+import type { LogEvent } from "@/app/actions/log";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function LogClient({
 	logs,

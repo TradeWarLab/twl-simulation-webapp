@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ClassRosterEntry } from "@/lib/types/domain";
 import {
-	updateStudentTeam,
-	updateInviteAffiliation,
 	removeStudentFromClass,
+	updateInviteAffiliation,
+	updateStudentTeam,
 } from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
+import type { ClassRosterEntry } from "@/lib/types/domain";
 
 export function ManageTeamsClient({
 	classId,

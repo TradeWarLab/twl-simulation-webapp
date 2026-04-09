@@ -1,8 +1,8 @@
 "use client";
 
-import type { TradeProposal, TeamCountry } from "@/lib/types/domain";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { TeamCountry, TradeProposal } from "@/lib/types/domain";
 
 type Props = {
 	history: TradeProposal[];

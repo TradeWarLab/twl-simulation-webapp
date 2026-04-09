@@ -1,11 +1,11 @@
 "use client";
 
-import { TradeProposal, TeamScore } from "@/lib/types/domain";
-import { TradeItem } from "@/app/actions/trade";
+import { useEffect, useState } from "react";
+import type { TradeItem } from "@/app/actions/trade";
+import { TradeConfirmation } from "@/components/trade-confirmation";
 import { TradeProposalBuilder } from "@/components/trade-proposal-builder";
 import { VotingPanel } from "@/components/voting-panel";
-import { TradeConfirmation } from "@/components/trade-confirmation";
-import { useEffect, useState } from "react";
+import { TeamScore, type TradeProposal } from "@/lib/types/domain";
 
 type NegotiationControllerProps = {
 	classId: string;

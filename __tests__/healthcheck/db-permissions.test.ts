@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { describe, expect, it } from "vitest";
 
 // Load .env.local to get live credentials for the healthcheck test
 dotenv.config({ path: ".env.local" });

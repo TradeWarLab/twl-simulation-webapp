@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { getTradeProposals } from "@/app/actions/trade-controller";
+import { createClient } from "@/lib/supabase/server";
 
 type MessageRecord = {
 	id: string;

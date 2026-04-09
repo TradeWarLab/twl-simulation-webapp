@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { revalidatePath } from "next/cache";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createAsk,
 	createBundle,
 	respondToBundle,
 } from "@/app/actions/negotiations";
 import { mockClient } from "../helpers/supabase-mock";
-import { revalidatePath } from "next/cache";
 
 describe("Negotiation Actions", () => {
 	beforeEach(() => {

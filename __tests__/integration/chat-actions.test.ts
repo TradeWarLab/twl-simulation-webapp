@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { sendMessage, getMessages } from "@/app/actions/chat";
-import { mockClient } from "../helpers/supabase-mock";
 import { revalidatePath } from "next/cache";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMessages, sendMessage } from "@/app/actions/chat";
+import { mockClient } from "../helpers/supabase-mock";
 
 describe("Chat Actions", () => {
 	beforeEach(() => {

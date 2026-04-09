@@ -1,21 +1,21 @@
 "use client";
 
 import {
+	closestCenter,
 	DndContext,
+	type DragEndEvent,
 	DragOverlay,
+	type DragStartEvent,
+	type UniqueIdentifier,
 	useDraggable,
 	useDroppable,
-	closestCenter,
-	type DragStartEvent,
-	type DragEndEvent,
-	type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { createTradeProposal } from "@/app/actions/trade-controller";
-import type { TradeProposalItem, TeamCountry } from "@/lib/types/domain";
 import { useState, useTransition } from "react";
+import { createTradeProposal } from "@/app/actions/trade-controller";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
+import type { TeamCountry, TradeProposalItem } from "@/lib/types/domain";
 
 // ─── Types ───────────────────────────────────────────────────────────────
 type TradeItemWithTeam = {

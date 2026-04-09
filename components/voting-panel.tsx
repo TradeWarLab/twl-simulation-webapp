@@ -1,14 +1,14 @@
 "use client";
 
-import { TradeProposal, Vote, VoteChoice } from "@/lib/types/domain";
-import {
-	submitVote,
-	getVotesForProposal,
-} from "@/app/actions/trade-controller";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState, useTransition } from "react";
+import {
+	getVotesForProposal,
+	submitVote,
+} from "@/app/actions/trade-controller";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { TradeProposal, Vote, VoteChoice } from "@/lib/types/domain";
 
 type VotingPanelProps = {
 	proposal: TradeProposal;

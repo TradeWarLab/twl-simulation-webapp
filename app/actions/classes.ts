@@ -1,14 +1,14 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import {
-	type ClassRosterEntry,
-	type ClassSummary,
-	type StudentClassJoinRow,
-	type StudentClassSummary,
-	type TeamCountry,
-} from "@/lib/types/domain";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import type {
+	ClassRosterEntry,
+	ClassSummary,
+	StudentClassJoinRow,
+	StudentClassSummary,
+	TeamCountry,
+} from "@/lib/types/domain";
 
 const VALID_NATIONS: readonly TeamCountry[] = ["USA", "China"];
 

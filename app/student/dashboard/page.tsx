@@ -1,11 +1,11 @@
-import { getStudentClasses, enrollStudentByCode } from "@/app/actions/classes";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { Suspense } from "react";
+import { enrollStudentByCode, getStudentClasses } from "@/app/actions/classes";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/server";
 
 // Render a synchronous component that immediately shows a fallback while
 // the inner async component performs per-request I/O (supabase, etc.). This
