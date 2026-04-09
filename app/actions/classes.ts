@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import {
-  type ClassInviteRow,
   type ClassRosterEntry,
   type ClassSummary,
   type StudentClassJoinRow,
@@ -11,10 +10,10 @@ import {
 } from "@/lib/types/domain";
 import { revalidatePath } from "next/cache";
 
-const VALID_AFFILIATIONS: readonly TeamCountry[] = ["USA", "China"];
+const VALID_NATIONS: readonly TeamCountry[] = ["USA", "China"];
 
-function isValidAffiliation(value: string): value is TeamCountry {
-  return VALID_AFFILIATIONS.includes(value as TeamCountry);
+function isValidNation(value: string): value is TeamCountry {
+  return VALID_NATIONS.includes(value as TeamCountry);
 }
 
 function generateClassCode() {
@@ -94,7 +93,7 @@ export async function inviteStudentToClass(formData: FormData): Promise<void> {
   const email = rawEmail.toLowerCase();
   const interestBlock = rawInterestBlock.length > 0 ? rawInterestBlock : null;
 
-  if (!classId || !email || !isValidAffiliation(affiliation)) {
+  if (!classId || !email || !isValidNation(affiliation)) {
     return;
   }
 

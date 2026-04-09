@@ -22,14 +22,6 @@ export type StudentClassJoinRow = {
   teams: { country: TeamCountry } | { country: TeamCountry }[] | null;
 };
 
-export type ClassInviteRow = {
-  email: string;
-  affiliation: TeamCountry;
-  interest_block: string | null;
-  status: InviteStatus;
-  invited_at: string;
-};
-
 export type ClassRosterEntry = {
   user_id?: string;
   email: string;
@@ -38,6 +30,18 @@ export type ClassRosterEntry = {
   interest_group: string | null;
   status: InviteStatus;
   joined_at: string | null;
+};
+
+export type Briefing = {
+  id: string;
+  class_id: string;
+  title: string;
+  content: string | null;
+  target_role: "USA" | "China" | "All";
+  interest_group: string | null;
+  file_url: string | null;
+  created_at: string;
+  updated_at?: string | null;
 };
 
 // ─── Trade Controller Types ─────────────────────────────

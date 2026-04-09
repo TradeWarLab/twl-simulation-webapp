@@ -56,7 +56,7 @@ export function BriefingForm({ classId }: { classId: string }) {
                         >
                             <option value="All">All Participants</option>
                             <option value="USA">Team USA</option>
-                            <option value="China">Team China</option>
+                            <option value="China">Team PRC</option>
                         </select>
                     </div>
 

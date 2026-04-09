@@ -52,14 +52,14 @@ export function Scoreboard({ initialScores }: ScoreboardProps) {
                     <div className="text-[10px] text-muted-foreground mt-0.5">points</div>
                 </div>
 
-                {/* China Score */}
+                {/* PRC Score */}
                 <div className={`p-4 text-center transition-all duration-500 ${
                     animateChange === chinaScore?.team_id
                         ? "bg-red-50 dark:bg-red-950/20"
                         : ""
                 }`}>
                     <div className="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">
-                        🇨🇳 China
+                        🇨🇳 PRC
                     </div>
                     <div className={`text-3xl font-bold tabular-nums transition-all duration-700 ${
                         animateChange === chinaScore?.team_id

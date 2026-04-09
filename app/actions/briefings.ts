@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { promises as fs } from "fs";
 import path from "path";
+import { Briefing } from "@/lib/types/domain";
 
 export async function createBriefing(classId: string, formData: FormData) {
     const supabase = await createClient();
@@ -101,7 +102,7 @@ export async function getStudentBriefings(classId: string, teamCountry: string |
     }
 
     // Filter by interest group in memory for simplicity to handle null logic safely
-    const filtered = (data || []).filter((briefing: any) => {
+    const filtered = (data || []).filter((briefing: Briefing) => {
         if (!briefing.interest_group || briefing.interest_group === "All") return true; 
         return briefing.interest_group === interestGroup;
     });

@@ -10,7 +10,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "TWL Simulation",
-  description: "Simulate the US-China trade negotiations",
+  description: "Simulate the U.S.–PRC trade negotiations",
 };
 
 const geistSans = Geist({

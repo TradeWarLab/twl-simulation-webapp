@@ -184,7 +184,7 @@ export default function Home() {
                   textTransform: "uppercase",
                   marginBottom: "28px",
                 }}>
-                U.S.–China Relations · Policy Simulation Platform
+                U.S.–PRC Relations · Policy Simulation Platform
               </div>
 
               {/* Giant headline */}
@@ -198,9 +198,9 @@ export default function Home() {
                   overflowWrap: "break-word",
                   hyphens: "auto",
                 }}>
-                Modeling the
+                Modeling
                 <br />
-                <em>New Trade War.</em>
+                Trump&apos;s First<br></br> <em>Trade War.</em>
               </h1>
 
               <div
@@ -226,7 +226,7 @@ export default function Home() {
                 }}>
                 An interactive simulation environment for researchers, students,
                 and policy professionals studying the economic and geopolitical
-                dimensions of U.S.–China trade conflict.
+                dimensions of U.S.–PRC trade conflict.
               </p>
             </div>
 

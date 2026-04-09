@@ -100,7 +100,7 @@ export function ManageItemsClient({
     return (
         <div className="grid md:grid-cols-2 gap-8">
             <TeamPanel title="🇺🇸 Team USA Trade Items (Asks/Receives)" teamId={usaTeamId} items={usaItems} isUsa={true} />
-            <TeamPanel title="🇨🇳 Team China Trade Items (Asks/Receives)" teamId={chinaTeamId} items={chinaItems} isUsa={false} />
+            <TeamPanel title="🇨🇳 Team PRC Trade Items (Asks/Receives)" teamId={chinaTeamId} items={chinaItems} isUsa={false} />
         </div>
     );
 }

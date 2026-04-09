@@ -116,7 +116,7 @@ export function ManageTeamsClient({ classId, initialRoster }: { classId: string,
                                 >
                                     <option value="" disabled>Unassigned</option>
                                     <option value="USA">Team USA</option>
-                                    <option value="China">Team China</option>
+                                    <option value="China">Team PRC</option>
                                 </select>
                             </div>
                             

@@ -82,8 +82,11 @@ async function BriefingsDashboardInner({ params }: { params: Promise<{ id: strin
                                     <div className="flex justify-between items-start">
                                         <CardTitle className="text-xl">{briefing.title}</CardTitle>
                                         <div className="space-x-2 flex">
-                                            <Badge variant={briefing.target_role === "All" ? "secondary" : "outline"} className={briefing.target_role === "USA" ? "border-blue-500 text-blue-700" : briefing.target_role === "China" ? "border-red-500 text-red-700" : ""}>
-                                                {briefing.target_role}
+                                            <Badge
+                                                variant={briefing.target_role === "All" ? "secondary" : "outline"}
+                                                className={briefing.target_role === "USA" ? "border-blue-500 text-blue-700" : briefing.target_role === "China" ? "border-red-500 text-red-700" : ""}
+                                            >
+                                                {briefing.target_role === "China" ? "PRC" : briefing.target_role}
                                             </Badge>
                                             {briefing.interest_group && briefing.interest_group !== "All" && (
                                                 <Badge variant="outline" className="border-purple-500 text-purple-700">
