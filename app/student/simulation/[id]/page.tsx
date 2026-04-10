@@ -8,11 +8,14 @@ import {
 	getScoreboard,
 	getTradeProposals,
 } from "@/app/actions/trade-controller";
-import { ChatPanel } from "@/components/chat-panel";
-import { NegotiationController } from "@/components/negotiation-controller";
-import { Scoreboard } from "@/components/scoreboard";
-import { SimulationRealtimeProvider } from "@/components/simulation-realtime-provider";
-import { TradeItemsPanel } from "@/components/trade-items-panel";
+import { ChatPanel } from "@/components/chat/chat-panel";
+import { NegotiationController } from "@/components/negotiation/negotiation-controller";
+import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
+import { Scoreboard } from "@/components/simulation/scoreboard";
+import { SimulationHeader } from "@/components/simulation/simulation-header";
+import { SimulationRealtimeProvider } from "@/components/simulation/simulation-realtime-provider";
+import { BriefingPanel } from "@/components/student/briefing-panel";
+import { UnassignedState } from "@/components/student/unassigned-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -121,51 +124,14 @@ async function SimulationPageInner({
 	return (
 		<div className="container mx-auto p-4 h-screen flex flex-col">
 			<SimulationRealtimeProvider classId={id} />
-			<header className="flex justify-between items-center mb-4 pb-4 border-b">
-				<div>
-					<Link
-						href="/student/dashboard"
-						className="text-sm text-muted-foreground hover:underline"
-					>
-						Exit Simulation
-					</Link>
-					<h1 className="text-2xl font-bold">{classRecord.name}</h1>
-				</div>
-				<div className="text-center">
-					<div className="text-xs uppercase tracking-wide text-muted-foreground">
-						Current Phase
-					</div>
-					<div className="font-bold text-lg">
-						{periods[classRecord.current_period]}
-					</div>
-				</div>
-				<div className="text-right">
-					<div className="text-xs uppercase tracking-wide text-muted-foreground">
-						My Team
-					</div>
-					<div
-						className={`font-bold text-lg ${teamRecord?.country === "USA" ? "text-blue-600" : "text-red-600"}`}
-					>
-						{teamRecord?.country || "Unassigned"}
-					</div>
-				</div>
-			</header>
+			<SimulationHeader
+				classRecord={classRecord}
+				teamRecord={teamRecord}
+				periods={periods}
+			/>
 
 			{!teamRecord ? (
-				<main className="flex-1 flex items-center justify-center">
-					<Card className="w-full max-w-md p-6 text-center">
-						<CardHeader>
-							<CardTitle className="text-2xl text-slate-700">
-								Waiting for Assignment
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="text-muted-foreground">
-								Your instructor has not yet assigned you to a team. Please wait.
-							</p>
-						</CardContent>
-					</Card>
-				</main>
+				<UnassignedState />
 			) : (
 				<main className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
 					{/* Left Panel: Scoreboard, Briefing & Trade Items */}
@@ -173,36 +139,7 @@ async function SimulationPageInner({
 						{/* Scoreboard */}
 						<Scoreboard initialScores={scores} />
 
-						<Card className="flex-1 flex flex-col min-h-0">
-							<CardHeader className="py-3 shrink-0">
-								<CardTitle className="text-md">Briefing & Resources</CardTitle>
-							</CardHeader>
-							<CardContent className="flex-1 overflow-y-auto space-y-4 pr-2">
-								{briefings.length === 0 ? (
-									<p className="text-sm text-muted-foreground">
-										No briefings available yet.
-									</p>
-								) : (
-									briefings.map((b) => (
-										<div key={b.id} className="p-3 bg-muted rounded-md text-sm">
-											<div className="font-semibold mb-1">{b.title}</div>
-											{b.content && (
-												<p className="whitespace-pre-wrap text-muted-foreground mb-2">
-													{b.content}
-												</p>
-											)}
-											{b.file_url && (
-												<Button variant="link" className="p-0 h-auto" asChild>
-													<a href={b.file_url} target="_blank" rel="noreferrer">
-														View Document
-													</a>
-												</Button>
-											)}
-										</div>
-									))
-								)}
-							</CardContent>
-						</Card>
+						<BriefingPanel briefings={briefings} />
 						<div className="flex-1 flex flex-col min-h-0">
 							{teamRecord && (
 								<TradeItemsPanel

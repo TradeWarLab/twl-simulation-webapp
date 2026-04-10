@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getClassRoster } from "@/app/actions/classes";
-import { ManageTeamsClient } from "@/components/manage-teams-client";
+import { ManageTeamsClient } from "@/components/instructor/manage-teams-client";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getTeamTradeItems } from "@/app/actions/trade";
-import { ManageItemsClient } from "@/components/manage-items-client";
+import { ManageItemsClient } from "@/components/instructor/manage-items-client";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 

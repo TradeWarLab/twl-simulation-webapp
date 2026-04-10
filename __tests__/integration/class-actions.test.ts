@@ -21,7 +21,11 @@ describe("Class Actions", () => {
 				data: { user: { id: "instructor-1" } },
 			});
 
-			const insertMock = vi.fn().mockResolvedValue({ error: null });
+			const singleMock = vi
+				.fn()
+				.mockResolvedValue({ data: { id: "new-cls" }, error: null });
+			const selectMock = vi.fn().mockReturnValue({ single: singleMock });
+			const insertMock = vi.fn().mockReturnValue({ select: selectMock });
 			mockClient.from.mockReturnValue({ insert: insertMock } as any);
 
 			const formData = new FormData();
@@ -45,7 +49,11 @@ describe("Class Actions", () => {
 
 		it("aborts if no user", async () => {
 			mockClient.auth.getUser.mockResolvedValueOnce({ data: { user: null } });
-			const insertMock = vi.fn();
+			const singleMock = vi
+				.fn()
+				.mockResolvedValue({ data: null, error: new Error() });
+			const selectMock = vi.fn().mockReturnValue({ single: singleMock });
+			const insertMock = vi.fn().mockReturnValue({ select: selectMock });
 			mockClient.from.mockReturnValue({ insert: insertMock } as any);
 
 			const formData = new FormData();

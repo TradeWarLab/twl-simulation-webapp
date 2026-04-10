@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { TradeItem } from "@/app/actions/trade";
-import { TradeOfferDndBuilder } from "@/components/trade-offer-dnd-builder";
+import { TradeOfferDndBuilder } from "@/components/negotiation/trade-offer-dnd-builder";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

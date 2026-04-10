@@ -1,0 +1,45 @@
+$ vitest run
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90mC:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp[39m
+
+ [32mΓ£ô[39m __tests__/integration/auth-actions.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [31mΓ¥»[39m __tests__/integration/class-actions.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 39[2mms[22m[39m
+[31m       [31m├ù[31m inserts a class and revalidates dashboard[39m[32m 18[2mms[22m[39m
+       [32mΓ£ô[39m aborts if no user[32m 3[2mms[22m[39m
+       [32mΓ£ô[39m updates class period and revalidates[32m 7[2mms[22m[39m
+       [32mΓ£ô[39m enrolls a student when a valid code is provided[32m 2[2mms[22m[39m
+       [32mΓ£ô[39m instructor: queries classes correctly[32m 2[2mms[22m[39m
+       [32mΓ£ô[39m student: queries classes correctly joining teams[32m 2[2mms[22m[39m
+ [32mΓ£ô[39m __tests__/integration/trade-actions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32mΓ£ô[39m __tests__/integration/negotiation-actions.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+[90mstdout[2m | __tests__/healthcheck/db-permissions.test.ts
+[22m[39m[dotenv@17.3.1] injecting env (2) from .env.local -- tip: ΓÜÖ∩╕Å  load multiple .env files with { path: ['.env.local', '.env'] }
+
+stderr | __tests__/integration/chat-actions.test.ts > Chat Actions > sendMessage > returns database error from insert
+Error sending message: { message: 'DB Error' }
+
+ [32mΓ£ô[39m __tests__/integration/chat-actions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mΓ£ô[39m __tests__/healthcheck/db-permissions.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 228[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  __tests__/integration/class-actions.test.ts > Class Actions > createClass > inserts a class and revalidates dashboard
+TypeError: supabase.from(...).insert(...).select is not a function
+ Γ¥» createClass app/actions/classes.ts:71:4
+     69|    current_period: 0,
+     70|   })
+     71|   .select("id")
+       |    ^
+     72|   .single();
+     73|
+ Γ¥» __tests__/integration/class-actions.test.ts:30:4
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m29 passed[39m[22m[90m (30)[39m
+[2m   Start at [22m 23:28:25
+[2m   Duration [22m 5.61s[2m (transform 779ms, setup 3.30s, import 959ms, tests 368ms, environment 22.56s)[22m
+
+error: script "test" exited with code 1

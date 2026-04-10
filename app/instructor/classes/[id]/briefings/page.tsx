@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getClassBriefings } from "@/app/actions/briefings";
-import { BriefingForm } from "@/components/briefing-form";
+import { BriefingForm } from "@/components/instructor/briefing-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

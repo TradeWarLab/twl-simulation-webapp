@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AuthButton } from "@/components/auth-button";
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { AuthButton } from "@/components/auth/auth-button";
+import { DeployButton } from "@/components/shared/deploy-button";
+import { EnvVarWarning } from "@/components/shared/env-var-warning";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
 
 export default function ProtectedLayout({

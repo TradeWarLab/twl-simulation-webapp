@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type { TradeItem } from "@/app/actions/trade";
-import { TradeConfirmation } from "@/components/trade-confirmation";
-import { TradeProposalBuilder } from "@/components/trade-proposal-builder";
-import { VotingPanel } from "@/components/voting-panel";
+import { TradeConfirmation } from "@/components/negotiation/trade-confirmation";
+import { TradeProposalBuilder } from "@/components/negotiation/trade-proposal-builder";
+import { VotingPanel } from "@/components/negotiation/voting-panel";
 import { TeamScore, type TradeProposal } from "@/lib/types/domain";
 
 type NegotiationControllerProps = {

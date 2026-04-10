@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getSimulationLog } from "@/app/actions/log";
-import { LogClient } from "@/components/log-client";
+import { LogClient } from "@/components/instructor/log-client";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 

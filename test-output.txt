@@ -1,0 +1,497 @@
+bun test v1.3.5 (1e86cebd)
+
+__tests__\healthcheck\db-permissions.test.ts:
+[dotenv@17.3.1] injecting env (2) from .env.local -- tip: ≡ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+(pass) Database Health & Permissions > anon role should have USAGE privilege on the public schema without 'permission denied' errors [235.00ms]
+
+__tests__\integration\auth-actions.test.ts:
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at login (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\auth.ts:10:25)
+      at login (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\auth.ts:7:29)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:21:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:11:39)
+(fail) Auth Actions > login > returns error on failed login
+45 | 
+46 | 			try {
+47 | 				await login(formData);
+48 | 				expect.fail("login should redirect");
+49 | 			} catch (error) {
+50 | 				expect((error as any).name).toBe("RedirectError");
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: "RedirectError"
+Received: "Error"
+
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:50:33)
+(fail) Auth Actions > login > redirects to instructor dashboard on instructor login
+70 | 
+71 | 			try {
+72 | 				await login(formData);
+73 | 				expect.fail("login should redirect");
+74 | 			} catch (error) {
+75 | 				expect((error as any).name).toBe("RedirectError");
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: "RedirectError"
+Received: "Error"
+
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:75:33)
+(fail) Auth Actions > login > redirects to student dashboard on student login
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `headers` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at headers (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\headers.js:123:39)
+      at signUp (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\auth.ts:43:24)
+      at signUp (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\auth.ts:42:30)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:93:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:82:40)
+(fail) Auth Actions > signUp > returns error on failed signup
+111 | 
+112 | 			try {
+113 | 				await signUp(formData);
+114 | 				expect.fail("signUp should redirect");
+115 | 			} catch (error) {
+116 | 				expect((error as any).name).toBe("RedirectError");
+                                      ^
+error: expect(received).toBe(expected)
+
+Expected: "RedirectError"
+Received: "Error"
+
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:116:33)
+(fail) Auth Actions > signUp > redirects to student dashboard if signup succeeds immediately (no email confirm)
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `headers` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at headers (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\headers.js:123:39)
+      at signUp (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\auth.ts:43:24)
+      at signUp (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\auth.ts:42:30)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:133:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:121:76)
+(fail) Auth Actions > signUp > returns success without redirect if email confirmation is required
+139 | 		it("calls auth.signOut and redirects to login", async () => {
+140 | 			try {
+141 | 				await signOut();
+142 | 				expect.fail("signOut should redirect");
+143 | 			} catch (error) {
+144 | 				expect(mockClient.auth.signOut).toHaveBeenCalled();
+                                          ^
+error: expect(received).toHaveBeenCalled()
+
+Expected number of calls: >= 1
+Received number of calls: 0
+
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\auth-actions.test.ts:144:37)
+(fail) Auth Actions > signOut > calls auth.signOut and redirects to login [15.00ms]
+
+__tests__\integration\chat-actions.test.ts:
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:21:25)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:17:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:15:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:12:47)
+(fail) Chat Actions > sendMessage > returns error if user is unauthorized
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:21:25)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:17:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:24:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:19:40)
+(fail) Chat Actions > sendMessage > returns error on empty message
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:21:25)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:17:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:37:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:28:50)
+(fail) Chat Actions > sendMessage > inserts message and calls revalidatePath [16.00ms]
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:21:25)
+      at sendMessage (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:17:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:61:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:51:44)
+(fail) Chat Actions > sendMessage > returns database error from insert
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at getMessages (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:51:25)
+      at getMessages (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:48:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:70:27)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:67:45)
+(fail) Chat Actions > getMessages > returns empty array if unauthorized
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at getMessages (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:51:25)
+      at getMessages (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\chat.ts:48:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:93:27)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\chat-actions.test.ts:74:58)
+(fail) Chat Actions > getMessages > queries and returns messages via chained methods
+
+__tests__\integration\class-actions.test.ts:
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at createClass (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:51:25)
+      at createClass (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:50:35)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:30:10)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:19:51)
+(fail) Class Actions > createClass > inserts a class and revalidates dashboard
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at createClass (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:51:25)
+      at createClass (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:50:35)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:52:10)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:46:27)
+(fail) Class Actions > createClass > aborts if no user
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at updateClassPeriod (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:397:25)
+      at updateClassPeriod (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:396:41)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:64:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:59:46)
+(fail) Class Actions > updateClassPeriod > updates class period and revalidates
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at enrollStudentByCode (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:296:25)
+      at enrollStudentByCode (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:295:43)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:82:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:73:57)
+(fail) Class Actions > enrollStudentByCode > enrolls a student when a valid code is provided
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at getInstructorClasses (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:322:25)
+      at getInstructorClasses (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:321:43)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:109:26)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:92:47)
+(fail) Class Actions > getClasses (Instructor & Student) > instructor: queries classes correctly [15.00ms]
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at getStudentClasses (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:344:25)
+      at getStudentClasses (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\classes.ts:343:40)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:142:26)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\class-actions.test.ts:118:58)
+(fail) Class Actions > getClasses (Instructor & Student) > student: queries classes correctly joining teams
+
+__tests__\integration\negotiation-actions.test.ts:
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at createAsk (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:13:25)
+      at createAsk (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:9:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:20:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:16:45)
+(fail) Negotiation Actions > createAsk > inserts an ask and revalidates path [16.00ms]
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at createBundle (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:33:25)
+      at createBundle (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:29:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:66:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:37:42)
+(fail) Negotiation Actions > createBundle > creates bundle and links actions
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at createBundle (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:33:25)
+      at createBundle (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:29:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:102:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:88:48)
+(fail) Negotiation Actions > createBundle > returns error if bundle creation fails
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at respondToBundle (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:64:25)
+      at respondToBundle (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\negotiations.ts:61:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:113:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\negotiation-actions.test.ts:108:43)
+(fail) Negotiation Actions > respondToBundle > updates bundle status to accepted
+
+__tests__\integration\trade-actions.test.ts:
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at getTeamTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:19:25)
+      at getTeamTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:16:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:19:24)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:16:45)
+(fail) Trade Actions > getTeamTradeItems > returns empty array if unauthorized
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at getTeamTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:19:25)
+      at getTeamTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:16:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:39:24)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:23:35)
+(fail) Trade Actions > getTeamTradeItems > queries and returns items
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at updateTradeItemValue (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:46:25)
+      at updateTradeItemValue (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:42:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:52:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:49:39)
+(fail) Trade Actions > updateTradeItemValue > returns error if unauthorized
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at updateTradeItemValue (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:46:25)
+      at updateTradeItemValue (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:42:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:65:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:56:44)
+(fail) Trade Actions > updateTradeItemValue > updates value and revalidates path
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at initializeTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:72:25)
+      at initializeTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:68:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:80:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:77:39)
+(fail) Trade Actions > initializeTradeItems > returns error if unauthorized
+58 | });
+59 | const _workunitasyncstorageinstance = require("./work-unit-async-storage-instance");
+60 | const _approuterheaders = require("../../client/components/app-router-headers");
+61 | const _invarianterror = require("../../shared/lib/invariant-error");
+62 | function throwForMissingRequestStore(callingExpression) {
+63 |     throw Object.defineProperty(new Error(`\`${callingExpression}\` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context`), "__NEXT_ERROR_CODE", {
+                                         ^
+error: `cookies` was called outside a request scope. Read more: https://nextjs.org/docs/messages/next-dynamic-api-wrong-context
+      at throwForMissingRequestStore (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\app-render\work-unit-async-storage.external.js:63:37)
+      at cookies (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\node_modules\next\dist\server\request\cookies.js:112:39)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:10:28)
+      at createClient (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\lib\supabase\server.ts:9:35)
+      at initializeTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:72:25)
+      at initializeTradeItems (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\app\actions\trade.ts:68:2)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:99:25)
+      at <anonymous> (C:\Users\obijr\Downloads\code\projects\web\twl-simulation-webapp\__tests__\integration\trade-actions.test.ts:86:53)
+(fail) Trade Actions > initializeTradeItems > inserts multiple items and revalidates path
+
+ 1 pass
+ 29 fail
+ 5 expect() calls
+Ran 30 tests across 6 files. [921.00ms]

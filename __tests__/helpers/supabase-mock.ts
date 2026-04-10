@@ -74,6 +74,8 @@ export type MockSupabaseClient = {
 		signOut: ReturnType<typeof vi.fn>;
 		getClaims: ReturnType<typeof vi.fn>;
 	};
+	channel: ReturnType<typeof vi.fn>;
+	removeChannel: ReturnType<typeof vi.fn>;
 	_builders: Map<string, ReturnType<typeof createChainableBuilder>>;
 	_mockTable: (table: string, response: MockResponse) => void;
 };
@@ -103,6 +105,14 @@ export function createMockSupabaseClient(): MockSupabaseClient {
 				data: { claims: { sub: "user-1" } },
 			}),
 		},
+		channel: vi.fn().mockReturnValue({
+			on: vi.fn().mockReturnThis(),
+			subscribe: vi.fn((cb) => {
+				if (cb) cb("SUBSCRIBED");
+			}),
+			unsubscribe: vi.fn(),
+		}),
+		removeChannel: vi.fn(),
 		_builders: builders,
 		_mockTable: (table: string, response: MockResponse) => {
 			builders.set(table, createChainableBuilder(response));
