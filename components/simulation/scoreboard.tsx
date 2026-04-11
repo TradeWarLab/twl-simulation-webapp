@@ -22,7 +22,7 @@ export function Scoreboard({ initialScores }: ScoreboardProps) {
 			}
 		}
 		setScores(initialScores);
-	}, [initialScores]);
+	}, [initialScores, scores.find]);
 
 	const usaScore = scores.find((s) => s.team?.country === "USA");
 	const chinaScore = scores.find((s) => s.team?.country === "China");

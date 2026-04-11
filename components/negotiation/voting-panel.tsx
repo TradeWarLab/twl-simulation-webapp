@@ -55,7 +55,7 @@ export function VotingPanel({
 		});
 	};
 
-	const isMyTeamProposal = proposal.proposing_team_id === myTeamId;
+	const _isMyTeamProposal = proposal.proposing_team_id === myTeamId;
 	const isResolved = proposal.status !== "pending";
 	const approvals = votes.filter((v) => v.vote === "approve").length;
 	const rejections = votes.filter((v) => v.vote === "reject").length;

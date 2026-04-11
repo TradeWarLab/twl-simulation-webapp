@@ -5,7 +5,7 @@ import type { TradeItem } from "@/app/actions/trade";
 import { TradeConfirmation } from "@/components/negotiation/trade-confirmation";
 import { TradeProposalBuilder } from "@/components/negotiation/trade-proposal-builder";
 import { VotingPanel } from "@/components/negotiation/voting-panel";
-import { TeamScore, type TradeProposal } from "@/lib/types/domain";
+import type { TradeProposal } from "@/lib/types/domain";
 
 type NegotiationControllerProps = {
 	classId: string;
@@ -57,7 +57,7 @@ export function NegotiationController({
 				}
 			}
 		}
-	}, [initialProposals]);
+	}, [initialProposals, selectedProposal.id, selectedProposal]);
 
 	const handleProposalSelect = (proposal: TradeProposal) => {
 		setSelectedProposal(proposal);

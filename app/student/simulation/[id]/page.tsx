@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
@@ -16,7 +15,6 @@ import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationRealtimeProvider } from "@/components/simulation/simulation-realtime-provider";
 import { BriefingPanel } from "@/components/student/briefing-panel";
 import { UnassignedState } from "@/components/student/unassigned-state";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 

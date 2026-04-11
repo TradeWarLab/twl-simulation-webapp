@@ -34,7 +34,7 @@ export function ManageItemsClient({
 		const name = formData.get("name") as string;
 		const value = parseInt(formData.get("value") as string, 10);
 
-		if (!name || isNaN(value)) return;
+		if (!name || Number.isNaN(value)) return;
 
 		startTransition(async () => {
 			await createTradeItem(classId, teamId, name, value);

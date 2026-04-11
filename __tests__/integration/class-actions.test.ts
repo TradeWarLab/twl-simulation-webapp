@@ -2,10 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createClass,
 	enrollStudentByCode,
-	getClassRoster,
 	getInstructorClasses,
 	getStudentClasses,
-	inviteStudentToClass,
 	updateClassPeriod,
 } from "@/app/actions/classes";
 import { mockClient } from "../helpers/supabase-mock";

@@ -6,7 +6,6 @@ import {
 	type DragEndEvent,
 	DragOverlay,
 	type DragStartEvent,
-	type UniqueIdentifier,
 	useDraggable,
 	useDroppable,
 } from "@dnd-kit/core";

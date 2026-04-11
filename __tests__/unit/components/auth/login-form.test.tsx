@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { login } from "@/app/actions/auth";
 import { LoginForm } from "@/components/auth/login-form";
@@ -26,7 +26,7 @@ describe("LoginForm Component", () => {
 
 		render(<LoginForm />);
 
-		const submitButton = screen.getByRole("button", { name: "Login" });
+		const _submitButton = screen.getByRole("button", { name: "Login" });
 		const emailInput = screen.getByLabelText(/Email/i);
 		const passwordInput = screen.getByLabelText(/Password/i);
 

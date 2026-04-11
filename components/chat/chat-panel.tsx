@@ -33,7 +33,7 @@ export function ChatPanel({
 		setTeamMessages(initialTeamMessages);
 		setGlobalMessages(initialGlobalMessages);
 		bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [initialTeamMessages, initialGlobalMessages, activeTab]);
+	}, [initialTeamMessages, initialGlobalMessages]);
 
 	const activeChannel = activeTab === "team" ? teamChannel : "global";
 	const messages = activeTab === "team" ? teamMessages : globalMessages;

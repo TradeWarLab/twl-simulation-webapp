@@ -1,16 +1,16 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TradeProposalBuilder } from "@/components/negotiation/trade-proposal-builder";
 
 // We simply test that it mounts its child and can be interacted with.
 describe("TradeProposalBuilder Component", () => {
-	const teamRecord = {
+	const _teamRecord = {
 		id: "team-1",
 		class_id: "cls-1",
 		country: "USA",
 		balance: 1000,
 	};
-	const availableItems = [
+	const _availableItems = [
 		{
 			id: "item-1",
 			name: "Soybeans",
@@ -28,7 +28,7 @@ describe("TradeProposalBuilder Component", () => {
 			value: 150,
 		},
 	];
-	const otherTeams = [
+	const _otherTeams = [
 		{ id: "team-2", country: "China", class_id: "cls-1", balance: 2000 },
 	];
 

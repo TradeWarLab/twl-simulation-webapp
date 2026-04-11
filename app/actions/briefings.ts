@@ -1,8 +1,8 @@
 "use server";
 
-import { promises as fs } from "fs";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { revalidatePath } from "next/cache";
-import path from "path";
 import { createClient } from "@/lib/supabase/server";
 import type { Briefing } from "@/lib/types/domain";
 
