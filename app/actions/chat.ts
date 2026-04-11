@@ -38,7 +38,7 @@ export async function sendMessage(
 		return { error: error.message };
 	}
 
-	// Usually realtime handles UI updates, but we can also revalidate
+	// Usually realtime handles UI updates, but we can also revalidate 
 	// in case this is called in a context without realtime
 	revalidatePath(`/student/simulation/${classId}`);
 	return { success: true };

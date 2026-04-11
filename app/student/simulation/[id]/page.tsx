@@ -120,25 +120,28 @@ async function SimulationPageInner({
 	const scores = await getScoreboard(id);
 
 	return (
-		<div className="container mx-auto p-4 h-screen flex flex-col">
+		<div className="container mx-auto p-2 md:p-4 min-h-screen flex flex-col lg:h-screen lg:max-h-screen">
 			<SimulationRealtimeProvider classId={id} />
-			<SimulationHeader
-				classRecord={classRecord}
-				teamRecord={teamRecord}
-				periods={periods}
-			/>
+			<div className="shrink-0">
+				<SimulationHeader
+					classRecord={classRecord}
+					teamRecord={teamRecord}
+					periods={periods}
+				/>
+			</div>
 
 			{!teamRecord ? (
 				<UnassignedState />
 			) : (
-				<main className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
+				<main className="flex-1 grid grid-cols-1 lg:grid-cols-[320px_1fr_380px] gap-4 min-h-0">
 					{/* Left Panel: Scoreboard, Briefing & Trade Items */}
-					<div className="h-full flex flex-col gap-4">
+					<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
 						{/* Scoreboard */}
 						<Scoreboard initialScores={scores} />
 
 						<BriefingPanel briefings={briefings} />
-						<div className="flex-1 flex flex-col min-h-0">
+						
+						<div className="flex flex-col flex-shrink-0 pb-4">
 							{teamRecord && (
 								<TradeItemsPanel
 									classId={id}
@@ -150,11 +153,11 @@ async function SimulationPageInner({
 					</div>
 
 					{/* Center Panel: Action Center (Negotiation Controller) */}
-					<Card className="md:col-span-1 h-full flex flex-col">
+					<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto">
 						<CardHeader className="py-3 shrink-0">
 							<CardTitle className="text-md">Action Center</CardTitle>
 						</CardHeader>
-						<CardContent className="flex-1 overflow-y-auto p-3">
+						<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
 							{classRecord.current_period === 1 && (
 								<div className="flex items-center justify-center h-full text-muted-foreground">
 									Documentary Placeholder
@@ -183,7 +186,7 @@ async function SimulationPageInner({
 					</Card>
 
 					{/* Right Panel: Chat */}
-					<div className="h-full flex flex-col min-h-0">
+					<div className="flex flex-col min-h-0 h-[600px] lg:h-full pb-4 lg:pb-0">
 						<ChatPanel
 							classId={id}
 							teamChannel={teamChannel}
