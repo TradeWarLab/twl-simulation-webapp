@@ -1,6 +1,6 @@
 # the Trade War Lab - Trade War Simulation
 
-1. Rename `.env.example` to `.env.local` and update the following:
+1. Rename `.env.example` to `.env.local` and update the following: 
 
   ```env
   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
