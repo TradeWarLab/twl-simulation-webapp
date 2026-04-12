@@ -199,8 +199,12 @@ create table public.messages (
   sender_id uuid references public.users not null,
   channel text not null,  -- 'global', 'team_usa', 'team_china'
   content text not null,
+  client_message_id text,
   created_at timestamptz default now() not null
 );
+
+create index messages_class_channel_created_idx on public.messages (class_id, channel, created_at desc);
+create unique index messages_client_message_id_unique on public.messages (sender_id, client_message_id);
 
 alter table public.messages enable row level security;
 
@@ -532,3 +536,6 @@ alter publication supabase_realtime add table public.trade_proposals;
 alter publication supabase_realtime add table public.votes;
 alter publication supabase_realtime add table public.team_scores;
 alter publication supabase_realtime add table public.classes;
+alter publication supabase_realtime add table public.trade_items;
+alter publication supabase_realtime add table public.negotiation_actions;
+alter publication supabase_realtime add table public.negotiation_bundles;

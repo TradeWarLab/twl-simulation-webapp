@@ -140,7 +140,7 @@ async function SimulationPageInner({
 						<Scoreboard initialScores={scores} />
 
 						<BriefingPanel briefings={briefings} />
-						
+
 						<div className="flex flex-col flex-shrink-0 pb-4">
 							{teamRecord && (
 								<TradeItemsPanel

@@ -85,10 +85,12 @@ export function createMockSupabaseClient(): MockSupabaseClient {
 
 	const mockClient: MockSupabaseClient = {
 		from: vi.fn((table: string) => {
-			if (!builders.has(table)) {
-				builders.set(table, createChainableBuilder());
+			let builder = builders.get(table);
+			if (!builder) {
+				builder = createChainableBuilder();
+				builders.set(table, builder);
 			}
-			return builders.get(table)!;
+			return builder;
 		}),
 		rpc: vi.fn(),
 		auth: {

@@ -55,19 +55,6 @@ export function SimulationRealtimeProvider({ classId }: { classId: string }) {
 				{
 					event: "*",
 					schema: "public",
-					table: "messages",
-					filter: `class_id=eq.${classId}`,
-				},
-				() => {
-					console.log("New message received, refreshing...");
-					router.refresh();
-				},
-			)
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
 					table: "trade_items",
 					filter: `class_id=eq.${classId}`,
 				},
