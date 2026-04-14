@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	getMessagesBefore,
 	type Message,
@@ -26,9 +26,10 @@ export function ChatPanel({
 }) {
 	const [activeTab, setActiveTab] = useState<"team" | "global">("team");
 
+	type ChatMessage = Message & { local_status?: "optimistic" | "failed" };
 	const [teamMessages, setTeamMessages] =
-		useState<Message[]>(initialTeamMessages);
-	const [globalMessages, setGlobalMessages] = useState<Message[]>(
+		useState<ChatMessage[]>(initialTeamMessages);
+	const [globalMessages, setGlobalMessages] = useState<ChatMessage[]>(
 		initialGlobalMessages,
 	);
 
@@ -48,22 +49,22 @@ export function ChatPanel({
 
 	const supabase = useMemo(() => createClient(), []);
 
-	function getViewportEl() {
+	const getViewportEl = useCallback(() => {
 		return scrollAreaRef.current?.querySelector(
 			'[data-slot="scroll-area-viewport"]',
 		) as HTMLDivElement | null;
-	}
+	}, []);
 
-	function scrollToBottom(smooth = true) {
+	const scrollToBottom = useCallback((smooth = true) => {
 		const viewport = getViewportEl();
 		if (!viewport) return;
 		viewport.scrollTo({
 			top: viewport.scrollHeight,
 			behavior: smooth ? "smooth" : "auto",
 		});
-	}
+	}, [getViewportEl]);
 
-	function upsertMessage(list: Message[], msg: Message): Message[] {
+	const upsertMessage = useCallback((list: ChatMessage[], msg: ChatMessage): ChatMessage[] => {
 		const next = [...list];
 		const byClientId =
 			msg.client_message_id != null
@@ -90,9 +91,9 @@ export function ChatPanel({
 				new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
 		);
 		return next;
-	}
+	}, []);
 
-	async function resolveSenderName(senderId: string) {
+	const resolveSenderName = useCallback(async (senderId: string) => {
 		if (nameCacheRef.current.has(senderId)) {
 			return nameCacheRef.current.get(senderId) ?? null;
 		}
@@ -104,9 +105,9 @@ export function ChatPanel({
 		const name = data?.full_name ?? null;
 		nameCacheRef.current.set(senderId, name);
 		return name;
-	}
+	}, [supabase]);
 
-	function handleIncomingMessage(msg: Message) {
+	const handleIncomingMessage = useCallback((msg: ChatMessage) => {
 		if (msg.channel === teamChannel) {
 			setTeamMessages((prev) => upsertMessage(prev, msg));
 		} else if (msg.channel === "global") {
@@ -117,7 +118,7 @@ export function ChatPanel({
 		if (shouldScroll) {
 			setTimeout(() => scrollToBottom(true), 50);
 		}
-	}
+	}, [currentUserId, scrollToBottom, teamChannel, upsertMessage]);
 
 	useEffect(() => {
 		setTeamMessages((prev) => {
@@ -178,13 +179,7 @@ export function ChatPanel({
 		return () => {
 			supabase.removeChannel(channel);
 		};
-	}, [
-		classId,
-		currentUserId,
-		supabase,
-		resolveSenderName,
-		handleIncomingMessage,
-	]);
+	}, [classId, currentUserId, supabase, resolveSenderName, handleIncomingMessage]);
 
 	const activeChannel = activeTab === "team" ? teamChannel : "global";
 	const messages = activeTab === "team" ? teamMessages : globalMessages;
@@ -203,7 +198,7 @@ export function ChatPanel({
 				: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 		// Add optimistic message
-		const optimisticMsg: Message = {
+		const optimisticMsg: ChatMessage = {
 			id: `temp-${Date.now()}`,
 			class_id: classId,
 			channel: activeChannel,
@@ -235,7 +230,7 @@ export function ChatPanel({
 			}
 		} catch (error) {
 			console.error("Failed to send message", error);
-			const markFailed = (list: Message[]) =>
+			const markFailed = (list: ChatMessage[]) =>
 				list.map((msg) =>
 					msg.client_message_id === clientMessageId
 						? { ...msg, local_status: "failed" as const }
@@ -251,7 +246,7 @@ export function ChatPanel({
 		}
 	}
 
-	async function retryMessage(msg: Message) {
+	async function retryMessage(msg: ChatMessage) {
 		if (isPending) return;
 		setIsPending(true);
 		const clientMessageId =
@@ -260,7 +255,7 @@ export function ChatPanel({
 				? crypto.randomUUID()
 				: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
 
-		const markOptimistic = (list: Message[]) =>
+		const markOptimistic = (list: ChatMessage[]) =>
 			list.map((item) =>
 				item.id === msg.id
 					? {
@@ -289,7 +284,7 @@ export function ChatPanel({
 			}
 		} catch (error) {
 			console.error("Failed to resend message", error);
-			const markFailed = (list: Message[]) =>
+			const markFailed = (list: ChatMessage[]) =>
 				list.map((item) =>
 					item.id === msg.id
 						? { ...item, local_status: "failed" as const }
