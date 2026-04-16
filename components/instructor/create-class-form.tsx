@@ -10,13 +10,18 @@ export function CreateClassForm() {
 				<CardTitle>Create New Class</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form action={createClass} className="flex gap-4">
+				<form action={createClass} className="flex flex-col gap-4">
 					<Input
 						name="name"
 						placeholder="Class Name (e.g. Spring 2026)"
 						required
 					/>
-					<Button type="submit">Create</Button>
+					<Input
+						name="notebooklm_url"
+						placeholder="Google NotebookLM URL (Optional)"
+						type="url"
+					/>
+					<Button type="submit" className="w-full">Create Class</Button>
 				</form>
 			</CardContent>
 		</Card>

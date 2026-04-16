@@ -59,16 +59,27 @@ export function ManageItemsClient({
 		teamId: string | null;
 		items: TradeItem[];
 		isUsa: boolean;
-	}) => (
-		<Card className={`${isUsa ? "border-blue-200" : "border-red-200"}`}>
+	}) => {
+		const teamAccent = isUsa ? "#378ADD" : "#D85A30";
+		const panelBorder = isUsa ? "border-blue-200/80" : "border-orange-200/90";
+		const panelHeader = isUsa ? "bg-blue-50/60" : "bg-orange-50/70";
+		const panelTitle = isUsa ? "text-blue-950" : "text-orange-950";
+		const stripSurface = isUsa
+			? "bg-blue-50/80 border-blue-100"
+			: "bg-orange-50/80 border-orange-100";
+		const actionButton = isUsa
+			? "border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100"
+			: "border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100";
+
+		return (
+		<Card
+			className={`overflow-hidden border ${panelBorder}`}
+			style={{ borderTopWidth: "3px", borderTopColor: teamAccent }}
+		>
 			<CardHeader
-				className={`${isUsa ? "bg-blue-50/50" : "bg-red-50/50"} pb-4`}
+				className={`${panelHeader} border-b pb-4`}
 			>
-				<CardTitle
-					className={`text-xl ${isUsa ? "text-blue-800" : "text-red-800"}`}
-				>
-					{title}
-				</CardTitle>
+				<CardTitle className={`text-xl ${panelTitle}`}>{title}</CardTitle>
 			</CardHeader>
 			<CardContent className="pt-6">
 				{!teamId ? (
@@ -79,10 +90,10 @@ export function ManageItemsClient({
 					<div className="space-y-6">
 						<form
 							onSubmit={(e) => handleCreate(e, teamId)}
-							className="flex gap-2 items-end"
+							className={`flex items-end gap-2 rounded-lg border px-3 py-3 ${stripSurface}`}
 						>
 							<div className="flex-1 space-y-1">
-								<label className="text-xs font-medium text-slate-500">
+								<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 									Item Name
 								</label>
 								<Input
@@ -93,7 +104,7 @@ export function ManageItemsClient({
 								/>
 							</div>
 							<div className="w-24 space-y-1">
-								<label className="text-xs font-medium text-slate-500">
+								<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
 									Value
 								</label>
 								<Input
@@ -107,19 +118,15 @@ export function ManageItemsClient({
 							<Button
 								type="submit"
 								disabled={isPending}
-								variant={isUsa ? "outline" : "default"}
-								className={
-									isUsa
-										? "border-blue-300 text-blue-700 hover:bg-blue-50"
-										: "bg-red-600 hover:bg-red-700"
-								}
+								variant="outline"
+								className={actionButton}
 							>
 								Add
 							</Button>
 						</form>
 
 						<div className="rounded-md border divide-y overflow-hidden">
-							<div className="flex bg-slate-50 p-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
+							<div className="flex bg-slate-50 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.07em] text-muted-foreground">
 								<span className="flex-1">Name</span>
 								<span className="w-16 text-right">Value</span>
 								<span className="w-10"></span>
@@ -132,19 +139,25 @@ export function ManageItemsClient({
 								items.map((item) => (
 									<div
 										key={item.id}
-										className="flex items-center p-2 text-sm bg-white hover:bg-slate-50 transition-colors"
+										className="flex items-center p-2 text-sm text-foreground bg-card hover:bg-muted transition-colors"
 									>
 										<span className="flex-1 font-medium">{item.name}</span>
 										<span
-											className={`w-16 text-right font-bold ${item.value > 0 ? "text-green-600" : "text-red-600"}`}
+											className={`w-16 text-right font-bold ${
+												item.value > 0
+													? "text-green-600"
+													: item.value < 0
+														? "text-red-600"
+														: "text-muted-foreground"
+											}`}
 										>
-											{item.value > 0 ? `+${item.value}` : item.value}
+											{item.value > 0 ? `+${item.value}` : item.value < 0 ? item.value : "—"}
 										</span>
 										<div className="w-10 text-right">
 											<button
 												onClick={() => handleDelete(item.id)}
 												disabled={isPending}
-												className="text-slate-400 hover:text-red-500 p-1 rounded-md"
+												className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-slate-200 text-slate-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
 												title="Delete item"
 											>
 												✕
@@ -158,18 +171,19 @@ export function ManageItemsClient({
 				)}
 			</CardContent>
 		</Card>
-	);
+		);
+	};
 
 	return (
 		<div className="grid md:grid-cols-2 gap-8">
 			<TeamPanel
-				title="🇺🇸 Team USA Trade Items (Asks/Receives)"
+				title="Team USA Trade Items (Asks/Concessions)"
 				teamId={usaTeamId}
 				items={usaItems}
 				isUsa={true}
 			/>
 			<TeamPanel
-				title="🇨🇳 Team PRC Trade Items (Asks/Receives)"
+				title="Team PRC Trade Items (Asks/Concessions)"
 				teamId={chinaTeamId}
 				items={chinaItems}
 				isUsa={false}

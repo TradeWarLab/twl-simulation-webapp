@@ -46,8 +46,8 @@ describe("TradeOfferDndBuilder Component", () => {
 		expect(screen.getByText("Soybeans")).toBeInTheDocument();
 		expect(screen.getByText("Microchips")).toBeInTheDocument();
 
-		expect(screen.getByText(/Items We Offer/i)).toBeInTheDocument();
-		expect(screen.getByText(/Items We Request/i)).toBeInTheDocument();
+		expect(screen.getByText(/Concessions Offered/i)).toBeInTheDocument();
+		expect(screen.getByText(/Asks Requested/i)).toBeInTheDocument();
 	});
 
 	it("displays submit button but disabled initially since offers are empty by default", () => {

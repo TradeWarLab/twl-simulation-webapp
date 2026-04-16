@@ -57,7 +57,7 @@ export function NegotiationController({
 				}
 			}
 		}
-	}, [initialProposals, selectedProposal.id, selectedProposal]);
+	}, [initialProposals, selectedProposal?.id, selectedProposal]);
 
 	const handleProposalSelect = (proposal: TradeProposal) => {
 		setSelectedProposal(proposal);

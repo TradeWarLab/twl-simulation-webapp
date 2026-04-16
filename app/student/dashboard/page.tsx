@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentClasses } from "@/app/actions/classes";
+import { ThemeInitializer } from "@/components/shared/theme-initializer";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { JoinClassForm } from "@/components/student/join-class-form";
 import { StudentSimulationsList } from "@/components/student/student-simulations-list";
 import { createClient } from "@/lib/supabase/server";
@@ -40,10 +42,14 @@ async function StudentDashboardInner() {
 
 	return (
 		<div className="container mx-auto p-8">
+			<ThemeInitializer userRole="student" />
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-bold">Student Dashboard</h1>
-				<div className="text-sm text-muted-foreground">
-					Welcome, {user.email}
+				<div className="flex items-center gap-4">
+					<ThemeSwitcher />
+					<div className="text-sm text-muted-foreground">
+						Welcome, {user.email}
+					</div>
 				</div>
 			</div>
 

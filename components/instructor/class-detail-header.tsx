@@ -18,15 +18,6 @@ export function ClassDetailHeader({ classData }: { classData: any }) {
 						Manage your class simulation state and student teams.
 					</p>
 				</div>
-				<span
-					className={`px-4 py-1.5 rounded-full text-sm font-medium border ${
-						classData.status === "active"
-							? "bg-green-50 text-green-700 border-green-200"
-							: "bg-slate-100 text-slate-700 border-slate-200"
-					}`}
-				>
-					{classData.status.charAt(0).toUpperCase() + classData.status.slice(1)}
-				</span>
 			</div>
 		</div>
 	);

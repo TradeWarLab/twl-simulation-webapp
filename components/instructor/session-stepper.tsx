@@ -7,7 +7,7 @@ export function SessionStepper({
 }) {
 	return (
 		<div className="relative">
-			<div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -z-10 -translate-y-1/2" />
+			<div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -z-10 -translate-y-1/2" />
 			<div className="flex justify-between items-center">
 				{periods.map((period, index) => {
 					const isCompleted = index < currentPeriod;
@@ -24,7 +24,7 @@ export function SessionStepper({
 										? "bg-primary border-primary text-primary-foreground"
 										: isCurrent
 											? "bg-background border-primary text-primary ring-4 ring-primary/20"
-											: "bg-background border-slate-200 text-slate-400"
+											: "bg-background border-border text-muted-foreground"
 								}`}
 							>
 								{isCompleted ? (

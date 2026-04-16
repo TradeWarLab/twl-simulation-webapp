@@ -127,7 +127,7 @@ export function ManageTeamsClient({
 				<div className="divide-y relative">
 					{/* Add overlay if loading changes */}
 					<div
-						className={`absolute inset-0 bg-white/50 z-10 transition-opacity ${isPending ? "opacity-100 pointer-events-none" : "opacity-0 pointer-events-none"}`}
+						className={`absolute inset-0 bg-background/50 z-10 transition-opacity ${isPending ? "opacity-100 pointer-events-none" : "opacity-0 pointer-events-none"}`}
 					/>
 
 					{roster.map((entry) => (

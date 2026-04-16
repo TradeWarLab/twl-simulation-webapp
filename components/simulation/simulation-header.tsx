@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 
 export function SimulationHeader({
 	className,
@@ -16,12 +17,15 @@ export function SimulationHeader({
 			className={`flex justify-between items-center mb-4 pb-4 border-b ${className ?? ""}`}
 		>
 			<div>
-				<Link
-					href="/student/dashboard"
-					className="text-sm text-muted-foreground hover:underline"
-				>
-					Exit Simulation
-				</Link>
+				<div className="flex items-center gap-3">
+					<Link
+						href="/student/dashboard"
+						className="text-sm text-muted-foreground hover:underline"
+					>
+						Exit Simulation
+					</Link>
+					<ThemeSwitcher />
+				</div>
 				<h1 className="text-2xl font-bold">{classRecord.name}</h1>
 			</div>
 			<div className="text-center">
@@ -45,3 +49,4 @@ export function SimulationHeader({
 		</header>
 	);
 }
+

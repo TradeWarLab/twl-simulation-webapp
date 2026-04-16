@@ -70,7 +70,7 @@ async function ItemsDashboardInner({
 				<Button variant="ghost" asChild className="mb-4">
 					<Link href={`/instructor/classes/${id}`}>← Back to Dashboard</Link>
 				</Button>
-				<div className="flex justify-between items-center bg-slate-900 border-border text-slate-100 p-6 rounded-lg shadow-sm border mb-8">
+				<div className="mb-8 flex items-center justify-between rounded-lg border border-slate-800 bg-[#0f1e3a] p-6 text-slate-100 shadow-sm">
 					<div>
 						<h1 className="text-3xl font-bold">
 							{classData.name} - Trade Item Seeding

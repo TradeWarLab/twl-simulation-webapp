@@ -9,11 +9,11 @@ export function BriefingPanel({
 	className?: string;
 }) {
 	return (
-		<Card className={`flex-1 flex flex-col min-h-0 ${className ?? ""}`}>
-			<CardHeader className="py-3 shrink-0">
+		<Card className={`${className ?? ""}`}>
+			<CardHeader className="py-3">
 				<CardTitle className="text-md">Briefing & Resources</CardTitle>
 			</CardHeader>
-			<CardContent className="flex-1 overflow-y-auto space-y-4 pr-2">
+			<CardContent className="space-y-4">
 				{briefings.length === 0 ? (
 					<p className="text-sm text-muted-foreground">
 						No briefings available yet.

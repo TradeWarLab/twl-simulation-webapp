@@ -72,7 +72,7 @@ export function SignUpForm({
 							Check your inbox
 						</h1>
 						<p
-							className="mt-3 text-sm text-neutral-700"
+							className="mt-3 text-sm text-muted-foreground"
 							style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
 						>
 							{success}
@@ -98,14 +98,13 @@ export function SignUpForm({
 			className={cn("flex flex-col gap-6", className)}
 			style={{
 				fontFamily: "'Palatino Linotype', Palatino, 'Times New Roman', serif",
-				color: "#0a0a0a",
 			}}
 			{...props}
 		>
-			<div className="border-2 border-black bg-white">
-				<div className="border-b-2 border-black px-8 py-6 text-center">
+			<div className="border-2 border-foreground bg-card">
+				<div className="border-b-2 border-foreground px-8 py-6 text-center">
 					<div
-						className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-600"
+						className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground"
 						style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
 					>
 						Create Account
@@ -114,7 +113,7 @@ export function SignUpForm({
 						Student & Instructor Sign Up
 					</h1>
 					<p
-						className="mt-3 text-sm text-neutral-700"
+						className="mt-3 text-sm text-muted-foreground"
 						style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
 					>
 						Join the simulation platform with a verified account.
@@ -133,7 +132,7 @@ export function SignUpForm({
 									autoComplete="email"
 									placeholder="m@example.com"
 									required
-									className="rounded-none border-2 border-black focus-visible:ring-2 focus-visible:ring-black/70 focus-visible:ring-offset-2"
+									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
 								/>
 							</div>
 							<div className="grid gap-2">
@@ -145,7 +144,7 @@ export function SignUpForm({
 									autoComplete="name"
 									placeholder="John Doe"
 									required
-									className="rounded-none border-2 border-black focus-visible:ring-2 focus-visible:ring-black/70 focus-visible:ring-offset-2"
+									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
 								/>
 							</div>
 							<div className="grid gap-2">
@@ -156,7 +155,7 @@ export function SignUpForm({
 									type="password"
 									autoComplete="new-password"
 									required
-									className="rounded-none border-2 border-black focus-visible:ring-2 focus-visible:ring-black/70 focus-visible:ring-offset-2"
+									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
 								/>
 							</div>
 							<div className="grid gap-2">
@@ -167,7 +166,7 @@ export function SignUpForm({
 									type="password"
 									autoComplete="new-password"
 									required
-									className="rounded-none border-2 border-black focus-visible:ring-2 focus-visible:ring-black/70 focus-visible:ring-offset-2"
+									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
 								/>
 								{passwordMismatch && (
 									<p
@@ -188,10 +187,10 @@ export function SignUpForm({
 										name="class_code"
 										type="text"
 										placeholder="e.g. TWL-A42B39"
-										className="rounded-none border-2 border-black focus-visible:ring-2 focus-visible:ring-black/70 focus-visible:ring-offset-2"
+										className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
 									/>
 									<p
-										className="text-xs text-neutral-600"
+										className="text-xs text-muted-foreground"
 										style={{
 											fontFamily: "'Helvetica Neue', Arial, sans-serif",
 										}}
@@ -227,7 +226,7 @@ export function SignUpForm({
 
 							<Button
 								type="submit"
-								className="w-full rounded-none border-2 border-black bg-black px-6 py-5 text-xs font-bold uppercase tracking-[0.35em] text-white hover:bg-black/90"
+								className="w-full rounded-none border-2 border-foreground bg-foreground px-6 py-5 text-xs font-bold uppercase tracking-[0.35em] text-background hover:bg-foreground/90"
 								disabled={isLoading}
 							>
 								{isLoading ? "Creating account..." : "Sign up"}

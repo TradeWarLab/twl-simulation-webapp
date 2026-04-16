@@ -63,7 +63,7 @@ export function VotingPanel({
 	return (
 		<div className="flex flex-col h-full animate-in slide-in-from-right-2 duration-200">
 			{/* Header */}
-			<div className="flex items-center justify-between p-3 border-b bg-white dark:bg-slate-950 rounded-t-md">
+			<div className="flex items-center justify-between p-3 border-b bg-card rounded-t-md">
 				<div>
 					<h4 className="font-semibold text-sm">Trade Proposal</h4>
 					<p className="text-xs text-muted-foreground">
@@ -101,7 +101,7 @@ export function VotingPanel({
 					<div className="grid grid-cols-2 gap-3">
 						<div>
 							<p className="text-xs font-medium text-muted-foreground mb-2">
-								🤝 Offered ({proposal.proposing_team?.country})
+								🤝 Concessions ({proposal.proposing_team?.country})
 							</p>
 							<div className="space-y-1">
 								{(proposal.offered_items ?? []).map((item, i) => (
@@ -119,7 +119,7 @@ export function VotingPanel({
 						</div>
 						<div>
 							<p className="text-xs font-medium text-muted-foreground mb-2">
-								📥 Requested ({proposal.receiving_team?.country})
+								📥 Asks ({proposal.receiving_team?.country})
 							</p>
 							<div className="space-y-1">
 								{(proposal.requested_items ?? []).map((item, i) => (
@@ -138,7 +138,7 @@ export function VotingPanel({
 					</div>
 
 					{/* Vote Tally */}
-					<div className="rounded-lg border bg-slate-50 dark:bg-slate-900 p-3">
+					<div className="rounded-lg border bg-muted p-3">
 						<p className="text-xs font-medium mb-2">Vote Tally</p>
 						<div className="flex gap-4 mb-2">
 							<div className="flex-1 text-center">
@@ -149,7 +149,7 @@ export function VotingPanel({
 									Approve
 								</div>
 							</div>
-							<div className="w-px bg-slate-200 dark:bg-slate-700" />
+							<div className="w-px bg-border" />
 							<div className="flex-1 text-center">
 								<div className="text-2xl font-bold text-red-500">
 									{rejections}
@@ -160,7 +160,7 @@ export function VotingPanel({
 							</div>
 						</div>
 						{proposal.vote_summary && (
-							<div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+							<div className="h-2 bg-muted rounded-full overflow-hidden">
 								<div
 									className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
 									style={{
@@ -185,7 +185,7 @@ export function VotingPanel({
 								{votes.map((v) => (
 									<div
 										key={v.id}
-										className="flex items-center justify-between text-xs px-3 py-1.5 rounded-md bg-white dark:bg-slate-950 border"
+										className="flex items-center justify-between text-xs px-3 py-1.5 rounded-md bg-card border"
 									>
 										<span>{v.user?.full_name ?? "Unknown"}</span>
 										<Badge
@@ -208,7 +208,7 @@ export function VotingPanel({
 
 			{/* Vote Actions */}
 			{!isResolved && (
-				<div className="p-3 border-t bg-white dark:bg-slate-950 rounded-b-md">
+				<div className="p-3 border-t bg-card rounded-b-md">
 					{hasVoted ? (
 						<div className="text-center">
 							<p className="text-xs text-muted-foreground">

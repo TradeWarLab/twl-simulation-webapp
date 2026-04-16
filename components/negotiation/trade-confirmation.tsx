@@ -24,8 +24,8 @@ export function TradeConfirmation({
 	if (proposal.status !== "executed") return null;
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-			<div className="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl border max-w-md w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-300">
+		<div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-300">
+			<div className="bg-card rounded-2xl shadow-2xl border max-w-md w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-300">
 				{/* Success Banner */}
 				<div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 p-6 text-center relative overflow-hidden">
 					{showConfetti && (
@@ -53,9 +53,9 @@ export function TradeConfirmation({
 						</div>
 					)}
 					<div className="text-5xl mb-3">🎉</div>
-					<h3 className="text-xl font-bold text-white">Trade Executed!</h3>
+					<h3 className="text-xl font-bold text-white">Resolution Reached!</h3>
 					<p className="text-sm text-white/80 mt-1">
-						Both teams approved the deal
+						Both teams agreed to the terms
 					</p>
 				</div>
 
@@ -64,7 +64,7 @@ export function TradeConfirmation({
 					<div className="grid grid-cols-2 gap-3">
 						<div>
 							<p className="text-xs font-medium text-muted-foreground mb-1.5">
-								{proposal.proposing_team?.country} gave:
+								{proposal.proposing_team?.country} Concessions:
 							</p>
 							{(proposal.offered_items ?? []).map((item, i) => (
 								<div
@@ -77,7 +77,7 @@ export function TradeConfirmation({
 						</div>
 						<div>
 							<p className="text-xs font-medium text-muted-foreground mb-1.5">
-								{proposal.receiving_team?.country} gave:
+								{proposal.receiving_team?.country} Concessions:
 							</p>
 							{(proposal.requested_items ?? []).map((item, i) => (
 								<div
@@ -91,9 +91,9 @@ export function TradeConfirmation({
 					</div>
 
 					<div className="flex items-center justify-center gap-3 py-2">
-						<div className="w-16 h-px bg-slate-200 dark:bg-slate-700" />
+						<div className="w-16 h-px bg-border" />
 						<span className="text-xs text-muted-foreground">⇄</span>
-						<div className="w-16 h-px bg-slate-200 dark:bg-slate-700" />
+						<div className="w-16 h-px bg-border" />
 					</div>
 
 					<Button

@@ -7,8 +7,11 @@ export type TradeItem = {
 	id: string;
 	class_id: string;
 	team_id: string;
+	issue_id: string | null;
 	name: string;
 	value: number;
+	role: "ask" | "concession" | null;
+	is_resolved: boolean;
 	created_at: string;
 };
 

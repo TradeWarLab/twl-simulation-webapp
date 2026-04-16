@@ -85,7 +85,7 @@ function DraggableItem({
 						onRemove();
 					}}
 					className="ml-1 w-5 h-5 rounded-full flex items-center justify-center
-                        bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20
+                        bg-foreground/10 hover:bg-foreground/20
                         text-xs transition-colors"
 					aria-label={`Remove ${item.name}`}
 				>

@@ -53,6 +53,7 @@ create table public.classes (
   class_code text not null unique,
   status text check (status in ('active', 'archived')) default 'active',
   current_period int default 0,  -- 0=Setup, 1=Watch, 2=Debate, 3=Negotiation, 4=Reflection
+  notebooklm_url text, -- Predefined link to NotebookLM resource
   created_at timestamptz default now() not null
 );
 
@@ -216,15 +217,35 @@ create policy "Users can insert messages."
 
 
 -- ──────────────────────────────────────────────
--- 8. Trade Items (negotiation inventory)
+-- 8. Global Issues (Fixed simulation issues)
+-- ──────────────────────────────────────────────
+
+create table public.global_issues (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text,
+  created_at timestamptz default now() not null
+);
+
+alter table public.global_issues enable row level security;
+
+create policy "Global issues viewable by anyone."
+  on public.global_issues for select using (true);
+
+
+-- ──────────────────────────────────────────────
+-- 9. Trade Items / Target Values (negotiation inventory)
 -- ──────────────────────────────────────────────
 
 create table public.trade_items (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
   team_id uuid references public.teams not null,
+  issue_id uuid references public.global_issues,
   name text not null,
   value numeric default 0 not null,
+  role text check (role in ('ask', 'concession')),
+  is_resolved boolean default false not null,
   created_at timestamptz default now() not null,
   unique(class_id, team_id, name)
 );

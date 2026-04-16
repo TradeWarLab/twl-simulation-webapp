@@ -104,8 +104,8 @@ export function QuickActionsSidebar({
 					<CardTitle>Class Code</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<div className="flex items-center gap-2 p-3 bg-slate-200 dark:bg-slate-700 rounded-md border font-mono text-sm">
-						<span className="flex-1 truncate select-all text-slate-900 dark:text-slate-100">
+					<div className="flex items-center gap-2 p-3 bg-muted rounded-md border font-mono text-sm">
+						<span className="flex-1 truncate select-all text-foreground">
 							{classCode ?? "Unavailable"}
 						</span>
 						<ClassCodeCopyButton code={classCode ?? ""} />

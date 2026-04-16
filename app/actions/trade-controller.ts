@@ -308,32 +308,34 @@ export async function executeTrade(proposalId: string) {
 	const offeredItems = proposal.offered_items as TradeProposalItem[];
 	const requestedItems = proposal.requested_items as TradeProposalItem[];
 
-	// Transfer offered items: proposing team → receiving team
-	for (const item of offeredItems) {
-		const { error } = await supabase
-			.from("trade_items")
-			.update({ team_id: proposal.receiving_team_id })
-			.eq("id", item.item_id);
+	// Get the issue_ids and names of all items involved in the trade
+	const allItemIds = [...offeredItems, ...requestedItems].map((i) => i.item_id);
 
-		if (error) {
-			console.error(`Error transferring offered item ${item.item_id}:`, error);
-			return { error: `Failed to transfer item: ${item.name}` };
+	const { data: items } = await supabase
+		.from("trade_items")
+		.select("issue_id, name")
+		.in("id", allItemIds);
+
+	if (items && items.length > 0) {
+		const issueIds = items.map((i) => i.issue_id).filter(Boolean);
+		const names = items.map((i) => i.name);
+
+		// Mark all instances of these issues as resolved for BOTH teams in this class
+		let query = supabase
+			.from("trade_items")
+			.update({ is_resolved: true })
+			.eq("class_id", proposal.class_id);
+
+		if (issueIds.length > 0) {
+			query = query.in("issue_id", issueIds);
+		} else {
+			query = query.in("name", names);
 		}
-	}
 
-	// Transfer requested items: receiving team → proposing team
-	for (const item of requestedItems) {
-		const { error } = await supabase
-			.from("trade_items")
-			.update({ team_id: proposal.proposing_team_id })
-			.eq("id", item.item_id);
-
+		const { error } = await query;
 		if (error) {
-			console.error(
-				`Error transferring requested item ${item.item_id}:`,
-				error,
-			);
-			return { error: `Failed to transfer item: ${item.name}` };
+			console.error("Error resolving trade items:", error);
+			return { error: "Failed to resolve trade issues" };
 		}
 	}
 
@@ -365,12 +367,13 @@ export async function updateScores(classId: string) {
 	if (!teams) return { error: "No teams found" };
 
 	for (const team of teams) {
-		// Sum values of all trade items owned by this team
+		// Sum values of all RESOLVED trade items owned by this team
 		const { data: items } = await supabase
 			.from("trade_items")
 			.select("value")
 			.eq("class_id", classId)
-			.eq("team_id", team.id);
+			.eq("team_id", team.id)
+			.eq("is_resolved", true);
 
 		const totalScore = (items ?? []).reduce(
 			(sum, item) => sum + Number(item.value),

@@ -49,7 +49,7 @@ export function TradeProposalBuilder({
 			{!showBuilder && (
 				<Button
 					onClick={() => setShowBuilder(true)}
-					className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md"
+					className="w-full bg-indigo-500 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md"
 				>
 					+ New Trade Proposal
 				</Button>
@@ -57,7 +57,7 @@ export function TradeProposalBuilder({
 
 			{/* Builder Panel */}
 			{showBuilder && (
-				<div className="rounded-lg border bg-white dark:bg-slate-950 p-4 space-y-4 shadow-sm animate-in slide-in-from-top-2 duration-200">
+				<div className="rounded-lg border bg-card p-4 space-y-4 shadow-sm animate-in slide-in-from-top-2 duration-200">
 					<div className="flex justify-between items-center">
 						<h4 className="font-semibold text-sm">Create Trade Proposal</h4>
 						<Button
@@ -99,7 +99,7 @@ export function TradeProposalBuilder({
 								<button
 									key={proposal.id}
 									onClick={() => onProposalSelect(proposal)}
-									className="w-full text-left p-3 rounded-lg border bg-white dark:bg-slate-950 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-sm"
+									className="w-full text-left p-3 rounded-lg border bg-card hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-sm"
 								>
 									<div className="flex justify-between items-start mb-1.5">
 										<span className="text-xs font-semibold">
@@ -115,18 +115,18 @@ export function TradeProposalBuilder({
 									</div>
 									<div className="text-[11px] text-muted-foreground">
 										<span>
-											Offers {(proposal.offered_items ?? []).length} item
+											Offers {(proposal.offered_items ?? []).length} issue
 											{(proposal.offered_items ?? []).length !== 1 ? "s" : ""}
 										</span>
 										<span className="mx-1">·</span>
 										<span>
-											Requests {(proposal.requested_items ?? []).length} item
+											Requests {(proposal.requested_items ?? []).length} issue
 											{(proposal.requested_items ?? []).length !== 1 ? "s" : ""}
 										</span>
 									</div>
 									{proposal.vote_summary && proposal.status === "pending" && (
 										<div className="mt-1.5 flex items-center gap-1.5">
-											<div className="h-1.5 flex-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+											<div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
 												<div
 													className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
 													style={{

@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
@@ -15,7 +16,10 @@ import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationRealtimeProvider } from "@/components/simulation/simulation-realtime-provider";
 import { BriefingPanel } from "@/components/student/briefing-panel";
 import { UnassignedState } from "@/components/student/unassigned-state";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
 export default function SimulationPage({
@@ -67,13 +71,7 @@ async function SimulationPageInner({
 	const teamRecord = Array.isArray(teamData) ? teamData[0] : teamData;
 	const classRecord = Array.isArray(classData) ? classData[0] : classData;
 
-	const periods = [
-		"Setup",
-		"Watch Documentary",
-		"Debate",
-		"Negotiation",
-		"Reflection",
-	];
+	const periods = SIMULATION_PERIODS;
 
 	// Fetch initial chat messages
 	const teamChannel = `team_${teamRecord?.country?.toLowerCase() || "unassigned"}`;
@@ -89,10 +87,10 @@ async function SimulationPageInner({
 	// Fetch Student Briefings
 	const briefings = teamRecord
 		? await getStudentBriefings(
-				id,
-				teamRecord.country,
-				enrollment.interest_block,
-			)
+			id,
+			teamRecord.country,
+			enrollment.interest_block,
+		)
 		: [];
 
 	// Fetch opponent team info and items for negotiation
@@ -133,23 +131,79 @@ async function SimulationPageInner({
 			{!teamRecord ? (
 				<UnassignedState />
 			) : (
-				<main className="flex-1 grid grid-cols-1 lg:grid-cols-[320px_1fr_380px] gap-4 min-h-0">
-					{/* Left Panel: Scoreboard, Briefing & Trade Items */}
+				<main className="flex-1 grid grid-cols-1 lg:grid-cols-[330px_1fr_390px] gap-4 min-h-0">
+					{/* Left Panel: Dashboard (Target Values) or Resources */}
 					<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
-						{/* Scoreboard */}
-						<Scoreboard initialScores={scores} />
+						<Tabs
+							defaultValue="dashboard"
+							className="w-full"
+						>
+							<TabsList className="w-full grid grid-cols-2 shrink-0">
+								<TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+								<TabsTrigger value="resources">Resources</TabsTrigger>
+							</TabsList>
 
-						<BriefingPanel briefings={briefings} />
+							<TabsContent
+								value="dashboard"
+								className="mt-4 flex flex-col gap-4 data-[state=active]:flex"
+							>
+								<div className="flex flex-col pb-4">
+									{teamRecord && classRecord.current_period !== 2 && (
+										<div className="pb-4">
+											<TradeItemsPanel
+												classId={id}
+												initialItems={tradeItems}
+												isLocked={isTradeLocked}
+											/>
+										</div>
+									)}
+								</div>
+							</TabsContent>
 
-						<div className="flex flex-col flex-shrink-0 pb-4">
-							{teamRecord && (
-								<TradeItemsPanel
-									classId={id}
-									initialItems={tradeItems}
-									isLocked={isTradeLocked}
-								/>
-							)}
-						</div>
+							<TabsContent
+								value="resources"
+								className="mt-4 flex flex-col justify-start gap-4 data-[state=active]:flex"
+							>
+								{classRecord.notebooklm_url ? (
+									<Card className="shrink-0 bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900 shadow-sm">
+										<CardContent className="p-4 flex flex-col gap-3">
+											<div>
+												<h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+													Research Notebook
+												</h3>
+												<p className="text-xs text-blue-700/80 dark:text-blue-300">
+													Access your class research materials and ask AI
+													queries directly.
+												</p>
+											</div>
+											<Button
+												asChild
+												size="sm"
+												variant="outline"
+												className="w-full bg-card hover:bg-muted"
+											>
+												<a
+													href={classRecord.notebooklm_url}
+													target="_blank"
+													rel="noopener noreferrer"
+												>
+													Open NotebookLM{" "}
+													<ExternalLink className="w-3 h-3 ml-2" />
+												</a>
+											</Button>
+										</CardContent>
+									</Card>
+								) : (
+									<div className="p-4 rounded-lg border border-dashed border-border text-center text-sm text-muted-foreground shrink-0 bg-muted/50">
+										No research notebook available.
+									</div>
+								)}
+
+								<div className="pb-4">
+									<BriefingPanel briefings={briefings} />
+								</div>
+							</TabsContent>
+						</Tabs>
 					</div>
 
 					{/* Center Panel: Action Center (Negotiation Controller) */}
@@ -162,6 +216,13 @@ async function SimulationPageInner({
 								<div className="flex items-center justify-center h-full text-muted-foreground">
 									Documentary Placeholder
 								</div>
+							)}
+							{classRecord.current_period === 2 && teamRecord && (
+								<TradeItemsPanel
+									classId={id}
+									initialItems={tradeItems}
+									isLocked={isTradeLocked}
+								/>
 							)}
 							{classRecord.current_period === 3 && teamRecord && (
 								<NegotiationController
@@ -177,6 +238,7 @@ async function SimulationPageInner({
 								/>
 							)}
 							{classRecord.current_period !== 1 &&
+								classRecord.current_period !== 2 &&
 								classRecord.current_period !== 3 && (
 									<div className="flex items-center justify-center h-full text-muted-foreground">
 										Wait for the next phase.

@@ -118,7 +118,7 @@ function TradeItemCard({
 						e.stopPropagation();
 						onRemove();
 					}}
-					className="ml-1 w-5 h-5 rounded-full flex items-center justify-center bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-xs transition-colors"
+					className="ml-1 w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors"
 					aria-label={`Remove ${item.name}`}
 				>
 					✕
@@ -205,12 +205,10 @@ export function TradeOfferDndBuilder({
 	onSubmitted,
 }: Props) {
 	const supabase = createClient();
-	const [liveMyItems, setLiveMyItems] = useState<TradeItem[]>(myTeamItems);
-	const [liveOpponentItems, setLiveOpponentItems] =
-		useState<TradeItem[]>(opponentTeamItems);
-	const [myInventory, setMyInventory] = useState<TradeItem[]>(myTeamItems);
-	const [opponentInventory, setOpponentInventory] =
-		useState<TradeItem[]>(opponentTeamItems);
+	const [liveMyItems, setLiveMyItems] = useState<TradeItem[]>(myTeamItems.filter(i => !i.is_resolved));
+	const [liveOpponentItems, setLiveOpponentItems] = useState<TradeItem[]>(opponentTeamItems.filter(i => !i.is_resolved));
+	const [myInventory, setMyInventory] = useState<TradeItem[]>(myTeamItems.filter(i => !i.is_resolved));
+	const [opponentInventory, setOpponentInventory] = useState<TradeItem[]>(opponentTeamItems.filter(i => !i.is_resolved));
 	const [offerItems, setOfferItems] = useState<TradeItem[]>([]);
 	const [requestItems, setRequestItems] = useState<TradeItem[]>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -230,11 +228,11 @@ export function TradeOfferDndBuilder({
 	}, [liveMyItems, liveOpponentItems]);
 
 	useEffect(() => {
-		setLiveMyItems(myTeamItems);
+		setLiveMyItems(myTeamItems.filter(i => !i.is_resolved));
 	}, [myTeamItems]);
 
 	useEffect(() => {
-		setLiveOpponentItems(opponentTeamItems);
+		setLiveOpponentItems(opponentTeamItems.filter(i => !i.is_resolved));
 	}, [opponentTeamItems]);
 
 	useEffect(() => {
@@ -266,7 +264,14 @@ export function TradeOfferDndBuilder({
 						);
 						return;
 					}
-					if (!next) return;
+
+					if (!next || next.is_resolved) {
+						if (removeId) {
+							setLiveMyItems((prev) => prev.filter((i) => i.id !== removeId));
+							setLiveOpponentItems((prev) => prev.filter((i) => i.id !== removeId));
+						}
+						return;
+					}
 
 					const upsert = (arr: TradeItem[]) => {
 						const idx = arr.findIndex((i) => i.id === next.id);
@@ -477,7 +482,7 @@ export function TradeOfferDndBuilder({
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-[11px]">
-				<span className="text-muted-foreground">Trade item values</span>
+				<span className="text-muted-foreground">Unresolved Issue Values</span>
 				<span className="inline-flex items-center gap-1.5">
 					<span
 						className={[
@@ -517,7 +522,7 @@ export function TradeOfferDndBuilder({
 									<div className="flex flex-wrap gap-2 p-2">
 										{myInventory.length === 0 ? (
 											<p className="text-xs text-muted-foreground italic p-2">
-												No items available
+												No issues available
 											</p>
 										) : (
 											myInventory.map((item) => (
@@ -537,7 +542,7 @@ export function TradeOfferDndBuilder({
 
 						<DropZone
 							id="offer-zone"
-							label="Items We Offer"
+							label="Concessions Offered"
 							hint={`From Team ${myTeamCountry}`}
 							empty={offerItems.length === 0}
 							tone="my"
@@ -567,7 +572,7 @@ export function TradeOfferDndBuilder({
 									<div className="flex flex-wrap gap-2 p-2">
 										{opponentInventory.length === 0 ? (
 											<p className="text-xs text-muted-foreground italic p-2">
-												No items available
+												No issues available
 											</p>
 										) : (
 											opponentInventory.map((item) => (
@@ -587,7 +592,7 @@ export function TradeOfferDndBuilder({
 
 						<DropZone
 							id="request-zone"
-							label="Items We Request"
+							label="Asks Requested"
 							hint={`From Team ${opponentTeamCountry}`}
 							empty={requestItems.length === 0}
 							tone="opponent"

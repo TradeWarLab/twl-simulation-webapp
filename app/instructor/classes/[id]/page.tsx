@@ -7,6 +7,8 @@ import { QuickActionsSidebar } from "@/components/instructor/quick-actions-sideb
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
 import { SessionStepper } from "@/components/instructor/session-stepper";
 import { StudentRoster } from "@/components/instructor/student-roster";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
+import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
 export default function ClassDetailPage({
@@ -57,12 +59,7 @@ async function ClassDetailPageInner({
 	}
 
 	const roster = await getClassRoster(id);
-	const periods = [
-		"Setup",
-		"Domestic Negotiation",
-		"Bilateral Negotiation",
-		"End",
-	];
+	const periods = SIMULATION_PERIODS;
 
 	// Server action wrapper for updating period
 	async function advancePeriod() {
@@ -84,7 +81,10 @@ async function ClassDetailPageInner({
 	return (
 		<div className="container mx-auto p-8 space-y-8">
 			{/* Header Section */}
-			<ClassDetailHeader classData={classData} />
+			<div className="flex justify-between items-start">
+				<ClassDetailHeader classData={classData} />
+				<ThemeSwitcher />
+			</div>
 
 			{/* Stepper */}
 			<SessionStepper

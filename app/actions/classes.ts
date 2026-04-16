@@ -50,6 +50,7 @@ async function ensureInstructorOwnsClass(
 export async function createClass(formData: FormData): Promise<void> {
 	const supabase = await createClient();
 	const name = formData.get("name") as string;
+	const notebooklmUrl = formData.get("notebooklm_url") as string | null;
 
 	const {
 		data: { user },
@@ -67,6 +68,7 @@ export async function createClass(formData: FormData): Promise<void> {
 			instructor_id: user.id,
 			status: "active",
 			current_period: 0,
+			notebooklm_url: notebooklmUrl || null,
 		})
 		.select("id")
 		.single();
@@ -77,13 +79,56 @@ export async function createClass(formData: FormData): Promise<void> {
 	}
 
 	// Automatically create USA and China teams for the new class
-	const { error: teamsError } = await supabase.from("teams").insert([
-		{ class_id: classData.id, country: "USA" },
-		{ class_id: classData.id, country: "China" },
-	]);
+	const { data: teams, error: teamsError } = await supabase
+		.from("teams")
+		.insert([
+			{ class_id: classData.id, country: "USA" },
+			{ class_id: classData.id, country: "China" },
+		])
+		.select();
 
-	if (teamsError) {
+	if (teamsError || !teams) {
 		console.error("Error generating base teams:", teamsError);
+	} else {
+		// Seed team_issue_values (trade_items) automatically from global_issues
+		const { data: globalIssues } = await supabase
+			.from("global_issues")
+			.select("*");
+
+		if (globalIssues && globalIssues.length > 0) {
+			const tradeItemsToInsert = [];
+			for (const team of teams) {
+				for (const issue of globalIssues) {
+					// Infer role: "The U.S. to..." means China asks, US concedes. "China to..." means US asks, China concedes.
+					let role: "ask" | "concession" | null = null;
+					if (issue.title.startsWith("The U.S.")) {
+						role = team.country === "China" ? "ask" : "concession";
+					} else if (issue.title.startsWith("China")) {
+						role = team.country === "USA" ? "ask" : "concession";
+					}
+
+					tradeItemsToInsert.push({
+						class_id: classData.id,
+						team_id: team.id,
+						issue_id: issue.id,
+						name: issue.title,
+						value: 0,
+						role,
+						is_resolved: false,
+					});
+				}
+			}
+
+			if (tradeItemsToInsert.length > 0) {
+				const { error: seedError } = await supabase
+					.from("trade_items")
+					.insert(tradeItemsToInsert);
+
+				if (seedError) {
+					console.error("Error seeding trade issues:", seedError);
+				}
+			}
+		}
 	}
 
 	revalidatePath("/instructor/classes");

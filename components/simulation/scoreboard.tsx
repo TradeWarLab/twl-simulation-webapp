@@ -28,11 +28,11 @@ export function Scoreboard({ initialScores }: ScoreboardProps) {
 	const chinaScore = scores.find((s) => s.team?.country === "China");
 
 	return (
-		<div className="rounded-lg border bg-white dark:bg-slate-950 overflow-hidden shadow-sm">
-			<div className="px-4 py-2.5 border-b bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+		<div className="rounded-lg border bg-card overflow-hidden shadow-sm">
+			<div className="px-4 py-2.5 border-b bg-gradient-to-r from-muted/60 to-muted">
 				<h3 className="font-semibold text-sm">🏆 Scoreboard</h3>
 			</div>
-			<div className="grid grid-cols-2 divide-x divide-slate-200 dark:divide-slate-700">
+			<div className="grid grid-cols-2 divide-x divide-border">
 				{/* USA Score */}
 				<div
 					className={`p-4 text-center transition-all duration-500 ${
@@ -48,7 +48,7 @@ export function Scoreboard({ initialScores }: ScoreboardProps) {
 						className={`text-3xl font-bold tabular-nums transition-all duration-700 ${
 							animateChange === usaScore?.team_id
 								? "text-blue-600 scale-110"
-								: "text-slate-900 dark:text-white"
+								: "text-foreground"
 						}`}
 					>
 						{usaScore?.score ?? 0}
@@ -71,7 +71,7 @@ export function Scoreboard({ initialScores }: ScoreboardProps) {
 						className={`text-3xl font-bold tabular-nums transition-all duration-700 ${
 							animateChange === chinaScore?.team_id
 								? "text-red-600 scale-110"
-								: "text-slate-900 dark:text-white"
+								: "text-foreground"
 						}`}
 					>
 						{chinaScore?.score ?? 0}

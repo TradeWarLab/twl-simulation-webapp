@@ -338,12 +338,12 @@ export function ChatPanel({
 	}
 
 	return (
-		<div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-md border text-sm flex-1 min-h-0">
+		<div className="flex flex-col h-full bg-card rounded-md border text-sm flex-1 min-h-0">
 			{/* Tabs */}
 			<div className="flex border-b">
 				<button
 					onClick={() => setActiveTab("team")}
-					className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 ${
+					className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-muted ${
 						activeTab === "team"
 							? "border-b-2 border-primary text-primary"
 							: "text-muted-foreground"
@@ -353,7 +353,7 @@ export function ChatPanel({
 				</button>
 				<button
 					onClick={() => setActiveTab("global")}
-					className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 ${
+					className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-muted ${
 						activeTab === "global"
 							? "border-b-2 border-primary text-primary"
 							: "text-muted-foreground"
@@ -430,13 +430,13 @@ export function ChatPanel({
 					</div>
 				</ScrollArea>
 			</div>
-			<div className="p-3 border-t bg-slate-50 dark:bg-slate-900 rounded-b-md shrink-0">
+			<div className="p-3 border-t bg-muted rounded-b-md shrink-0">
 				<form onSubmit={handleSend} className="flex gap-2">
 					<Input
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
 						placeholder="Type a message..."
-						className="flex-1 bg-white dark:bg-slate-950"
+						className="flex-1 bg-card"
 						disabled={isPending}
 					/>
 					<Button type="submit" disabled={!input.trim() || isPending}>
