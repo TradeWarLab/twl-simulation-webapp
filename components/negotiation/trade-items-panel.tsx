@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { type TradeItem, updateTradeItemValue } from "@/app/actions/trade";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 
 export function TradeItemsPanel({
 	classId,
@@ -20,9 +20,15 @@ export function TradeItemsPanel({
 
 	const asks = items.filter((i) => i.role === "ask");
 	const concessions = items.filter((i) => i.role === "concession");
-	
-	const asksTotal = asks.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
-	const concessionsTotal = concessions.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+
+	const asksTotal = asks.reduce(
+		(sum, item) => sum + (Number(item.value) || 0),
+		0,
+	);
+	const concessionsTotal = concessions.reduce(
+		(sum, item) => sum + (Number(item.value) || 0),
+		0,
+	);
 
 	const asksValid = asksTotal === 100;
 	const concessionsValid = concessionsTotal === -100;
@@ -45,16 +51,16 @@ export function TradeItemsPanel({
 		if (isLocked) return;
 
 		let validValue = newValue;
-		const item = items.find(i => i.id === itemId);
+		const item = items.find((i) => i.id === itemId);
 		if (item) {
-			if (item.role === "ask" && validValue < 0) validValue = Math.abs(validValue);
-			else if (item.role === "concession" && validValue > 0) validValue = -Math.abs(validValue);
+			if (item.role === "ask" && validValue < 0)
+				validValue = Math.abs(validValue);
+			else if (item.role === "concession" && validValue > 0)
+				validValue = -Math.abs(validValue);
 
 			if (validValue !== newValue) {
 				setItems((prev) =>
-					prev.map((i) =>
-						i.id === itemId ? { ...i, value: validValue } : i,
-					),
+					prev.map((i) => (i.id === itemId ? { ...i, value: validValue } : i)),
 				);
 			}
 		}
@@ -84,15 +90,25 @@ export function TradeItemsPanel({
 				</p>
 
 				<div className="grid grid-cols-2 gap-4">
-					<div className={`p-2 rounded border text-xs flex flex-col gap-1 ${asksValid ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'}`}>
+					<div
+						className={`p-2 rounded border text-xs flex flex-col gap-1 ${asksValid ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400" : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400"}`}
+					>
 						<span className="font-semibold uppercase tracking-wider">Asks</span>
 						<span className="font-mono text-sm">{asksTotal} / 100</span>
-						{!asksValid && <span className="text-[10px] opacity-80">Must sum to 100</span>}
+						{!asksValid && (
+							<span className="text-[10px] opacity-80">Must sum to 100</span>
+						)}
 					</div>
-					<div className={`p-2 rounded border text-xs flex flex-col gap-1 ${concessionsValid ? 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'}`}>
-						<span className="font-semibold uppercase tracking-wider">Concessions</span>
+					<div
+						className={`p-2 rounded border text-xs flex flex-col gap-1 ${concessionsValid ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400" : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400"}`}
+					>
+						<span className="font-semibold uppercase tracking-wider">
+							Concessions
+						</span>
 						<span className="font-mono text-sm">{concessionsTotal} / -100</span>
-						{!concessionsValid && <span className="text-[10px] opacity-80">Must sum to -100</span>}
+						{!concessionsValid && (
+							<span className="text-[10px] opacity-80">Must sum to -100</span>
+						)}
 					</div>
 				</div>
 			</div>
@@ -101,19 +117,28 @@ export function TradeItemsPanel({
 					{items.map((item) => (
 						<div
 							key={item.id}
-							className={`flex flex-col gap-2 bg-card p-3 rounded-lg border shadow-sm ${item.is_resolved ? 'opacity-60 grayscale' : ''}`}
+							className={`flex flex-col gap-2 bg-card p-3 rounded-lg border shadow-sm ${item.is_resolved ? "opacity-60 grayscale" : ""}`}
 						>
 							<div className="flex items-start justify-between gap-4">
 								<div className="flex-1">
-									<Label htmlFor={`item-${item.id}`} className="font-medium flex items-center gap-2">
+									<Label
+										htmlFor={`item-${item.id}`}
+										className="font-medium flex items-center gap-2"
+									>
 										{item.name}
 									</Label>
 									<div className="flex items-center gap-2 mt-2">
-										<Badge variant={item.role === 'ask' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-											{item.role || 'Item'}
+										<Badge
+											variant={item.role === "ask" ? "default" : "secondary"}
+											className="text-[10px] uppercase"
+										>
+											{item.role || "Item"}
 										</Badge>
 										{item.is_resolved && (
-											<Badge variant="outline" className="text-[10px] text-green-600 border-green-600">
+											<Badge
+												variant="outline"
+												className="text-[10px] text-green-600 border-green-600"
+											>
 												RESOLVED
 											</Badge>
 										)}
@@ -124,8 +149,8 @@ export function TradeItemsPanel({
 										id={`item-${item.id}`}
 										type="number"
 										value={item.value}
-										max={item.role === 'ask' ? undefined : 0}
-										min={item.role === 'ask' ? 0 : undefined}
+										max={item.role === "ask" ? undefined : 0}
+										min={item.role === "ask" ? 0 : undefined}
 										onChange={(e) => handleValueChange(item.id, e.target.value)}
 										// Submit to server on blur or Enter key
 										onBlur={() => handleBlurOrSubmit(item.id, item.value)}

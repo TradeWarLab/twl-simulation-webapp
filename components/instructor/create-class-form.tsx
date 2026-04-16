@@ -21,7 +21,9 @@ export function CreateClassForm() {
 						placeholder="Google NotebookLM URL (Optional)"
 						type="url"
 					/>
-					<Button type="submit" className="w-full">Create Class</Button>
+					<Button type="submit" className="w-full">
+						Create Class
+					</Button>
 				</form>
 			</CardContent>
 		</Card>

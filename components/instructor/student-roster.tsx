@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { INTEREST_GROUPS } from "@/lib/constants";
 import type { ClassRosterEntry } from "@/lib/types/domain";
 
 export function StudentRoster({
@@ -60,13 +61,14 @@ export function StudentRoster({
 					</select>
 					<select
 						name="interest_block"
-						defaultValue="Economy"
+						defaultValue={INTEREST_GROUPS[0]}
 						className="h-9 rounded-md border bg-background px-3 text-sm min-w-[170px]"
 					>
-						<option value="Economy">Economy</option>
-						<option value="National Security">National Security</option>
-						<option value="Technology">Technology</option>
-						<option value="Environment">Environment</option>
+						{INTEREST_GROUPS.map((group) => (
+							<option key={group} value={group}>
+								{group}
+							</option>
+						))}
 					</select>
 					<Button type="submit" className="whitespace-nowrap">
 						Invite Student
@@ -80,7 +82,6 @@ export function StudentRoster({
 						<div className="col-span-3">Interest Group</div>
 						<div className="col-span-2">Joined At</div>
 						<div className="col-span-1">Status</div>
-						{/* <div className="col-span-2 text-right">Actions</div> */}
 					</div>
 					{roster.length === 0 ? (
 						<div className="p-8 text-center text-muted-foreground text-sm">
@@ -138,16 +139,7 @@ export function StudentRoster({
 														entry.user_id,
 													);
 												}}
-											>
-												{/* <Button
-                          type="submit"
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          Remove
-                        </Button> */}
-											</form>
+											></form>
 										</div>
 									</div>
 								);

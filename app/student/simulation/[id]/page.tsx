@@ -11,7 +11,6 @@ import {
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { NegotiationController } from "@/components/negotiation/negotiation-controller";
 import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
-import { Scoreboard } from "@/components/simulation/scoreboard";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationRealtimeProvider } from "@/components/simulation/simulation-realtime-provider";
 import { BriefingPanel } from "@/components/student/briefing-panel";
@@ -87,10 +86,10 @@ async function SimulationPageInner({
 	// Fetch Student Briefings
 	const briefings = teamRecord
 		? await getStudentBriefings(
-			id,
-			teamRecord.country,
-			enrollment.interest_block,
-		)
+				id,
+				teamRecord.country,
+				enrollment.interest_block,
+			)
 		: [];
 
 	// Fetch opponent team info and items for negotiation
@@ -115,7 +114,7 @@ async function SimulationPageInner({
 
 	// Fetch trade proposals and scoreboard
 	const proposals = await getTradeProposals(id);
-	const scores = await getScoreboard(id);
+	const _scores = await getScoreboard(id);
 
 	return (
 		<div className="container mx-auto p-2 md:p-4 min-h-screen flex flex-col lg:h-screen lg:max-h-screen">
@@ -134,10 +133,7 @@ async function SimulationPageInner({
 				<main className="flex-1 grid grid-cols-1 lg:grid-cols-[330px_1fr_390px] gap-4 min-h-0">
 					{/* Left Panel: Dashboard (Target Values) or Resources */}
 					<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
-						<Tabs
-							defaultValue="dashboard"
-							className="w-full"
-						>
+						<Tabs defaultValue="dashboard" className="w-full">
 							<TabsList className="w-full grid grid-cols-2 shrink-0">
 								<TabsTrigger value="dashboard">Dashboard</TabsTrigger>
 								<TabsTrigger value="resources">Resources</TabsTrigger>

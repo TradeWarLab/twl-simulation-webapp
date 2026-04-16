@@ -5,6 +5,7 @@ import { createBriefing } from "@/app/actions/briefings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { INTEREST_GROUPS, TARGET_ROLES } from "@/lib/constants";
 
 export function BriefingForm({ classId }: { classId: string }) {
 	const [isPending, startTransition] = useTransition();
@@ -64,9 +65,13 @@ export function BriefingForm({ classId }: { classId: string }) {
 							disabled={isPending}
 							className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							<option value="All">All Participants</option>
-							<option value="USA">Team USA</option>
-							<option value="China">Team PRC</option>
+							{TARGET_ROLES.map((role) => (
+								<option key={role} value={role}>
+									{role === "All"
+										? "All Participants"
+										: `Team ${role === "USA" ? "USA" : "PRC"}`}
+								</option>
+							))}
 						</select>
 					</div>
 
@@ -81,11 +86,11 @@ export function BriefingForm({ classId }: { classId: string }) {
 							className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							<option value="All">All Groups</option>
-							<option value="Economy">Economy</option>
-							<option value="National Security">National Security</option>
-							<option value="Technology">Technology</option>
-							<option value="Environment">Environment</option>
-							<option value="Nationalism">Nationalism</option>
+							{INTEREST_GROUPS.map((group) => (
+								<option key={group} value={group}>
+									{group}
+								</option>
+							))}
 						</select>
 					</div>
 

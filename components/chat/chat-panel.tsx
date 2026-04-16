@@ -55,70 +55,82 @@ export function ChatPanel({
 		) as HTMLDivElement | null;
 	}, []);
 
-	const scrollToBottom = useCallback((smooth = true) => {
-		const viewport = getViewportEl();
-		if (!viewport) return;
-		viewport.scrollTo({
-			top: viewport.scrollHeight,
-			behavior: smooth ? "smooth" : "auto",
-		});
-	}, [getViewportEl]);
+	const scrollToBottom = useCallback(
+		(smooth = true) => {
+			const viewport = getViewportEl();
+			if (!viewport) return;
+			viewport.scrollTo({
+				top: viewport.scrollHeight,
+				behavior: smooth ? "smooth" : "auto",
+			});
+		},
+		[getViewportEl],
+	);
 
-	const upsertMessage = useCallback((list: ChatMessage[], msg: ChatMessage): ChatMessage[] => {
-		const next = [...list];
-		const byClientId =
-			msg.client_message_id != null
-				? next.findIndex(
-						(item) => item.client_message_id === msg.client_message_id,
-					)
-				: -1;
-		if (byClientId >= 0) {
-			next[byClientId] = {
-				...next[byClientId],
-				...msg,
-				local_status: undefined,
-			};
+	const upsertMessage = useCallback(
+		(list: ChatMessage[], msg: ChatMessage): ChatMessage[] => {
+			const next = [...list];
+			const byClientId =
+				msg.client_message_id != null
+					? next.findIndex(
+							(item) => item.client_message_id === msg.client_message_id,
+						)
+					: -1;
+			if (byClientId >= 0) {
+				next[byClientId] = {
+					...next[byClientId],
+					...msg,
+					local_status: undefined,
+				};
+				return next;
+			}
+			const byId = next.findIndex((item) => item.id === msg.id);
+			if (byId >= 0) {
+				next[byId] = { ...next[byId], ...msg, local_status: undefined };
+				return next;
+			}
+			next.push(msg);
+			next.sort(
+				(a, b) =>
+					new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+			);
 			return next;
-		}
-		const byId = next.findIndex((item) => item.id === msg.id);
-		if (byId >= 0) {
-			next[byId] = { ...next[byId], ...msg, local_status: undefined };
-			return next;
-		}
-		next.push(msg);
-		next.sort(
-			(a, b) =>
-				new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-		);
-		return next;
-	}, []);
+		},
+		[],
+	);
 
-	const resolveSenderName = useCallback(async (senderId: string) => {
-		if (nameCacheRef.current.has(senderId)) {
-			return nameCacheRef.current.get(senderId) ?? null;
-		}
-		const { data } = await supabase
-			.from("users")
-			.select("full_name")
-			.eq("id", senderId)
-			.maybeSingle();
-		const name = data?.full_name ?? null;
-		nameCacheRef.current.set(senderId, name);
-		return name;
-	}, [supabase]);
+	const resolveSenderName = useCallback(
+		async (senderId: string) => {
+			if (nameCacheRef.current.has(senderId)) {
+				return nameCacheRef.current.get(senderId) ?? null;
+			}
+			const { data } = await supabase
+				.from("users")
+				.select("full_name")
+				.eq("id", senderId)
+				.maybeSingle();
+			const name = data?.full_name ?? null;
+			nameCacheRef.current.set(senderId, name);
+			return name;
+		},
+		[supabase],
+	);
 
-	const handleIncomingMessage = useCallback((msg: ChatMessage) => {
-		if (msg.channel === teamChannel) {
-			setTeamMessages((prev) => upsertMessage(prev, msg));
-		} else if (msg.channel === "global") {
-			setGlobalMessages((prev) => upsertMessage(prev, msg));
-		}
-		const shouldScroll =
-			isAtBottomRef.current || msg.sender_id === currentUserId;
-		if (shouldScroll) {
-			setTimeout(() => scrollToBottom(true), 50);
-		}
-	}, [currentUserId, scrollToBottom, teamChannel, upsertMessage]);
+	const handleIncomingMessage = useCallback(
+		(msg: ChatMessage) => {
+			if (msg.channel === teamChannel) {
+				setTeamMessages((prev) => upsertMessage(prev, msg));
+			} else if (msg.channel === "global") {
+				setGlobalMessages((prev) => upsertMessage(prev, msg));
+			}
+			const shouldScroll =
+				isAtBottomRef.current || msg.sender_id === currentUserId;
+			if (shouldScroll) {
+				setTimeout(() => scrollToBottom(true), 50);
+			}
+		},
+		[currentUserId, scrollToBottom, teamChannel, upsertMessage],
+	);
 
 	useEffect(() => {
 		setTeamMessages((prev) => {
@@ -179,7 +191,13 @@ export function ChatPanel({
 		return () => {
 			supabase.removeChannel(channel);
 		};
-	}, [classId, currentUserId, supabase, resolveSenderName, handleIncomingMessage]);
+	}, [
+		classId,
+		currentUserId,
+		supabase,
+		resolveSenderName,
+		handleIncomingMessage,
+	]);
 
 	const activeChannel = activeTab === "team" ? teamChannel : "global";
 	const messages = activeTab === "team" ? teamMessages : globalMessages;

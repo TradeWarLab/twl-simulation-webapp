@@ -13,7 +13,11 @@ const THEME_PREFERENCE_KEY = "twl-theme-preference";
  * If the user has already manually chosen a theme (stored in localStorage),
  * this component respects that choice and does nothing.
  */
-export function ThemeInitializer({ userRole }: { userRole: "instructor" | "student" }) {
+export function ThemeInitializer({
+	userRole,
+}: {
+	userRole: "instructor" | "student";
+}) {
 	const { setTheme } = useTheme();
 	const initialized = useRef(false);
 

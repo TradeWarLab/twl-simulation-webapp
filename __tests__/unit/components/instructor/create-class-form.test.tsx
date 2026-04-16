@@ -16,7 +16,9 @@ describe("CreateClassForm Component", () => {
 		render(<CreateClassForm />);
 		expect(screen.getByText("Create New Class")).toBeInTheDocument();
 		expect(screen.getByPlaceholderText(/Class Name/i)).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Create Class" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Create Class" }),
+		).toBeInTheDocument();
 	});
 
 	it("submits the form successfully tracking loading states", async () => {

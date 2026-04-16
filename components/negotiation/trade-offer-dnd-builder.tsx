@@ -205,10 +205,18 @@ export function TradeOfferDndBuilder({
 	onSubmitted,
 }: Props) {
 	const supabase = createClient();
-	const [liveMyItems, setLiveMyItems] = useState<TradeItem[]>(myTeamItems.filter(i => !i.is_resolved));
-	const [liveOpponentItems, setLiveOpponentItems] = useState<TradeItem[]>(opponentTeamItems.filter(i => !i.is_resolved));
-	const [myInventory, setMyInventory] = useState<TradeItem[]>(myTeamItems.filter(i => !i.is_resolved));
-	const [opponentInventory, setOpponentInventory] = useState<TradeItem[]>(opponentTeamItems.filter(i => !i.is_resolved));
+	const [liveMyItems, setLiveMyItems] = useState<TradeItem[]>(
+		myTeamItems.filter((i) => !i.is_resolved),
+	);
+	const [liveOpponentItems, setLiveOpponentItems] = useState<TradeItem[]>(
+		opponentTeamItems.filter((i) => !i.is_resolved),
+	);
+	const [myInventory, setMyInventory] = useState<TradeItem[]>(
+		myTeamItems.filter((i) => !i.is_resolved),
+	);
+	const [opponentInventory, setOpponentInventory] = useState<TradeItem[]>(
+		opponentTeamItems.filter((i) => !i.is_resolved),
+	);
 	const [offerItems, setOfferItems] = useState<TradeItem[]>([]);
 	const [requestItems, setRequestItems] = useState<TradeItem[]>([]);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -228,11 +236,11 @@ export function TradeOfferDndBuilder({
 	}, [liveMyItems, liveOpponentItems]);
 
 	useEffect(() => {
-		setLiveMyItems(myTeamItems.filter(i => !i.is_resolved));
+		setLiveMyItems(myTeamItems.filter((i) => !i.is_resolved));
 	}, [myTeamItems]);
 
 	useEffect(() => {
-		setLiveOpponentItems(opponentTeamItems.filter(i => !i.is_resolved));
+		setLiveOpponentItems(opponentTeamItems.filter((i) => !i.is_resolved));
 	}, [opponentTeamItems]);
 
 	useEffect(() => {
@@ -268,7 +276,9 @@ export function TradeOfferDndBuilder({
 					if (!next || next.is_resolved) {
 						if (removeId) {
 							setLiveMyItems((prev) => prev.filter((i) => i.id !== removeId));
-							setLiveOpponentItems((prev) => prev.filter((i) => i.id !== removeId));
+							setLiveOpponentItems((prev) =>
+								prev.filter((i) => i.id !== removeId),
+							);
 						}
 						return;
 					}

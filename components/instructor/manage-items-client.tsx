@@ -72,105 +72,108 @@ export function ManageItemsClient({
 			: "border-orange-200 bg-orange-50 text-orange-800 hover:bg-orange-100";
 
 		return (
-		<Card
-			className={`overflow-hidden border ${panelBorder}`}
-			style={{ borderTopWidth: "3px", borderTopColor: teamAccent }}
-		>
-			<CardHeader
-				className={`${panelHeader} border-b pb-4`}
+			<Card
+				className={`overflow-hidden border ${panelBorder}`}
+				style={{ borderTopWidth: "3px", borderTopColor: teamAccent }}
 			>
-				<CardTitle className={`text-xl ${panelTitle}`}>{title}</CardTitle>
-			</CardHeader>
-			<CardContent className="pt-6">
-				{!teamId ? (
-					<div className="text-sm text-muted-foreground p-4 text-center">
-						Team has not been created yet. Assign a student to this team first.
-					</div>
-				) : (
-					<div className="space-y-6">
-						<form
-							onSubmit={(e) => handleCreate(e, teamId)}
-							className={`flex items-end gap-2 rounded-lg border px-3 py-3 ${stripSurface}`}
-						>
-							<div className="flex-1 space-y-1">
-								<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-									Item Name
-								</label>
-								<Input
-									name="name"
-									required
-									placeholder="e.g. End subsidies"
-									disabled={isPending}
-								/>
-							</div>
-							<div className="w-24 space-y-1">
-								<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-									Value
-								</label>
-								<Input
-									name="value"
-									type="number"
-									required
-									placeholder="10"
-									disabled={isPending}
-								/>
-							</div>
-							<Button
-								type="submit"
-								disabled={isPending}
-								variant="outline"
-								className={actionButton}
-							>
-								Add
-							</Button>
-						</form>
-
-						<div className="rounded-md border divide-y overflow-hidden">
-							<div className="flex bg-slate-50 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.07em] text-muted-foreground">
-								<span className="flex-1">Name</span>
-								<span className="w-16 text-right">Value</span>
-								<span className="w-10"></span>
-							</div>
-							{items.length === 0 ? (
-								<div className="p-4 text-center text-sm text-slate-500">
-									No items added yet.
-								</div>
-							) : (
-								items.map((item) => (
-									<div
-										key={item.id}
-										className="flex items-center p-2 text-sm text-foreground bg-card hover:bg-muted transition-colors"
-									>
-										<span className="flex-1 font-medium">{item.name}</span>
-										<span
-											className={`w-16 text-right font-bold ${
-												item.value > 0
-													? "text-green-600"
-													: item.value < 0
-														? "text-red-600"
-														: "text-muted-foreground"
-											}`}
-										>
-											{item.value > 0 ? `+${item.value}` : item.value < 0 ? item.value : "—"}
-										</span>
-										<div className="w-10 text-right">
-											<button
-												onClick={() => handleDelete(item.id)}
-												disabled={isPending}
-												className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-slate-200 text-slate-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-												title="Delete item"
-											>
-												✕
-											</button>
-										</div>
-									</div>
-								))
-							)}
+				<CardHeader className={`${panelHeader} border-b pb-4`}>
+					<CardTitle className={`text-xl ${panelTitle}`}>{title}</CardTitle>
+				</CardHeader>
+				<CardContent className="pt-6">
+					{!teamId ? (
+						<div className="text-sm text-muted-foreground p-4 text-center">
+							Team has not been created yet. Assign a student to this team
+							first.
 						</div>
-					</div>
-				)}
-			</CardContent>
-		</Card>
+					) : (
+						<div className="space-y-6">
+							<form
+								onSubmit={(e) => handleCreate(e, teamId)}
+								className={`flex items-end gap-2 rounded-lg border px-3 py-3 ${stripSurface}`}
+							>
+								<div className="flex-1 space-y-1">
+									<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+										Item Name
+									</label>
+									<Input
+										name="name"
+										required
+										placeholder="e.g. End subsidies"
+										disabled={isPending}
+									/>
+								</div>
+								<div className="w-24 space-y-1">
+									<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+										Value
+									</label>
+									<Input
+										name="value"
+										type="number"
+										required
+										placeholder="10"
+										disabled={isPending}
+									/>
+								</div>
+								<Button
+									type="submit"
+									disabled={isPending}
+									variant="outline"
+									className={actionButton}
+								>
+									Add
+								</Button>
+							</form>
+
+							<div className="rounded-md border divide-y overflow-hidden">
+								<div className="flex bg-slate-50 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.07em] text-muted-foreground">
+									<span className="flex-1">Name</span>
+									<span className="w-16 text-right">Value</span>
+									<span className="w-10"></span>
+								</div>
+								{items.length === 0 ? (
+									<div className="p-4 text-center text-sm text-slate-500">
+										No items added yet.
+									</div>
+								) : (
+									items.map((item) => (
+										<div
+											key={item.id}
+											className="flex items-center p-2 text-sm text-foreground bg-card hover:bg-muted transition-colors"
+										>
+											<span className="flex-1 font-medium">{item.name}</span>
+											<span
+												className={`w-16 text-right font-bold ${
+													item.value > 0
+														? "text-green-600"
+														: item.value < 0
+															? "text-red-600"
+															: "text-muted-foreground"
+												}`}
+											>
+												{item.value > 0
+													? `+${item.value}`
+													: item.value < 0
+														? item.value
+														: "—"}
+											</span>
+											<div className="w-10 text-right">
+												<button
+													onClick={() => handleDelete(item.id)}
+													disabled={isPending}
+													className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-slate-200 text-slate-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+													title="Delete item"
+												>
+													✕
+												</button>
+											</div>
+										</div>
+									))
+								)}
+							</div>
+						</div>
+					)}
+				</CardContent>
+			</Card>
 		);
 	};
 

@@ -7,6 +7,7 @@ import {
 	updateStudentTeam,
 } from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
+import { INTEREST_GROUPS } from "@/lib/constants";
 import type { ClassRosterEntry } from "@/lib/types/domain";
 
 export function ManageTeamsClient({
@@ -165,15 +166,15 @@ export function ManageTeamsClient({
 							<div className="col-span-2 pr-4">
 								<select
 									className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-muted/50 px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-									value={entry.interest_group ?? "Economy"}
+									value={entry.interest_group ?? INTEREST_GROUPS[0]}
 									onChange={(e) => handleInterestChange(entry, e.target.value)}
 									disabled={isPending}
 								>
-									<option value="Economy">Economy</option>
-									<option value="National Security">National Security</option>
-									<option value="Technology">Technology</option>
-									<option value="Environment">Environment</option>
-									<option value="Nationalism">Nationalism</option>
+									{INTEREST_GROUPS.map((group) => (
+										<option key={group} value={group}>
+											{group}
+										</option>
+									))}
 								</select>
 							</div>
 
