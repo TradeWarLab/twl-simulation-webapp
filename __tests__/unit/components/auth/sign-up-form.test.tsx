@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signUp } from "@/app/actions/auth";
 import { SignUpForm } from "@/components/auth/sign-up-form";
@@ -12,40 +13,91 @@ describe("SignUpForm Component", () => {
 		vi.clearAllMocks();
 	});
 
-	it("renders required fields correctly", () => {
+	it("renders the current student signup fields", () => {
 		render(<SignUpForm />);
+
 		expect(
-			screen.getByRole("heading", { name: /Sign Up/i }),
+			screen.getByRole("heading", { name: /sign up/i }),
 		).toBeInTheDocument();
-		expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/class code/i)).toBeInTheDocument();
 		expect(
-			screen.getByRole("button", { name: /Sign up/i }),
+			screen.getByLabelText(/sign up as instructor\?/i),
 		).toBeInTheDocument();
 	});
 
-	it("shows loading state and displays error if signup fails", async () => {
+	it("hides the class code field for instructor signup", async () => {
+		const user = userEvent.setup();
+		render(<SignUpForm />);
+
+		await user.click(screen.getByLabelText(/sign up as instructor\?/i));
+
+		expect(screen.queryByLabelText(/class code/i)).not.toBeInTheDocument();
+	});
+
+	it("prevents submit when passwords do not match", async () => {
 		const mockSignUp = vi.mocked(signUp);
-		mockSignUp.mockResolvedValueOnce({ error: "Email already taken" });
+		render(<SignUpForm />);
+
+		fireEvent.change(screen.getByLabelText(/full name/i), {
+			target: { value: "Test User" },
+		});
+		fireEvent.change(screen.getByLabelText(/email/i), {
+			target: { value: "test@example.com" },
+		});
+		fireEvent.change(screen.getByLabelText(/^password$/i), {
+			target: { value: "password123" },
+		});
+		fireEvent.change(screen.getByLabelText(/confirm password/i), {
+			target: { value: "different-password" },
+		});
+
+		const form = screen.getByRole("button", { name: /sign up/i }).closest("form");
+		if (form) {
+			fireEvent.submit(form);
+		}
+
+		expect(mockSignUp).not.toHaveBeenCalled();
+		expect(
+			await screen.findByText(/passwords do not match/i),
+		).toBeInTheDocument();
+	});
+
+	it("shows the email verification state after successful signup", async () => {
+		const mockSignUp = vi.mocked(signUp);
+		mockSignUp.mockResolvedValueOnce({ success: true });
 
 		render(<SignUpForm />);
 
-		const submitButton = screen.getByRole("button", { name: /Sign up/i });
-
-		fireEvent.change(screen.getByLabelText(/Name/i), {
+		fireEvent.change(screen.getByLabelText(/full name/i), {
 			target: { value: "Test User" },
 		});
-		fireEvent.change(screen.getByLabelText(/Email/i), {
+		fireEvent.change(screen.getByLabelText(/email/i), {
 			target: { value: "test@example.com" },
 		});
-		fireEvent.change(screen.getByLabelText(/^Password$/i), {
+		fireEvent.change(screen.getByLabelText(/^password$/i), {
 			target: { value: "password123" },
 		});
+		fireEvent.change(screen.getByLabelText(/confirm password/i), {
+			target: { value: "password123" },
+		});
+		fireEvent.change(screen.getByLabelText(/class code/i), {
+			target: { value: "TWL-AB12CD" },
+		});
 
-		const form = submitButton.closest("form");
-		if (form) fireEvent.submit(form);
+		const form = screen.getByRole("button", { name: /sign up/i }).closest("form");
+		if (form) {
+			fireEvent.submit(form);
+		}
 
-		expect(mockSignUp).toHaveBeenCalledTimes(1);
+		await waitFor(() => {
+			expect(mockSignUp).toHaveBeenCalledTimes(1);
+		});
+		expect(
+			await screen.findByRole("heading", { name: /check your inbox/i }),
+		).toBeInTheDocument();
 	});
 });

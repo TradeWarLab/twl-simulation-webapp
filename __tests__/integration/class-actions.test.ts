@@ -6,6 +6,7 @@ import {
 	getStudentClasses,
 	updateClassPeriod,
 } from "@/app/actions/classes";
+import { DEFAULT_BRIEFINGS } from "@/lib/constants";
 import { mockClient } from "../helpers/supabase-mock";
 
 describe("Class Actions", () => {
@@ -14,35 +15,191 @@ describe("Class Actions", () => {
 	});
 
 	describe("createClass", () => {
-		it("inserts a class and revalidates dashboard", async () => {
+		it("inserts a class with optional NotebookLM URL", async () => {
 			mockClient.auth.getUser.mockResolvedValueOnce({
 				data: { user: { id: "instructor-1" } },
 			});
 
-			const singleMock = vi
+			const classSingleMock = vi
 				.fn()
 				.mockResolvedValue({ data: { id: "new-cls" }, error: null });
-			const selectMock = vi.fn().mockReturnValue({ single: singleMock });
-			const insertMock = vi.fn().mockReturnValue({ select: selectMock });
-			mockClient.from.mockReturnValue({ insert: insertMock } as any);
+			const classSelectMock = vi
+				.fn()
+				.mockReturnValue({ single: classSingleMock });
+			const classInsertMock = vi
+				.fn()
+				.mockReturnValue({ select: classSelectMock });
+
+			const teamsSelectMock = vi.fn().mockResolvedValue({
+				data: [
+					{ id: "team-usa", country: "USA" },
+					{ id: "team-china", country: "China" },
+				],
+				error: null,
+			});
+			const teamsInsertMock = vi.fn().mockReturnValue({ select: teamsSelectMock });
+
+			const globalIssuesSelectMock = vi.fn().mockResolvedValue({
+				data: [],
+				error: null,
+			});
+			const tradeItemsInsertMock = vi.fn().mockResolvedValue({ error: null });
+			const briefingsInsertMock = vi.fn().mockResolvedValue({ error: null });
+
+			mockClient.from.mockImplementation((table: string) => {
+				if (table === "classes") {
+					return { insert: classInsertMock } as any;
+				}
+				if (table === "teams") {
+					return { insert: teamsInsertMock } as any;
+				}
+				if (table === "global_issues") {
+					return { select: globalIssuesSelectMock } as any;
+				}
+				if (table === "trade_items") {
+					return { insert: tradeItemsInsertMock } as any;
+				}
+				if (table === "briefings") {
+					return { insert: briefingsInsertMock } as any;
+				}
+				return {} as any;
+			});
+
+			const formData = new FormData();
+			formData.set("name", "History 101");
+			formData.set("notebooklm_url", "https://notebooklm.google.com/example");
+
+			await createClass(formData);
+
+			expect(classInsertMock).toHaveBeenCalledWith(
+				expect.objectContaining({
+					name: "History 101",
+					instructor_id: "instructor-1",
+					status: "active",
+					current_period: 0,
+					notebooklm_url: "https://notebooklm.google.com/example",
+				}),
+			);
+			const callArgs = classInsertMock.mock.calls[0][0];
+			expect(callArgs.class_code).toMatch(/^TWL-[A-Z0-9]{6}$/);
+			expect(callArgs.normalized_name).toBe("history-101");
+		});
+
+		it("seeds teams, trade items, and default briefings for a new class", async () => {
+			mockClient.auth.getUser.mockResolvedValueOnce({
+				data: { user: { id: "instructor-1" } },
+			});
+
+			const classSingleMock = vi
+				.fn()
+				.mockResolvedValue({ data: { id: "new-cls" }, error: null });
+			const classSelectMock = vi
+				.fn()
+				.mockReturnValue({ single: classSingleMock });
+			const classInsertMock = vi
+				.fn()
+				.mockReturnValue({ select: classSelectMock });
+
+			const teams = [
+				{ id: "team-usa", country: "USA" },
+				{ id: "team-china", country: "China" },
+			];
+			const teamsSelectMock = vi.fn().mockResolvedValue({
+				data: teams,
+				error: null,
+			});
+			const teamsInsertMock = vi.fn().mockReturnValue({ select: teamsSelectMock });
+
+			const issues = [
+				{ id: "issue-1", title: "The U.S. to reduce tariffs" },
+				{ id: "issue-2", title: "China to expand imports" },
+			];
+			const globalIssuesSelectMock = vi.fn().mockResolvedValue({
+				data: issues,
+				error: null,
+			});
+			const tradeItemsInsertMock = vi.fn().mockResolvedValue({ error: null });
+			const briefingsInsertMock = vi.fn().mockResolvedValue({ error: null });
+
+			mockClient.from.mockImplementation((table: string) => {
+				if (table === "classes") {
+					return { insert: classInsertMock } as any;
+				}
+				if (table === "teams") {
+					return { insert: teamsInsertMock } as any;
+				}
+				if (table === "global_issues") {
+					return { select: globalIssuesSelectMock } as any;
+				}
+				if (table === "trade_items") {
+					return { insert: tradeItemsInsertMock } as any;
+				}
+				if (table === "briefings") {
+					return { insert: briefingsInsertMock } as any;
+				}
+				return {} as any;
+			});
 
 			const formData = new FormData();
 			formData.set("name", "History 101");
 
 			await createClass(formData);
 
-			expect(insertMock).toHaveBeenCalledWith(
-				expect.objectContaining({
-					name: "History 101",
-					instructor_id: "instructor-1",
-					status: "active",
-					current_period: 0,
-				}),
+			expect(teamsInsertMock).toHaveBeenCalledWith([
+				{ class_id: "new-cls", country: "USA" },
+				{ class_id: "new-cls", country: "China" },
+			]);
+			expect(tradeItemsInsertMock).toHaveBeenCalledWith([
+				{
+					class_id: "new-cls",
+					team_id: "team-usa",
+					issue_id: "issue-1",
+					name: "The U.S. to reduce tariffs",
+					value: 0,
+					role: "concession",
+					is_resolved: false,
+				},
+				{
+					class_id: "new-cls",
+					team_id: "team-usa",
+					issue_id: "issue-2",
+					name: "China to expand imports",
+					value: 0,
+					role: "ask",
+					is_resolved: false,
+				},
+				{
+					class_id: "new-cls",
+					team_id: "team-china",
+					issue_id: "issue-1",
+					name: "The U.S. to reduce tariffs",
+					value: 0,
+					role: "ask",
+					is_resolved: false,
+				},
+				{
+					class_id: "new-cls",
+					team_id: "team-china",
+					issue_id: "issue-2",
+					name: "China to expand imports",
+					value: 0,
+					role: "concession",
+					is_resolved: false,
+				},
+			]);
+			expect(briefingsInsertMock).toHaveBeenCalledWith(
+				expect.arrayContaining(
+					DEFAULT_BRIEFINGS.map((briefing) =>
+						expect.objectContaining({
+							class_id: "new-cls",
+							title: briefing.title,
+							target_role: briefing.target_role,
+							interest_group: briefing.interest_group,
+							file_url: briefing.file_url,
+						}),
+					),
+				),
 			);
-			// Check that class_code and normalized_name are generated
-			const callArgs = insertMock.mock.calls[0][0];
-			expect(callArgs.class_code).toMatch(/^TWL-[A-Z0-9]{6}$/);
-			expect(callArgs.normalized_name).toBe("history-101");
 		});
 
 		it("aborts if no user", async () => {

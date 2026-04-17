@@ -94,6 +94,36 @@ describe("Auth Actions", () => {
 			expect(result).toEqual({ error: "User exists" });
 		});
 
+		it("passes role, class code, and confirm route into Supabase signup", async () => {
+			mockClient.auth.signUp.mockResolvedValueOnce({
+				error: null,
+				data: { session: null, user: { id: "user-student" } },
+			});
+
+			const formData = new FormData();
+			formData.set("email", "student@example.com");
+			formData.set("password", "valid");
+			formData.set("full_name", "Student User");
+			formData.set("role", "student");
+			formData.set("class_code", "TWL-AB12CD");
+
+			const result = await signUp(formData);
+
+			expect(mockClient.auth.signUp).toHaveBeenCalledWith({
+				email: "student@example.com",
+				password: "valid",
+				options: {
+					data: {
+						full_name: "Student User",
+						role: "student",
+						class_code: "TWL-AB12CD",
+					},
+					emailRedirectTo: "http://localhost:3000/auth/confirm",
+				},
+			});
+			expect(result).toEqual({ success: true });
+		});
+
 		it("redirects to student dashboard if signup succeeds immediately (no email confirm)", async () => {
 			mockClient.auth.signUp.mockResolvedValueOnce({
 				error: null,
@@ -115,6 +145,34 @@ describe("Auth Actions", () => {
 			} catch (error) {
 				expect((error as any).name).toBe("RedirectError");
 				expect((error as any).url).toBe("/student/dashboard");
+			}
+		});
+
+		it("redirects to instructor dashboard after immediate instructor signup", async () => {
+			mockClient.auth.signUp.mockResolvedValueOnce({
+				error: null,
+				data: {
+					session: { access_token: "token" },
+					user: { id: "user-instructor" },
+				},
+			});
+			mockClient._mockTable("users", {
+				data: { role: "instructor" },
+				error: null,
+			});
+
+			const formData = new FormData();
+			formData.set("email", "prof@example.com");
+			formData.set("password", "valid");
+			formData.set("full_name", "Professor");
+			formData.set("role", "instructor");
+
+			try {
+				await signUp(formData);
+				expect.fail("signUp should redirect");
+			} catch (error) {
+				expect((error as any).name).toBe("RedirectError");
+				expect((error as any).url).toBe("/instructor/dashboard");
 			}
 		});
 

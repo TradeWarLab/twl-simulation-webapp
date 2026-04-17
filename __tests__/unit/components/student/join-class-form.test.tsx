@@ -1,9 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { enrollStudentByCode } from "@/app/actions/classes";
 import { JoinClassForm } from "@/components/student/join-class-form";
 
-// Mock the server action
 vi.mock("@/app/actions/classes", () => ({
 	enrollStudentByCode: vi.fn(),
 }));
@@ -13,28 +12,31 @@ describe("JoinClassForm Component", () => {
 		vi.clearAllMocks();
 	});
 
-	it("renders correctly", () => {
+	it("renders the class code join workflow", () => {
 		render(<JoinClassForm />);
+
 		expect(screen.getByText("Join a Class")).toBeInTheDocument();
-		expect(screen.getByPlaceholderText(/Class Code/i)).toBeInTheDocument();
+		expect(screen.getByPlaceholderText(/enter class code/i)).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
 	});
 
-	it("submits action without state tracking", async () => {
+	it("trims the class code before sending it to the server action", async () => {
 		const mockEnroll = vi.mocked(enrollStudentByCode);
 		mockEnroll.mockResolvedValueOnce({ success: true });
 
 		render(<JoinClassForm />);
 
-		const input = screen.getByPlaceholderText(/Class Code/i);
-		const submitButton = screen.getByRole("button", { name: "Join" });
+		fireEvent.change(screen.getByPlaceholderText(/enter class code/i), {
+			target: { value: "  TWL-123456  " },
+		});
 
-		fireEvent.change(input, { target: { value: "TWL-123456" } });
+		const form = screen.getByRole("button", { name: "Join" }).closest("form");
+		if (form) {
+			fireEvent.submit(form);
+		}
 
-		const form = submitButton.closest("form");
-		if (form) fireEvent.submit(form);
-
-		// Component does not have native loading rendering or native error tracking
-		// It just routes to action.
+		await waitFor(() => {
+			expect(mockEnroll).toHaveBeenCalledWith("TWL-123456");
+		});
 	});
 });

@@ -58,7 +58,7 @@ export async function signUp(formData: FormData) {
 				role,
 				class_code: class_code || null,
 			},
-			emailRedirectTo: `${origin}/auth/callback`,
+			emailRedirectTo: `${origin}/auth/confirm`,
 		},
 	});
 

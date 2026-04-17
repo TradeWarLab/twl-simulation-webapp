@@ -110,13 +110,13 @@ export function SignUpForm({
 						Create Account
 					</div>
 					<h1 className="mt-4 text-[clamp(28px,4vw,44px)] leading-tight">
-						Student & Instructor Sign Up
+						Sign Up
 					</h1>
 					<p
 						className="mt-3 text-sm text-muted-foreground"
 						style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
 					>
-						Join the simulation platform with a verified account.
+						Create an account to join the platform.
 					</p>
 				</div>
 				<div className="px-8 py-6">

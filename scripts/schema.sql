@@ -52,7 +52,7 @@ create table public.classes (
   normalized_name text not null,
   class_code text not null unique,
   status text check (status in ('active', 'archived')) default 'active',
-  current_period int default 0,  -- 0=Setup, 1=Watch, 2=Debate, 3=Negotiation, 4=Reflection
+  current_period int default 0,  -- 0=Setup, 1=Domestic Negotiation, 2=Bilateral Negotiation, 3=End
   notebooklm_url text, -- Predefined link to NotebookLM resource
   created_at timestamptz default now() not null
 );
