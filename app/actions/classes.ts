@@ -9,6 +9,7 @@ import type {
 	StudentClassSummary,
 	TeamCountry,
 } from "@/lib/types/domain";
+import { DEFAULT_BRIEFINGS } from "@/lib/constants";
 
 const VALID_NATIONS: readonly TeamCountry[] = ["USA", "China"];
 
@@ -127,6 +128,26 @@ export async function createClass(formData: FormData): Promise<void> {
 				if (seedError) {
 					console.error("Error seeding trade issues:", seedError);
 				}
+			}
+		}
+
+		// Seed default briefings automatically
+		const briefingsToInsert = DEFAULT_BRIEFINGS.map((b) => ({
+			class_id: classData.id,
+			title: b.title,
+			content: b.content,
+			file_url: b.file_url,
+			target_role: b.target_role,
+			interest_group: b.interest_group,
+		}));
+
+		if (briefingsToInsert.length > 0) {
+			const { error: briefingsError } = await supabase
+				.from("briefings")
+				.insert(briefingsToInsert);
+
+			if (briefingsError) {
+				console.error("Error seeding default briefings:", briefingsError);
 			}
 		}
 	}

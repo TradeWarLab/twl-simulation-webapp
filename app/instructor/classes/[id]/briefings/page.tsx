@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getClassBriefings } from "@/app/actions/briefings";
-import { BriefingForm } from "@/components/instructor/briefing-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,14 +77,7 @@ async function BriefingsDashboardInner({
 				</div>
 			</div>
 
-			<div className="grid md:grid-cols-2 gap-8">
-				{/* Form Column */}
-				<div>
-					<BriefingForm classId={id} />
-				</div>
-
-				{/* List Column */}
-				<div className="space-y-4">
+			<div className="space-y-4">
 					<h2 className="text-2xl font-bold tracking-tight">
 						Current Intelligence
 					</h2>
@@ -171,7 +163,6 @@ async function BriefingsDashboardInner({
 							</Card>
 						))
 					)}
-				</div>
 			</div>
 		</div>
 	);

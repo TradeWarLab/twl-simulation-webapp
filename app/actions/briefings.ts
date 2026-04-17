@@ -1,64 +1,9 @@
 "use server";
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Briefing } from "@/lib/types/domain";
 
-export async function createBriefing(classId: string, formData: FormData) {
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-
-	if (!user) return { error: "Not logged in" };
-
-	const title = formData.get("title") as string;
-	const content = formData.get("content") as string;
-	const target_role = formData.get("target_role") as "USA" | "China" | "All";
-	const interest_group = formData.get("interest_group") as string;
-
-	// File upload handling
-	const file = formData.get("file") as File | null;
-	let file_url = null;
-
-	if (file && file.size > 0) {
-		const buffer = Buffer.from(await file.arrayBuffer());
-		const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
-		const uploadDir = path.join(
-			process.cwd(),
-			"public",
-			"uploads",
-			"briefings",
-		);
-		await fs.mkdir(uploadDir, { recursive: true });
-		await fs.writeFile(path.join(uploadDir, filename), buffer);
-		file_url = `/uploads/briefings/${filename}`;
-	}
-
-	if (!title || (!content && !file_url) || !target_role) {
-		return { error: "Missing required fields" };
-	}
-
-	const { error } = await supabase.from("briefings").insert({
-		class_id: classId,
-		title,
-		content: content || "",
-		target_role,
-		interest_group:
-			interest_group === "All" || !interest_group ? null : interest_group,
-		file_url,
-	});
-
-	if (error) {
-		console.error("Failed to insert briefing:", error);
-		return { error: "Failed to create briefing" };
-	}
-
-	revalidatePath(`/instructor/classes/${classId}/briefings`);
-	return { success: true };
-}
 
 export async function getClassBriefings(classId: string) {
 	const supabase = await createClient();
