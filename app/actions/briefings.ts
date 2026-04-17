@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Briefing } from "@/lib/types/domain";
 
-
 export async function getClassBriefings(classId: string) {
 	const supabase = await createClient();
 	const {

@@ -1,7 +1,7 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL

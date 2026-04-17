@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { DEFAULT_BRIEFINGS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import type {
 	ClassRosterEntry,
@@ -9,7 +10,6 @@ import type {
 	StudentClassSummary,
 	TeamCountry,
 } from "@/lib/types/domain";
-import { DEFAULT_BRIEFINGS } from "@/lib/constants";
 
 const VALID_NATIONS: readonly TeamCountry[] = ["USA", "China"];
 
