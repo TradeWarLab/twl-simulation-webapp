@@ -169,7 +169,7 @@ export function LogClient({
 													<span className="text-muted-foreground">
 														{trade.offered_items.length > 0
 															? trade.offered_items
-																	.map((i) => `${i.name} ($${i.value})`)
+																	.map((i) => `${i.name} (${i.value})`)
 																	.join(", ")
 															: "Nothing"}
 													</span>
@@ -179,7 +179,7 @@ export function LogClient({
 													<span className="text-muted-foreground">
 														{trade.requested_items.length > 0
 															? trade.requested_items
-																	.map((i) => `${i.name} ($${i.value})`)
+																	.map((i) => `${i.name} (${i.value})`)
 																	.join(", ")
 															: "Nothing"}
 													</span>

@@ -295,7 +295,7 @@ export function NegotiationTradePanel({
 					{/* ─── My Team Column ─── */}
 					<div className="flex flex-col gap-3 min-h-0">
 						{/* Score Header */}
-						<div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-600/5 dark:from-blue-500/20 dark:to-blue-600/10 border border-blue-200/50 dark:border-blue-800/50">
+						<div className="flex items-center justify-between px-3 py-2 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 border border-blue-200/50 dark:border-blue-800/50">
 							<div className="flex items-center gap-2">
 								<span className="text-lg">{flagEmoji(myTeamCountry)}</span>
 								<span className="font-semibold text-sm">
@@ -359,7 +359,7 @@ export function NegotiationTradePanel({
 					{/* ─── Opponent Team Column ─── */}
 					<div className="flex flex-col gap-3 min-h-0">
 						{/* Score Header */}
-						<div className="flex items-center justify-between px-3 py-2 rounded-lg bg-gradient-to-r from-red-500/10 to-red-600/5 dark:from-red-500/20 dark:to-red-600/10 border border-red-200/50 dark:border-red-800/50">
+						<div className="flex items-center justify-between px-3 py-2 rounded-lg bg-red-500/10 dark:bg-red-500/20 border border-red-200/50 dark:border-red-800/50">
 							<div className="flex items-center gap-2">
 								<span className="text-lg">
 									{flagEmoji(opponentTeamCountry)}
@@ -442,7 +442,7 @@ export function NegotiationTradePanel({
 						isPending ||
 						(offeredItemIds.size === 0 && requestedItemIds.size === 0)
 					}
-					className="w-full max-w-xs bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-lg shadow-orange-500/25 transition-all hover:shadow-xl hover:shadow-orange-500/30 hover:-translate-y-0.5"
+					className="w-full max-w-xs bg-amber-500 hover:bg-amber-60 text-white font-semibold shadow-lg shadow-orange-500/25 transition-all hover:shadow-xl hover:shadow-orange-500/30 hover:-translate-y-0.5"
 					size="lg"
 				>
 					{isPending ? (

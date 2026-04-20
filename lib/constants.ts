@@ -51,7 +51,8 @@ export const DEFAULT_BRIEFINGS = [
 		target_role: "China" as const,
 		interest_group: "Pro-Globalization",
 		file_url: "/uploads/briefings/Briefing C- China Pro-Globalization.pdf",
-		content: "Official briefing for the China Pro-Globalization interest group.",
+		content:
+			"Official briefing for the China Pro-Globalization interest group.",
 	},
 	{
 		title: "China Pro-Decoupling Briefing",
@@ -65,6 +66,7 @@ export const DEFAULT_BRIEFINGS = [
 		target_role: "China" as const,
 		interest_group: "Strategic Rivalry",
 		file_url: "/uploads/briefings/Briefing F- China Strategic Rivalry.pdf",
-		content: "Official briefing for the China Strategic Rivalry interest group.",
+		content:
+			"Official briefing for the China Strategic Rivalry interest group.",
 	},
 ];

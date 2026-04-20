@@ -128,7 +128,7 @@ export function TradeProposalBuilder({
 										<div className="mt-1.5 flex items-center gap-1.5">
 											<div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
 												<div
-													className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+													className="h-full bg-indigo-500 rounded-full transition-all duration-500"
 													style={{
 														width: `${proposal.vote_summary.total_members > 0 ? (proposal.vote_summary.votes_cast / proposal.vote_summary.total_members) * 100 : 0}%`,
 													}}

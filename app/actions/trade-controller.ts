@@ -40,10 +40,50 @@ export async function getTradeProposals(
 		return [];
 	}
 
-	// Enrich with vote summaries
+	// Enrich with vote summaries and viewer's valuations
 	const proposals = (data ?? []) as TradeProposal[];
 
+	// Get the viewer's team items to map valuations
+	const { data: viewerEnrollment } = await supabase
+		.from("students_classes")
+		.select("team_id")
+		.eq("student_id", user.id)
+		.eq("class_id", classId)
+		.single();
+
+	const viewerTeamId = viewerEnrollment?.team_id;
+	let viewerItemsMap = new Map<string, number>();
+
+	if (viewerTeamId) {
+		const { data: viewerItems } = await supabase
+			.from("trade_items")
+			.select("issue_id, value, name")
+			.eq("team_id", viewerTeamId);
+		
+		if (viewerItems) {
+			for (const item of viewerItems) {
+				if (item.issue_id) viewerItemsMap.set(item.issue_id, Number(item.value));
+				viewerItemsMap.set(item.name, Number(item.value)); // fallback to name
+			}
+		}
+	}
+
 	for (const proposal of proposals) {
+		// Map viewer's values to the items
+		if (viewerTeamId) {
+			proposal.offered_items = proposal.offered_items.map(item => ({
+				...item,
+				value: viewerItemsMap.get(item.item_id) ?? viewerItemsMap.get(item.name) ?? 0
+			}));
+			proposal.requested_items = proposal.requested_items.map(item => ({
+				...item,
+				value: viewerItemsMap.get(item.item_id) ?? viewerItemsMap.get(item.name) ?? 0
+			}));
+		} else {
+			// If no team (e.g. instructor), we might want to show something else or just leave values blank
+			// For now, leave them as they are (which is blank/zero from DB)
+		}
+
 		// Count total team members for both teams
 		const { count: totalMembers } = await supabase
 			.from("students_classes")
@@ -123,9 +163,6 @@ export async function getScoreboard(classId: string): Promise<TeamScore[]> {
 
 // ─── Mutations ──────────────────────────────────────────
 
-/**
- * 1️⃣ Create a trade proposal from selected items.
- */
 export async function createTradeProposal(
 	classId: string,
 	proposingTeamId: string,
@@ -167,7 +204,7 @@ export async function createTradeProposal(
 		.eq("id", classId)
 		.single();
 
-	if (!classData || classData.current_period !== 3) {
+	if (!classData || classData.current_period !== 2) {
 		return {
 			error: "Trade proposals can only be created during the Negotiation phase",
 		};
@@ -179,8 +216,8 @@ export async function createTradeProposal(
 			class_id: classId,
 			proposing_team_id: proposingTeamId,
 			receiving_team_id: receivingTeamId,
-			offered_items: offeredItems,
-			requested_items: requestedItems,
+			offered_items: offeredItems.map(i => ({ item_id: i.item_id, name: i.name })),
+			requested_items: requestedItems.map(i => ({ item_id: i.item_id, name: i.name })),
 			status: "pending",
 			created_by: user.id,
 		})
@@ -196,10 +233,7 @@ export async function createTradeProposal(
 	return { success: true, proposalId: proposal.id };
 }
 
-/**
- * 2️⃣ Submit a vote on a trade proposal.
- * Automatically resolves the proposal when all votes are in.
- */
+// auto resolves when all votes are in
 export async function submitVote(proposalId: string, vote: VoteChoice) {
 	const supabase = await createClient();
 	const {
@@ -288,10 +322,7 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 	return { success: true };
 }
 
-/**
- * 3️⃣ Execute a trade: swap item ownership between teams.
- * Called automatically when both teams unanimously approve.
- */
+// Called automatically when both teams unanimously approve.
 export async function executeTrade(proposalId: string) {
 	const supabase = await createClient();
 
@@ -352,9 +383,7 @@ export async function executeTrade(proposalId: string) {
 	return { success: true };
 }
 
-/**
- * 4️⃣ Recalculate team scores by summing trade_items.value owned by each team.
- */
+// Recalculate team scores by summing trade_items.value owned by each team.
 export async function updateScores(classId: string) {
 	const supabase = await createClient();
 

@@ -55,7 +55,7 @@ export type TradeProposalStatus =
 export type TradeProposalItem = {
 	item_id: string;
 	name: string;
-	value: number;
+	value?: number;
 };
 
 export type TradeProposal = {

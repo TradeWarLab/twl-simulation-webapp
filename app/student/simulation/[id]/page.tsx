@@ -1,4 +1,3 @@
-import { ExternalLink } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
@@ -11,13 +10,12 @@ import {
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { NegotiationController } from "@/components/negotiation/negotiation-controller";
 import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
+import { FinalResults } from "@/components/simulation/final-results";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationRealtimeProvider } from "@/components/simulation/simulation-realtime-provider";
 import { BriefingPanel } from "@/components/student/briefing-panel";
 import { UnassignedState } from "@/components/student/unassigned-state";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -78,10 +76,15 @@ async function SimulationPageInner({
 	const initialGlobalMessages = await getMessages(id, "global");
 
 	// Fetch initial trade items for my team
-	const tradeItems = teamRecord
+	const allTradeItems = teamRecord
 		? await getTeamTradeItems(id, teamRecord.id)
 		: [];
-	const isTradeLocked = classRecord.current_period >= 3;
+	
+	// Categorize: Concessions are items I "own" and can give. Asks are items the opponent "owns" and I can request.
+	const myTeamItems = allTradeItems.filter(i => i.role === 'concession');
+	const opponentTeamItems = allTradeItems.filter(i => i.role === 'ask');
+
+	const isTradeLocked = classRecord.current_period !== 1;
 
 	// Fetch Student Briefings
 	const briefings = teamRecord
@@ -92,10 +95,9 @@ async function SimulationPageInner({
 			)
 		: [];
 
-	// Fetch opponent team info and items for negotiation
+	// Fetch opponent team info for negotiation
 	let opponentTeamId = "";
 	let opponentTeamCountry = "";
-	let opponentTeamItems: Awaited<ReturnType<typeof getTeamTradeItems>> = [];
 
 	if (teamRecord) {
 		const { data: opponentTeam } = await supabase
@@ -108,13 +110,12 @@ async function SimulationPageInner({
 		if (opponentTeam) {
 			opponentTeamId = opponentTeam.id;
 			opponentTeamCountry = opponentTeam.country;
-			opponentTeamItems = await getTeamTradeItems(id, opponentTeam.id);
 		}
 	}
 
 	// Fetch trade proposals and scoreboard
 	const proposals = await getTradeProposals(id);
-	const _scores = await getScoreboard(id);
+	const scores = await getScoreboard(id);
 
 	return (
 		<div className="container mx-auto p-2 md:p-4 min-h-screen flex flex-col lg:h-screen lg:max-h-screen">
@@ -133,73 +134,12 @@ async function SimulationPageInner({
 				<main className="flex-1 grid grid-cols-1 lg:grid-cols-[330px_1fr_390px] gap-4 min-h-0">
 					{/* Left Panel: Dashboard (Target Values) or Resources */}
 					<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
-						<Tabs defaultValue="dashboard" className="w-full">
-							<TabsList className="w-full grid grid-cols-2 shrink-0">
-								<TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-								<TabsTrigger value="resources">Resources</TabsTrigger>
-							</TabsList>
-
-							<TabsContent
-								value="dashboard"
-								className="mt-4 flex flex-col gap-4 data-[state=active]:flex"
-							>
-								<div className="flex flex-col pb-4">
-									{teamRecord && classRecord.current_period !== 2 && (
-										<div className="pb-4">
-											<TradeItemsPanel
-												classId={id}
-												initialItems={tradeItems}
-												isLocked={isTradeLocked}
-											/>
-										</div>
-									)}
-								</div>
-							</TabsContent>
-
-							<TabsContent
-								value="resources"
-								className="mt-4 flex flex-col justify-start gap-4 data-[state=active]:flex"
-							>
-								{classRecord.notebooklm_url ? (
-									<Card className="shrink-0 bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900 shadow-sm">
-										<CardContent className="p-4 flex flex-col gap-3">
-											<div>
-												<h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">
-													Research Notebook
-												</h3>
-												<p className="text-xs text-blue-700/80 dark:text-blue-300">
-													Access your class research materials and ask AI
-													queries directly.
-												</p>
-											</div>
-											<Button
-												asChild
-												size="sm"
-												variant="outline"
-												className="w-full bg-card hover:bg-muted"
-											>
-												<a
-													href={classRecord.notebooklm_url}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													Open NotebookLM{" "}
-													<ExternalLink className="w-3 h-3 ml-2" />
-												</a>
-											</Button>
-										</CardContent>
-									</Card>
-								) : (
-									<div className="p-4 rounded-lg border border-dashed border-border text-center text-sm text-muted-foreground shrink-0 bg-muted/50">
-										No research notebook available.
-									</div>
-								)}
-
-								<div className="pb-4">
-									<BriefingPanel briefings={briefings} />
-								</div>
-							</TabsContent>
-						</Tabs>
+						<div className="pb-4">
+							<BriefingPanel
+								briefings={briefings}
+								notebooklmUrl={classRecord?.notebooklm_url || null}
+							/>
+						</div>
 					</div>
 
 					{/* Center Panel: Action Center (Negotiation Controller) */}
@@ -208,19 +148,19 @@ async function SimulationPageInner({
 							<CardTitle className="text-md">Action Center</CardTitle>
 						</CardHeader>
 						<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
-							{classRecord.current_period === 1 && (
+							{classRecord.current_period === 0 && (
 								<div className="flex items-center justify-center h-full text-muted-foreground">
-									Documentary Placeholder
+									Wait for the domestic negotiation phase to start.
 								</div>
 							)}
-							{classRecord.current_period === 2 && teamRecord && (
+							{classRecord.current_period === 1 && teamRecord && (
 								<TradeItemsPanel
 									classId={id}
-									initialItems={tradeItems}
+									initialItems={allTradeItems}
 									isLocked={isTradeLocked}
 								/>
 							)}
-							{classRecord.current_period === 3 && teamRecord && (
+							{classRecord.current_period === 2 && teamRecord && (
 								<NegotiationController
 									classId={id}
 									currentUserId={user.id}
@@ -228,18 +168,14 @@ async function SimulationPageInner({
 									opponentTeamId={opponentTeamId}
 									myTeamCountry={teamRecord.country}
 									opponentTeamCountry={opponentTeamCountry}
-									myTeamItems={tradeItems}
+									myTeamItems={myTeamItems}
 									opponentTeamItems={opponentTeamItems}
 									initialProposals={proposals}
 								/>
 							)}
-							{classRecord.current_period !== 1 &&
-								classRecord.current_period !== 2 &&
-								classRecord.current_period !== 3 && (
-									<div className="flex items-center justify-center h-full text-muted-foreground">
-										Wait for the next phase.
-									</div>
-								)}
+							{classRecord.current_period === 3 && teamRecord && (
+								<FinalResults scores={scores} />
+							)}
 						</CardContent>
 					</Card>
 

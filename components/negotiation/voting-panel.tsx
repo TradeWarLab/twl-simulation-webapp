@@ -60,6 +60,8 @@ export function VotingPanel({
 	const approvals = votes.filter((v) => v.vote === "approve").length;
 	const rejections = votes.filter((v) => v.vote === "reject").length;
 
+	const netImpact = (proposal.offered_items ?? []).concat(proposal.requested_items ?? []).reduce((sum, item) => sum + (item.value ?? 0), 0);
+
 	return (
 		<div className="flex flex-col h-full animate-in slide-in-from-right-2 duration-200">
 			{/* Header */}
@@ -101,17 +103,17 @@ export function VotingPanel({
 					<div className="grid grid-cols-2 gap-3">
 						<div>
 							<p className="text-xs font-medium text-muted-foreground mb-2">
-								🤝 Concessions ({proposal.proposing_team?.country})
+								Concessions ({proposal.proposing_team?.country})
 							</p>
 							<div className="space-y-1">
 								{(proposal.offered_items ?? []).map((item, i) => (
 									<div
 										key={i}
-										className="text-xs px-3 py-2 rounded-md bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800"
+										className="text-xs px-3 py-2 rounded-md bg-card border flex items-center justify-between"
 									>
 										<span className="font-medium">{item.name}</span>
-										<span className="float-right text-indigo-600 dark:text-indigo-400">
-											{item.value} pts
+										<span className={`font-mono ${item.value && item.value > 0 ? "text-emerald-600" : item.value && item.value < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+											{item.value && item.value > 0 ? `+${item.value}` : item.value} pts
 										</span>
 									</div>
 								))}
@@ -119,22 +121,32 @@ export function VotingPanel({
 						</div>
 						<div>
 							<p className="text-xs font-medium text-muted-foreground mb-2">
-								📥 Asks ({proposal.receiving_team?.country})
+								Asks ({proposal.receiving_team?.country})
 							</p>
 							<div className="space-y-1">
 								{(proposal.requested_items ?? []).map((item, i) => (
 									<div
 										key={i}
-										className="text-xs px-3 py-2 rounded-md bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800"
+										className="text-xs px-3 py-2 rounded-md bg-card border flex items-center justify-between"
 									>
 										<span className="font-medium">{item.name}</span>
-										<span className="float-right text-purple-600 dark:text-purple-400">
-											{item.value} pts
+										<span className={`font-mono ${item.value && item.value > 0 ? "text-emerald-600" : item.value && item.value < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+											{item.value && item.value > 0 ? `+${item.value}` : item.value} pts
 										</span>
 									</div>
 								))}
 							</div>
 						</div>
+					</div>
+
+					{/* Net Impact Summary */}
+					<div className="p-3 rounded-lg border-2 border-dashed bg-muted/20 flex items-center justify-between">
+						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+							Your Team&apos;s Net Impact
+						</span>
+						<span className={`text-lg font-bold tabular-nums ${netImpact > 0 ? "text-emerald-600" : netImpact < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+							{netImpact > 0 ? `+${netImpact}` : netImpact} pts
+						</span>
 					</div>
 
 					{/* Vote Tally */}
@@ -162,7 +174,7 @@ export function VotingPanel({
 						{proposal.vote_summary && (
 							<div className="h-2 bg-muted rounded-full overflow-hidden">
 								<div
-									className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
+									className="h-full bg-emerald-50 rounded-full transition-all duration-700"
 									style={{
 										width: `${proposal.vote_summary.total_members > 0 ? (votes.length / proposal.vote_summary.total_members) * 100 : 0}%`,
 									}}

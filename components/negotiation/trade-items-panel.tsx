@@ -85,7 +85,7 @@ export function TradeItemsPanel({
 				<h3 className="font-semibold text-sm">Target Issue Values</h3>
 				<p className="text-xs text-muted-foreground mt-1 mb-4">
 					{isLocked
-						? "Values are locked during the Negotiation phase."
+						? "Values can only be edited during the Domestic Negotiation phase."
 						: "Internal point system for your team. Asks yield positive points, Concessions cost negative points."}
 				</p>
 

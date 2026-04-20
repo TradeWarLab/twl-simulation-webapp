@@ -179,27 +179,25 @@ export function SignUpForm({
 								)}
 							</div>
 
-							{!isInstructor && (
-								<div className="grid gap-2">
-									<Label htmlFor="class_code">Class Code (Optional)</Label>
-									<Input
-										id="class_code"
-										name="class_code"
-										type="text"
-										placeholder="e.g. TWL-A42B39"
-										className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
-									/>
-									<p
-										className="text-xs text-muted-foreground"
-										style={{
-											fontFamily: "'Helvetica Neue', Arial, sans-serif",
-										}}
-									>
-										Join a class immediately with a code provided by your
-										instructor.
-									</p>
-								</div>
-							)}
+							<div className="grid gap-2">
+								<Label htmlFor="class_code">Class Code (Optional)</Label>
+								<Input
+									id="class_code"
+									name="class_code"
+									type="text"
+									placeholder="e.g. TWL-A42B39"
+									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
+								/>
+								<p
+									className="text-xs text-muted-foreground"
+									style={{
+										fontFamily: "'Helvetica Neue', Arial, sans-serif",
+									}}
+								>
+									Join a class immediately with a code provided by your
+									instructor.
+								</p>
+							</div>
 
 							<div className="flex items-center space-x-2">
 								<input

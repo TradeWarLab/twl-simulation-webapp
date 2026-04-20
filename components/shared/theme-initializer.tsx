@@ -8,7 +8,7 @@ const THEME_PREFERENCE_KEY = "twl-theme-preference";
 /**
  * Invisible component that sets the default theme based on user role.
  * - Instructors default to light mode
- * - Students default to dark mode
+ * - Students default to light mode
  *
  * If the user has already manually chosen a theme (stored in localStorage),
  * this component respects that choice and does nothing.
@@ -30,9 +30,9 @@ export function ThemeInitializer({
 		if (stored) return;
 
 		// Apply role-based default
-		const defaultTheme = userRole === "instructor" ? "light" : "dark";
+		const defaultTheme = "light";
 		setTheme(defaultTheme);
-	}, [userRole, setTheme]);
+	}, [setTheme]);
 
 	return null;
 }

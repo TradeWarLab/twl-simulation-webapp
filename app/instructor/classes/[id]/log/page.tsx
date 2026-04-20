@@ -62,9 +62,7 @@ async function LogDashboardInner({
 				</Button>
 				<div className="flex justify-between items-center bg-slate-900 border-border text-slate-100 p-6 rounded-lg shadow-sm border mb-8">
 					<div>
-						<h1 className="text-3xl font-bold">
-							{classData.name} - System Log
-						</h1>
+						<h1 className="text-3xl font-bold">{classData.name} - Log</h1>
 						<p className="text-sm font-medium opacity-80 mt-1">
 							Chronological history of chat interactions and trade proposals.
 						</p>

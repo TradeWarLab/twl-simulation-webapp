@@ -108,8 +108,8 @@ function TradeItemCard({
 			].join(" ")}
 		>
 			<span className="truncate max-w-[160px]">{item.name}</span>
-			<span className="ml-auto text-xs text-muted-foreground tabular-nums">
-				{item.value}
+			<span className={`ml-auto text-xs font-mono tabular-nums ${item.value && item.value > 0 ? "text-emerald-600 dark:text-emerald-400" : item.value && item.value < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
+				{item.value && item.value > 0 ? `+${item.value}` : item.value}
 			</span>
 			{variant === "zone" && onRemove && (
 				<button
@@ -235,6 +235,12 @@ export function TradeOfferDndBuilder({
 		return map;
 	}, [liveMyItems, liveOpponentItems]);
 
+	const currentScore = useMemo(() => {
+		const offerSum = offerItems.reduce((s, i) => s + (i.value || 0), 0);
+		const requestSum = requestItems.reduce((s, i) => s + (i.value || 0), 0);
+		return offerSum + requestSum;
+	}, [offerItems, requestItems]);
+
 	useEffect(() => {
 		setLiveMyItems(myTeamItems.filter((i) => !i.is_resolved));
 	}, [myTeamItems]);
@@ -294,10 +300,8 @@ export function TradeOfferDndBuilder({
 						setLiveOpponentItems((prev) =>
 							prev.filter((i) => i.id !== next.id),
 						);
-					} else if (next.team_id === opponentTeamId) {
-						setLiveOpponentItems((prev) => upsert(prev));
-						setLiveMyItems((prev) => prev.filter((i) => i.id !== next.id));
 					} else {
+						// Security: ignore updates for other teams
 						setLiveMyItems((prev) => prev.filter((i) => i.id !== next.id));
 						setLiveOpponentItems((prev) =>
 							prev.filter((i) => i.id !== next.id),
@@ -639,20 +643,37 @@ export function TradeOfferDndBuilder({
 				</DragOverlay>
 			</DndContext>
 
-			{submitError ? (
-				<p className="text-xs text-destructive">{submitError}</p>
-			) : null}
+			<div className="flex flex-col gap-3">
+				{submitError ? (
+					<p className="text-xs text-destructive px-1">{submitError}</p>
+				) : null}
 
-			<Button
-				type="button"
-				onClick={submit}
-				disabled={
-					isPending || (offerItems.length === 0 && requestItems.length === 0)
-				}
-				className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
-			>
-				{isPending ? "Submitting…" : "Submit Trade Offer"}
-			</Button>
+				<div className="flex items-center justify-between p-4 rounded-xl border-2 bg-muted/30">
+					<div className="flex flex-col text-left">
+						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+							Your Net Score Impact
+						</span>
+						<span className={`text-2xl font-bold tabular-nums ${currentScore > 0 ? "text-emerald-600" : currentScore < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+							{currentScore > 0 ? `+${currentScore}` : currentScore}
+						</span>
+					</div>
+					<div className="text-right">
+						<div className="text-[10px] text-muted-foreground mb-1">
+							{offerItems.length} concessions · {requestItems.length} asks
+						</div>
+						<Button
+							type="button"
+							onClick={submit}
+							disabled={
+								isPending || (offerItems.length === 0 && requestItems.length === 0)
+							}
+							className={`h-10 px-6 font-semibold shadow-sm transition-all ${currentScore >= 0 ? "bg-indigo-500 hover:bg-indigo-600 text-white" : "bg-amber-500 hover:bg-amber-600 text-white"}`}
+						>
+							{isPending ? "Submitting…" : "Submit Trade Offer"}
+						</Button>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 }

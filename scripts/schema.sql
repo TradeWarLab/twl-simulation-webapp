@@ -252,8 +252,12 @@ create table public.trade_items (
 
 alter table public.trade_items enable row level security;
 
-create policy "Trade items viewable by class."
-  on public.trade_items for select using (true);
+create policy "Trade items viewable by own team or instructor."
+  on public.trade_items for select using (
+    (exists (select 1 from public.students_classes where student_id = auth.uid() and team_id = trade_items.team_id))
+    or
+    (exists (select 1 from public.classes where id = trade_items.class_id and instructor_id = auth.uid()))
+  );
 
 create policy "Teams can update their own trade items."
   on public.trade_items for update using (
