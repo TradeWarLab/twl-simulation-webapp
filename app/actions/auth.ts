@@ -36,7 +36,7 @@ export async function login(formData: FormData) {
 		}
 	}
 
-	redirect("/protected");
+	redirect("/student/dashboard");
 }
 
 export async function signUp(formData: FormData) {

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { type TradeItem, updateTradeItemValue } from "@/app/actions/trade";
+import { updateTradeItemValue } from "@/app/actions/trade-controller";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { TradeItem } from "@/lib/types/domain";
 
 export function TradeItemsPanel({
 	classId,

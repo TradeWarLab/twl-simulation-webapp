@@ -4,11 +4,11 @@ import { useTransition } from "react";
 import {
 	createTradeItem,
 	deleteTradeItem,
-	type TradeItem,
-} from "@/app/actions/trade";
+} from "@/app/actions/trade-controller";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import type { TradeItem } from "@/lib/types/domain";
 
 export function ManageItemsClient({
 	classId,

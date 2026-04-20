@@ -17,12 +17,11 @@ import {
 	useState,
 	useTransition,
 } from "react";
-import type { TradeItem } from "@/app/actions/trade";
 import { createTradeProposal } from "@/app/actions/trade-controller";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/lib/supabase/client";
-import type { TradeProposalItem } from "@/lib/types/domain";
+import type { TradeItem, TradeProposalItem } from "@/lib/types/domain";
 
 type Side = "my" | "opponent";
 type ContainerId =
@@ -108,7 +107,9 @@ function TradeItemCard({
 			].join(" ")}
 		>
 			<span className="truncate max-w-[160px]">{item.name}</span>
-			<span className={`ml-auto text-xs font-mono tabular-nums ${item.value && item.value > 0 ? "text-emerald-600 dark:text-emerald-400" : item.value && item.value < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
+			<span
+				className={`ml-auto text-xs font-mono tabular-nums ${item.value && item.value > 0 ? "text-emerald-600 dark:text-emerald-400" : item.value && item.value < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
+			>
 				{item.value && item.value > 0 ? `+${item.value}` : item.value}
 			</span>
 			{variant === "zone" && onRemove && (
@@ -326,7 +327,7 @@ export function TradeOfferDndBuilder({
 			if (syncTimer) clearTimeout(syncTimer);
 			supabase.removeChannel(channel);
 		};
-	}, [supabase, classId, myTeamId, opponentTeamId]);
+	}, [supabase, classId, myTeamId]);
 
 	// Prune zone items when props change (realtime updates).
 	useEffect(() => {
@@ -653,7 +654,9 @@ export function TradeOfferDndBuilder({
 						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
 							Your Net Score Impact
 						</span>
-						<span className={`text-2xl font-bold tabular-nums ${currentScore > 0 ? "text-emerald-600" : currentScore < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+						<span
+							className={`text-2xl font-bold tabular-nums ${currentScore > 0 ? "text-emerald-600" : currentScore < 0 ? "text-red-600" : "text-muted-foreground"}`}
+						>
 							{currentScore > 0 ? `+${currentScore}` : currentScore}
 						</span>
 					</div>
@@ -665,7 +668,8 @@ export function TradeOfferDndBuilder({
 							type="button"
 							onClick={submit}
 							disabled={
-								isPending || (offerItems.length === 0 && requestItems.length === 0)
+								isPending ||
+								(offerItems.length === 0 && requestItems.length === 0)
 							}
 							className={`h-10 px-6 font-semibold shadow-sm transition-all ${currentScore >= 0 ? "bg-indigo-500 hover:bg-indigo-600 text-white" : "bg-amber-500 hover:bg-amber-600 text-white"}`}
 						>

@@ -25,7 +25,7 @@ describe("FinalResults Component", () => {
 
 		render(<FinalResults scores={scores as any} />);
 
-		expect(screen.getByText("🇺🇸 USA Wins!")).toBeInTheDocument();
+		expect(screen.getByText("USA Wins!")).toBeInTheDocument();
 		expect(screen.getByText("150")).toBeInTheDocument();
 		expect(screen.getByText("100")).toBeInTheDocument();
 		expect(screen.getByText("Winner")).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe("FinalResults Component", () => {
 
 		render(<FinalResults scores={scores as any} />);
 
-		expect(screen.getByText("🇨🇳 China Wins!")).toBeInTheDocument();
+		expect(screen.getByText("PRC Wins!")).toBeInTheDocument();
 		expect(screen.getByText("80")).toBeInTheDocument();
 		expect(screen.getByText("120")).toBeInTheDocument();
 	});
@@ -107,7 +107,11 @@ describe("FinalResults Component", () => {
 
 		render(<FinalResults scores={scores as any} />);
 
-		expect(screen.getByText("🏆 Simulation Complete")).toBeInTheDocument();
-		expect(screen.getByText("Thank you for participating in the trade war simulation!")).toBeInTheDocument();
+		expect(screen.getByText("Simulation Complete")).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Thank you for participating in the trade war simulation!",
+			),
+		).toBeInTheDocument();
 	});
 });

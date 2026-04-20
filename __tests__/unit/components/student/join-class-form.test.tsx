@@ -16,7 +16,9 @@ describe("JoinClassForm Component", () => {
 		render(<JoinClassForm />);
 
 		expect(screen.getByText("Join a Class")).toBeInTheDocument();
-		expect(screen.getByPlaceholderText(/enter class code/i)).toBeInTheDocument();
+		expect(
+			screen.getByPlaceholderText(/enter class code/i),
+		).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Join" })).toBeInTheDocument();
 	});
 

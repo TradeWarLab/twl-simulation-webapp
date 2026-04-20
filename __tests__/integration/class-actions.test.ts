@@ -37,7 +37,9 @@ describe("Class Actions", () => {
 				],
 				error: null,
 			});
-			const teamsInsertMock = vi.fn().mockReturnValue({ select: teamsSelectMock });
+			const teamsInsertMock = vi
+				.fn()
+				.mockReturnValue({ select: teamsSelectMock });
 
 			const globalIssuesSelectMock = vi.fn().mockResolvedValue({
 				data: [],
@@ -108,7 +110,9 @@ describe("Class Actions", () => {
 				data: teams,
 				error: null,
 			});
-			const teamsInsertMock = vi.fn().mockReturnValue({ select: teamsSelectMock });
+			const teamsInsertMock = vi
+				.fn()
+				.mockReturnValue({ select: teamsSelectMock });
 
 			const issues = [
 				{ id: "issue-1", title: "The U.S. to reduce tariffs" },

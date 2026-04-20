@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type {
 	TeamScore,
+	TradeItem,
 	TradeProposal,
 	TradeProposalItem,
 	Vote,
@@ -52,17 +53,18 @@ export async function getTradeProposals(
 		.single();
 
 	const viewerTeamId = viewerEnrollment?.team_id;
-	let viewerItemsMap = new Map<string, number>();
+	const viewerItemsMap = new Map<string, number>();
 
 	if (viewerTeamId) {
 		const { data: viewerItems } = await supabase
 			.from("trade_items")
 			.select("issue_id, value, name")
 			.eq("team_id", viewerTeamId);
-		
+
 		if (viewerItems) {
 			for (const item of viewerItems) {
-				if (item.issue_id) viewerItemsMap.set(item.issue_id, Number(item.value));
+				if (item.issue_id)
+					viewerItemsMap.set(item.issue_id, Number(item.value));
 				viewerItemsMap.set(item.name, Number(item.value)); // fallback to name
 			}
 		}
@@ -71,13 +73,19 @@ export async function getTradeProposals(
 	for (const proposal of proposals) {
 		// Map viewer's values to the items
 		if (viewerTeamId) {
-			proposal.offered_items = proposal.offered_items.map(item => ({
+			proposal.offered_items = proposal.offered_items.map((item) => ({
 				...item,
-				value: viewerItemsMap.get(item.item_id) ?? viewerItemsMap.get(item.name) ?? 0
+				value:
+					viewerItemsMap.get(item.item_id) ??
+					viewerItemsMap.get(item.name) ??
+					0,
 			}));
-			proposal.requested_items = proposal.requested_items.map(item => ({
+			proposal.requested_items = proposal.requested_items.map((item) => ({
 				...item,
-				value: viewerItemsMap.get(item.item_id) ?? viewerItemsMap.get(item.name) ?? 0
+				value:
+					viewerItemsMap.get(item.item_id) ??
+					viewerItemsMap.get(item.name) ??
+					0,
 			}));
 		} else {
 			// If no team (e.g. instructor), we might want to show something else or just leave values blank
@@ -216,8 +224,14 @@ export async function createTradeProposal(
 			class_id: classId,
 			proposing_team_id: proposingTeamId,
 			receiving_team_id: receivingTeamId,
-			offered_items: offeredItems.map(i => ({ item_id: i.item_id, name: i.name })),
-			requested_items: requestedItems.map(i => ({ item_id: i.item_id, name: i.name })),
+			offered_items: offeredItems.map((i) => ({
+				item_id: i.item_id,
+				name: i.name,
+			})),
+			requested_items: requestedItems.map((i) => ({
+				item_id: i.item_id,
+				name: i.name,
+			})),
 			status: "pending",
 			created_by: user.id,
 		})
@@ -421,6 +435,140 @@ export async function updateScores(classId: string) {
 		);
 	}
 
+	revalidatePath(`/student/simulation/${classId}`);
+	return { success: true };
+}
+
+// ─── Trade Item Management ─────────────────────────────
+
+export async function getTeamTradeItems(
+	classId: string,
+	teamId: string,
+): Promise<TradeItem[]> {
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) return [];
+
+	const { data, error } = await supabase
+		.from("trade_items")
+		.select("*")
+		.eq("class_id", classId)
+		.eq("team_id", teamId)
+		.order("name", { ascending: true });
+
+	if (error) {
+		console.error("Error fetching trade items:", error);
+		return [];
+	}
+
+	return data as TradeItem[];
+}
+
+export async function updateTradeItemValue(
+	itemId: string,
+	classId: string,
+	newValue: number,
+) {
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) return { error: "Unauthorized" };
+
+	const { error } = await supabase
+		.from("trade_items")
+		.update({ value: newValue })
+		.eq("id", itemId);
+
+	if (error) {
+		console.error("Error updating trade item:", error);
+		return { error: error.message };
+	}
+
+	revalidatePath(`/student/simulation/${classId}`);
+	return { success: true };
+}
+
+export async function initializeTradeItems(
+	classId: string,
+	teamId: string,
+	items: { name: string; value: number }[],
+) {
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) return { error: "Unauthorized" };
+
+	const insertData = items.map((item) => ({
+		class_id: classId,
+		team_id: teamId,
+		name: item.name,
+		value: item.value,
+	}));
+
+	const { error } = await supabase.from("trade_items").insert(insertData);
+
+	if (error) {
+		console.error("Error initializing trade items:", error);
+		return { error: error.message };
+	}
+
+	revalidatePath(`/instructor/classes/${classId}`);
+	return { success: true };
+}
+
+export async function createTradeItem(
+	classId: string,
+	teamId: string,
+	name: string,
+	value: number,
+) {
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) return { error: "Unauthorized" };
+
+	const { error } = await supabase
+		.from("trade_items")
+		.insert({ class_id: classId, team_id: teamId, name, value });
+
+	if (error) {
+		console.error("Error creating trade item:", error);
+		return { error: error.message };
+	}
+
+	revalidatePath(`/instructor/classes/${classId}/items`);
+	revalidatePath(`/student/simulation/${classId}`);
+	return { success: true };
+}
+
+export async function deleteTradeItem(classId: string, itemId: string) {
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+
+	if (!user) return { error: "Unauthorized" };
+
+	const { error } = await supabase
+		.from("trade_items")
+		.delete()
+		.eq("id", itemId);
+
+	if (error) {
+		console.error("Error deleting trade item:", error);
+		return { error: error.message };
+	}
+
+	revalidatePath(`/instructor/classes/${classId}/items`);
 	revalidatePath(`/student/simulation/${classId}`);
 	return { success: true };
 }

@@ -2,9 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
 import { getMessages } from "@/app/actions/chat";
-import { getTeamTradeItems } from "@/app/actions/trade";
 import {
 	getScoreboard,
+	getTeamTradeItems,
 	getTradeProposals,
 } from "@/app/actions/trade-controller";
 import { ChatPanel } from "@/components/chat/chat-panel";
@@ -79,10 +79,10 @@ async function SimulationPageInner({
 	const allTradeItems = teamRecord
 		? await getTeamTradeItems(id, teamRecord.id)
 		: [];
-	
+
 	// Categorize: Concessions are items I "own" and can give. Asks are items the opponent "owns" and I can request.
-	const myTeamItems = allTradeItems.filter(i => i.role === 'concession');
-	const opponentTeamItems = allTradeItems.filter(i => i.role === 'ask');
+	const myTeamItems = allTradeItems.filter((i) => i.role === "concession");
+	const opponentTeamItems = allTradeItems.filter((i) => i.role === "ask");
 
 	const isTradeLocked = classRecord.current_period !== 1;
 

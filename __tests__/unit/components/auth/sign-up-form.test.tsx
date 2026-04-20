@@ -55,7 +55,9 @@ describe("SignUpForm Component", () => {
 			target: { value: "different-password" },
 		});
 
-		const form = screen.getByRole("button", { name: /sign up/i }).closest("form");
+		const form = screen
+			.getByRole("button", { name: /sign up/i })
+			.closest("form");
 		if (form) {
 			fireEvent.submit(form);
 		}
@@ -88,7 +90,9 @@ describe("SignUpForm Component", () => {
 			target: { value: "TWL-AB12CD" },
 		});
 
-		const form = screen.getByRole("button", { name: /sign up/i }).closest("form");
+		const form = screen
+			.getByRole("button", { name: /sign up/i })
+			.closest("form");
 		if (form) {
 			fireEvent.submit(form);
 		}

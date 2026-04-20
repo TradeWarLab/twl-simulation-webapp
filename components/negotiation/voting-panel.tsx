@@ -20,7 +20,7 @@ type VotingPanelProps = {
 export function VotingPanel({
 	proposal,
 	currentUserId,
-	myTeamId,
+	// myTeamId,
 	onClose,
 }: VotingPanelProps) {
 	const [votes, setVotes] = useState<Vote[]>([]);
@@ -55,12 +55,14 @@ export function VotingPanel({
 		});
 	};
 
-	const _isMyTeamProposal = proposal.proposing_team_id === myTeamId;
+	// const _isMyTeamProposal = proposal.proposing_team_id === myTeamId;
 	const isResolved = proposal.status !== "pending";
 	const approvals = votes.filter((v) => v.vote === "approve").length;
 	const rejections = votes.filter((v) => v.vote === "reject").length;
 
-	const netImpact = (proposal.offered_items ?? []).concat(proposal.requested_items ?? []).reduce((sum, item) => sum + (item.value ?? 0), 0);
+	const netImpact = (proposal.offered_items ?? [])
+		.concat(proposal.requested_items ?? [])
+		.reduce((sum, item) => sum + (item.value ?? 0), 0);
 
 	return (
 		<div className="flex flex-col h-full animate-in slide-in-from-right-2 duration-200">
@@ -112,8 +114,13 @@ export function VotingPanel({
 										className="text-xs px-3 py-2 rounded-md bg-card border flex items-center justify-between"
 									>
 										<span className="font-medium">{item.name}</span>
-										<span className={`font-mono ${item.value && item.value > 0 ? "text-emerald-600" : item.value && item.value < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-											{item.value && item.value > 0 ? `+${item.value}` : item.value} pts
+										<span
+											className={`font-mono ${item.value && item.value > 0 ? "text-emerald-600" : item.value && item.value < 0 ? "text-red-500" : "text-muted-foreground"}`}
+										>
+											{item.value && item.value > 0
+												? `+${item.value}`
+												: item.value}{" "}
+											pts
 										</span>
 									</div>
 								))}
@@ -130,8 +137,13 @@ export function VotingPanel({
 										className="text-xs px-3 py-2 rounded-md bg-card border flex items-center justify-between"
 									>
 										<span className="font-medium">{item.name}</span>
-										<span className={`font-mono ${item.value && item.value > 0 ? "text-emerald-600" : item.value && item.value < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-											{item.value && item.value > 0 ? `+${item.value}` : item.value} pts
+										<span
+											className={`font-mono ${item.value && item.value > 0 ? "text-emerald-600" : item.value && item.value < 0 ? "text-red-500" : "text-muted-foreground"}`}
+										>
+											{item.value && item.value > 0
+												? `+${item.value}`
+												: item.value}{" "}
+											pts
 										</span>
 									</div>
 								))}
@@ -144,7 +156,9 @@ export function VotingPanel({
 						<span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
 							Your Team&apos;s Net Impact
 						</span>
-						<span className={`text-lg font-bold tabular-nums ${netImpact > 0 ? "text-emerald-600" : netImpact < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+						<span
+							className={`text-lg font-bold tabular-nums ${netImpact > 0 ? "text-emerald-600" : netImpact < 0 ? "text-red-600" : "text-muted-foreground"}`}
+						>
 							{netImpact > 0 ? `+${netImpact}` : netImpact} pts
 						</span>
 					</div>

@@ -20,7 +20,7 @@ export function FinalResults({ scores }: FinalResultsProps) {
 		winner = "USA Wins!";
 		winnerColor = "text-blue-600 dark:text-blue-400";
 	} else if (chinaPoints > usaPoints) {
-		winner = "PRC Wins!";
+		winner = "China Wins!";
 		winnerColor = "text-red-600 dark:text-red-400";
 	} else {
 		winner = "It's a Draw!";

@@ -4,7 +4,7 @@ import {
 	getTeamTradeItems,
 	initializeTradeItems,
 	updateTradeItemValue,
-} from "@/app/actions/trade";
+} from "@/app/actions/trade-controller";
 import { mockClient } from "../helpers/supabase-mock";
 
 describe("Trade Actions", () => {

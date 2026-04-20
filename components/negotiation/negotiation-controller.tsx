@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { TradeItem } from "@/app/actions/trade";
 import { TradeConfirmation } from "@/components/negotiation/trade-confirmation";
 import { TradeProposalBuilder } from "@/components/negotiation/trade-proposal-builder";
 import { VotingPanel } from "@/components/negotiation/voting-panel";
-import type { TradeProposal } from "@/lib/types/domain";
+import type { TradeItem, TradeProposal } from "@/lib/types/domain";
 
 type NegotiationControllerProps = {
 	classId: string;

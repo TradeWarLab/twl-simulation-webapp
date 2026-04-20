@@ -353,7 +353,6 @@ export async function getClassRoster(
 	}
 
 	return Array.from(rosterMap.values()).sort((a, b) => {
-		// Sort by joined or invited time (newest first placeholder)
 		return a.email.localeCompare(b.email);
 	});
 }
@@ -414,8 +413,6 @@ export async function getStudentClasses(): Promise<StudentClassSummary[]> {
 
 	if (!user) return [];
 
-	// This requires a join, but Supabase JS syntax handles it if relations are set up,
-	// or we can just fetch from students_classes
 	const { data, error } = await supabase
 		.from("students_classes")
 		.select(`
