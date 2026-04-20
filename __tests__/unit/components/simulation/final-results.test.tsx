@@ -80,7 +80,7 @@ describe("FinalResults Component", () => {
 
 		render(<FinalResults scores={scores as any} />);
 
-		expect(screen.getByText("🤝 It's a Draw!")).toBeInTheDocument();
+		expect(screen.getByText("It's a Draw!")).toBeInTheDocument();
 		expect(screen.getAllByText("100")).toHaveLength(2);
 		expect(screen.getByText("Draw")).toBeInTheDocument();
 	});

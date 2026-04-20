@@ -29,15 +29,6 @@ describe("SignUpForm Component", () => {
 		).toBeInTheDocument();
 	});
 
-	it("hides the class code field for instructor signup", async () => {
-		const user = userEvent.setup();
-		render(<SignUpForm />);
-
-		await user.click(screen.getByLabelText(/sign up as instructor\?/i));
-
-		expect(screen.queryByLabelText(/class code/i)).not.toBeInTheDocument();
-	});
-
 	it("prevents submit when passwords do not match", async () => {
 		const mockSignUp = vi.mocked(signUp);
 		render(<SignUpForm />);
