@@ -179,7 +179,7 @@ export function SignUpForm({
 								)}
 							</div>
 
-							<div className="grid gap-2">
+							{/* <div className="grid gap-2">
 								<Label htmlFor="class_code">Class Code (Optional)</Label>
 								<Input
 									id="class_code"
@@ -197,7 +197,7 @@ export function SignUpForm({
 									Join a class immediately with a code provided by your
 									instructor.
 								</p>
-							</div>
+							</div> */}
 
 							<div className="flex items-center space-x-2">
 								<input

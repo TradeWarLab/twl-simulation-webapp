@@ -124,6 +124,7 @@ async function SimulationPageInner({
 				<SimulationHeader
 					classRecord={classRecord}
 					teamRecord={teamRecord}
+					interestGroup={enrollment.interest_block}
 					periods={periods}
 				/>
 			</div>

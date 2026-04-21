@@ -5,11 +5,13 @@ export function SimulationHeader({
 	className,
 	classRecord,
 	teamRecord,
+	interestGroup,
 	periods,
 }: {
 	className?: string;
 	classRecord: { name: string; current_period: number };
 	teamRecord: { country: string } | null;
+	interestGroup?: string | null;
 	periods: string[];
 }) {
 	return (
@@ -44,6 +46,11 @@ export function SimulationHeader({
 					className={`font-bold text-lg ${teamRecord?.country === "USA" ? "text-blue-600" : "text-red-600"}`}
 				>
 					{teamRecord?.country || "Unassigned"}
+					{interestGroup && (
+						<span className="ml-2 text-lg font-medium opacity-80">
+							— {interestGroup}
+						</span>
+					)}
 				</div>
 			</div>
 		</header>

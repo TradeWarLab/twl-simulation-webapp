@@ -122,7 +122,7 @@ export function ManageTeamsClient({
 
 			{roster.length === 0 ? (
 				<div className="p-8 text-center text-muted-foreground text-sm">
-					No students currently enrolled or invited.
+					No students currently enrolled
 				</div>
 			) : (
 				<div className="divide-y relative">
