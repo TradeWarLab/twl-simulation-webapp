@@ -5,7 +5,6 @@ import {
 	Eye,
 	FileText,
 	History,
-	Lightbulb,
 	Timer,
 	XCircle,
 } from "lucide-react";
@@ -356,7 +355,7 @@ function RevealView({
 						{Object.values(issues).map((issue, idx) => {
 							const usaVal = issue.values.USA ?? 0;
 							const chinaVal = issue.values.China ?? 0;
-							const _totalVal = Math.abs(usaVal) + Math.abs(chinaVal);
+							// const _totalVal = Math.abs(usaVal) + Math.abs(chinaVal);
 
 							return (
 								<tr key={idx} className="hover:bg-muted/30 transition-colors">
@@ -386,57 +385,6 @@ function RevealView({
 					</tbody>
 				</table>
 			</div>
-		</div>
-	);
-}
-
-function _InsightsView({ insights }: { insights: any[] }) {
-	return (
-		<div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-			{insights.map((insight, idx) => (
-				<div
-					key={idx}
-					className={`p-6 rounded-2xl border-2 flex gap-4 ${
-						insight.type === "success"
-							? "bg-emerald-50/50 border-emerald-100"
-							: insight.type === "warning"
-								? "bg-amber-50/50 border-amber-100"
-								: "bg-indigo-50/50 border-indigo-100"
-					}`}
-				>
-					<div
-						className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-							insight.type === "success"
-								? "bg-emerald-500 text-white"
-								: insight.type === "warning"
-									? "bg-amber-500 text-white"
-									: "bg-indigo-500 text-white"
-						}`}
-					>
-						{insight.type === "success" ? (
-							<CheckCircle2 className="w-5 h-5" />
-						) : (
-							<Lightbulb className="w-5 h-5" />
-						)}
-					</div>
-					<div>
-						<h4
-							className={`text-sm font-black uppercase tracking-tight mb-2 ${
-								insight.type === "success"
-									? "text-emerald-900"
-									: insight.type === "warning"
-										? "text-amber-900"
-										: "text-indigo-900"
-							}`}
-						>
-							{insight.title}
-						</h4>
-						<p className="text-xs text-muted-foreground leading-relaxed leading-relaxed">
-							{insight.text}
-						</p>
-					</div>
-				</div>
-			))}
 		</div>
 	);
 }
