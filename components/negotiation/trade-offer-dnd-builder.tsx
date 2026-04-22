@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/lib/supabase/client";
 import type { TradeItem, TradeProposalItem } from "@/lib/types/domain";
+import { GripVertical, Info } from "lucide-react";
+import { TradeItemDetailModal } from "./trade-item-detail-modal";
 
 type Side = "my" | "opponent";
 type ContainerId =
@@ -68,12 +70,14 @@ function TradeItemCard({
 	variant,
 	containerId,
 	onRemove,
+	onView,
 }: {
 	item: TradeItem;
 	side: Side;
 	variant: "inventory" | "zone";
 	containerId: ContainerId;
 	onRemove?: () => void;
+	onView?: () => void;
 }) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } =
 		useDraggable({
@@ -94,37 +98,60 @@ function TradeItemCard({
 		<div
 			ref={setNodeRef}
 			style={style}
-			{...listeners}
-			{...attributes}
 			className={[
-				"inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium",
-				"cursor-grab active:cursor-grabbing select-none transition-all",
+				"flex items-center gap-2 rounded-xl border pl-1 pr-3 py-2.5 text-xs font-medium w-full",
+				"select-none transition-all group relative bg-background",
 				colorClasses,
 				isDragging
-					? "opacity-40 scale-95"
-					: "hover:shadow-md hover:-translate-y-0.5",
+					? "opacity-40 scale-[0.98] blur-[1px] z-50"
+					: "hover:shadow-md hover:border-foreground/20",
 				variant === "zone" ? "pr-2" : "",
 			].join(" ")}
 		>
-			<span className="truncate max-w-[160px]">{item.name}</span>
-			<span
-				className={`ml-auto text-xs font-mono tabular-nums ${item.value && item.value > 0 ? "text-emerald-600 dark:text-emerald-400" : item.value && item.value < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
+			{/* Drag Handle Area */}
+			<div
+				{...listeners}
+				{...attributes}
+				className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing hover:bg-foreground/5 rounded-lg py-1 px-1 -ml-0.5 transition-colors"
 			>
-				{item.value && item.value > 0 ? `+${item.value}` : item.value}
-			</span>
-			{variant === "zone" && onRemove && (
+				<GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+				<span className="line-clamp-2 text-left leading-snug">
+					{item.name}
+				</span>
+			</div>
+
+			{/* Interactive Elements Area (Non-Draggable) */}
+			<div className="flex items-center gap-1 shrink-0 ml-1">
 				<button
 					type="button"
 					onClick={(e) => {
 						e.stopPropagation();
-						onRemove();
+						onView?.();
 					}}
-					className="ml-1 w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors"
-					aria-label={`Remove ${item.name}`}
+					className="p-1 rounded-md hover:bg-foreground/10 text-muted-foreground hover:text-foreground transition-colors"
+					title="View Details"
 				>
-					✕
+					<Info className="w-3.5 h-3.5" />
 				</button>
-			)}
+				<span
+					className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${item.value && item.value > 0 ? "text-emerald-600 dark:text-emerald-400" : item.value && item.value < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}
+				>
+					{item.value && item.value > 0 ? `+${item.value}` : item.value || "0"}
+				</span>
+				{variant === "zone" && onRemove && (
+					<button
+						type="button"
+						onClick={(e) => {
+							e.stopPropagation();
+							onRemove();
+						}}
+						className="ml-1 w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors"
+						aria-label={`Remove ${item.name}`}
+					>
+						✕
+					</button>
+				)}
+			</div>
 		</div>
 	);
 }
@@ -227,6 +254,8 @@ export function TradeOfferDndBuilder({
 		"connecting" | "live" | "offline"
 	>("connecting");
 	const [isSyncing, setIsSyncing] = useState(false);
+	const [selectedDetailItem, setSelectedDetailItem] =
+		useState<TradeItem | null>(null);
 
 	const itemMeta = useMemo(() => {
 		const map = new Map<string, { item: TradeItem; side: Side }>();
@@ -425,26 +454,33 @@ export function TradeOfferDndBuilder({
 	function handleDragEnd(event: DragEndEvent) {
 		setActiveId(null);
 		const { active, over } = event;
-		if (!over) return; // cancelled
 
 		const itemId = String(active.id);
-		const overId = String(over.id);
+		const overId = over ? String(over.id) : null;
 		const overContainer =
 			overId === "my-inventory" ||
 			overId === "offer-zone" ||
 			overId === "opponent-inventory" ||
 			overId === "request-zone"
 				? (overId as ContainerId)
-				: (over.data.current?.containerId as ContainerId | undefined);
+				: (over?.data.current?.containerId as ContainerId | undefined);
 
 		const from = getContainerForItemId(itemId);
-		if (!from || !overContainer) return;
-		const to = overContainer;
+		if (!from) return;
 
-		if (from === to) return;
-		if (!isDropAllowed(itemId, to)) return;
+		// Handle drag-to-remove: drop outside valid container or into forbidden inventory
+		if (!over || !overContainer || !isDropAllowed(itemId, overContainer)) {
+			if (from === "offer-zone") {
+				moveItem(itemId, "offer-zone", "my-inventory");
+			} else if (from === "request-zone") {
+				moveItem(itemId, "request-zone", "opponent-inventory");
+			}
+			return;
+		}
 
-		moveItem(itemId, from, to);
+		if (from === overContainer) return;
+
+		moveItem(itemId, from, overContainer);
 	}
 
 	const activeItem = activeId
@@ -531,12 +567,12 @@ export function TradeOfferDndBuilder({
 						<div className="text-xs font-medium text-muted-foreground px-1">
 							Team {myTeamCountry} inventory
 						</div>
-						<div className="rounded-lg border bg-background">
-							<ScrollArea className="h-[120px]">
+						<div className="rounded-lg border bg-background overflow-hidden">
+							<ScrollArea className="h-[140px]">
 								<InventoryContainer id="my-inventory" tone="my">
-									<div className="flex flex-wrap gap-2 p-2">
+									<div className="grid grid-cols-1 gap-2 p-3">
 										{myInventory.length === 0 ? (
-											<p className="text-xs text-muted-foreground italic p-2">
+											<p className="text-xs text-muted-foreground italic p-2 text-center">
 												No issues available
 											</p>
 										) : (
@@ -547,6 +583,7 @@ export function TradeOfferDndBuilder({
 													side="my"
 													variant="inventory"
 													containerId="my-inventory"
+													onView={() => setSelectedDetailItem(item)}
 												/>
 											))
 										)}
@@ -572,6 +609,7 @@ export function TradeOfferDndBuilder({
 									onRemove={() =>
 										moveItem(item.id, "offer-zone", "my-inventory")
 									}
+									onView={() => setSelectedDetailItem(item)}
 								/>
 							))}
 						</DropZone>
@@ -581,12 +619,12 @@ export function TradeOfferDndBuilder({
 						<div className="text-xs font-medium text-muted-foreground px-1">
 							Team {opponentTeamCountry} inventory
 						</div>
-						<div className="rounded-lg border bg-background">
-							<ScrollArea className="h-[120px]">
+						<div className="rounded-lg border bg-background overflow-hidden">
+							<ScrollArea className="h-[140px]">
 								<InventoryContainer id="opponent-inventory" tone="opponent">
-									<div className="flex flex-wrap gap-2 p-2">
+									<div className="grid grid-cols-1 gap-2 p-3">
 										{opponentInventory.length === 0 ? (
-											<p className="text-xs text-muted-foreground italic p-2">
+											<p className="text-xs text-muted-foreground italic p-2 text-center">
 												No issues available
 											</p>
 										) : (
@@ -597,6 +635,7 @@ export function TradeOfferDndBuilder({
 													side="opponent"
 													variant="inventory"
 													containerId="opponent-inventory"
+													onView={() => setSelectedDetailItem(item)}
 												/>
 											))
 										)}
@@ -622,6 +661,7 @@ export function TradeOfferDndBuilder({
 									onRemove={() =>
 										moveItem(item.id, "request-zone", "opponent-inventory")
 									}
+									onView={() => setSelectedDetailItem(item)}
 								/>
 							))}
 						</DropZone>
@@ -678,6 +718,13 @@ export function TradeOfferDndBuilder({
 					</div>
 				</div>
 			</div>
+
+			{selectedDetailItem && (
+				<TradeItemDetailModal
+					item={selectedDetailItem}
+					onClose={() => setSelectedDetailItem(null)}
+				/>
+			)}
 		</div>
 	);
 }
