@@ -29,9 +29,10 @@ yarn-error.log*
 .pnpm-debug.log*
 *.log
 build_output.txt
+*.txt
 
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*.local
 .env
 
