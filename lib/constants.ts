@@ -1,3 +1,5 @@
+// not sure all of these are necessary, but nice to have in development
+
 export const SIMULATION_PERIODS = [
 	"Setup",
 	"Domestic Negotiation",
