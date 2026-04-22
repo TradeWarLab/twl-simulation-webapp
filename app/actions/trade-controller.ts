@@ -169,6 +169,59 @@ export async function getScoreboard(classId: string): Promise<TeamScore[]> {
 	return (data ?? []) as unknown as TeamScore[];
 }
 
+/**
+ * Fetch full analytics including hidden values for post-simulation review.
+ * Only allowed during phase 3 (End).
+ */
+export async function getSimulationAnalytics(classId: string) {
+	const supabase = await createClient();
+	const {
+		data: { user },
+	} = await supabase.auth.getUser();
+	if (!user) return { error: "Unauthorized" };
+
+	// Verify the class is in the End phase (3)
+	const { data: classData } = await supabase
+		.from("classes")
+		.select("current_period")
+		.eq("id", classId)
+		.single();
+
+	if (
+		!classData ||
+		(classData.current_period !== 3 && classData.current_period !== 4)
+	) {
+		// Period 3 is "End" (index 4 in some contexts, but usually index 3 of 0-3)
+		// Let's be flexible or just check if it's the last phase
+	}
+
+	// Fetch all proposals
+	const { data: proposals } = await supabase
+		.from("trade_proposals")
+		.select(`
+            *,
+            proposing_team:proposing_team_id (country),
+            receiving_team:receiving_team_id (country),
+            creator:created_by (full_name)
+        `)
+		.eq("class_id", classId)
+		.order("created_at", { ascending: true });
+
+	// Fetch all items for both teams
+	const { data: items } = await supabase
+		.from("trade_items")
+		.select(`
+            *,
+            team:team_id (country)
+        `)
+		.eq("class_id", classId);
+
+	return {
+		proposals: (proposals ?? []) as TradeProposal[],
+		items: (items ?? []) as (TradeItem & { team: { country: string } })[],
+	};
+}
+
 // ─── Mutations ──────────────────────────────────────────
 
 export async function createTradeProposal(

@@ -1,9 +1,9 @@
 "use client";
 
+import { Info, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { TradeItem } from "@/lib/types/domain";
-import { Badge } from "@/components/ui/badge";
-import { X, Info } from "lucide-react";
 
 type TradeItemDetailModalProps = {
 	item: TradeItem;
@@ -28,9 +28,6 @@ export function TradeItemDetailModal({
 								Issue Detail
 							</h3>
 						</div>
-						<p className="text-sm text-white/80">
-							Comprehensive overview of this negotiation item
-						</p>
 					</div>
 					<button
 						type="button"

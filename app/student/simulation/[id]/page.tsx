@@ -4,10 +4,12 @@ import { getStudentBriefings } from "@/app/actions/briefings";
 import { getMessages } from "@/app/actions/chat";
 import {
 	getScoreboard,
+	getSimulationAnalytics,
 	getTeamTradeItems,
 	getTradeProposals,
 } from "@/app/actions/trade-controller";
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { NegotiationAnalytics } from "@/components/negotiation/negotiation-analytics";
 import { NegotiationController } from "@/components/negotiation/negotiation-controller";
 import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
 import { FinalResults } from "@/components/simulation/final-results";
@@ -117,6 +119,15 @@ async function SimulationPageInner({
 	const proposals = await getTradeProposals(id);
 	const scores = await getScoreboard(id);
 
+	// Fetch full analytics (reveal) if in phase 3
+	let analyticsData = null;
+	if (classRecord.current_period === 3) {
+		const result = await getSimulationAnalytics(id);
+		if (!("error" in result)) {
+			analyticsData = result;
+		}
+	}
+
 	return (
 		<div className="container mx-auto p-2 md:p-4 min-h-screen flex flex-col lg:h-screen lg:max-h-screen">
 			<SimulationRealtimeProvider classId={id} />
@@ -132,21 +143,43 @@ async function SimulationPageInner({
 			{!teamRecord ? (
 				<UnassignedState />
 			) : (
-				<main className="flex-1 grid grid-cols-1 lg:grid-cols-[330px_1fr_390px] gap-4 min-h-0">
+				<main
+					className={`flex-1 grid gap-4 min-h-0 ${
+						classRecord.current_period === 3
+							? "grid-cols-1 max-w-4xl mx-auto w-full"
+							: "grid-cols-1 lg:grid-cols-[330px_1fr_390px]"
+					}`}
+				>
 					{/* Left Panel: Dashboard (Target Values) or Resources */}
-					<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
-						<div className="pb-4">
-							<BriefingPanel
-								briefings={briefings}
-								notebooklmUrl={classRecord?.notebooklm_url || null}
-							/>
+					{classRecord.current_period !== 3 && (
+						<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
+							<div className="pb-4">
+								<BriefingPanel
+									briefings={briefings}
+									notebooklmUrl={classRecord?.notebooklm_url || null}
+								/>
+							</div>
 						</div>
-					</div>
+					)}
 
 					{/* Center Panel: Action Center (Negotiation Controller) */}
-					<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto">
-						<CardHeader className="py-3 shrink-0">
-							<CardTitle className="text-md">Action Center</CardTitle>
+					<Card
+						className={`flex flex-col min-h-0 h-[600px] lg:h-auto ${
+							classRecord.current_period === 3 ? "border-2" : ""
+						}`}
+					>
+						<CardHeader
+							className={`py-3 shrink-0 ${classRecord.current_period === 3 ? "text-center border-b" : ""}`}
+						>
+							<CardTitle
+								className={
+									classRecord.current_period === 3 ? "text-xl" : "text-md"
+								}
+							>
+								{classRecord.current_period === 3
+									? "Simulation Results"
+									: "Action Center"}
+							</CardTitle>
 						</CardHeader>
 						<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
 							{classRecord.current_period === 0 && (
@@ -175,21 +208,28 @@ async function SimulationPageInner({
 								/>
 							)}
 							{classRecord.current_period === 3 && teamRecord && (
-								<FinalResults scores={scores} />
+								<div className="space-y-12 pb-12">
+									<FinalResults scores={scores} />
+									{analyticsData && (
+										<NegotiationAnalytics data={analyticsData} />
+									)}
+								</div>
 							)}
 						</CardContent>
 					</Card>
 
 					{/* Right Panel: Chat */}
-					<div className="flex flex-col min-h-0 h-[600px] lg:h-full pb-4 lg:pb-0">
-						<ChatPanel
-							classId={id}
-							teamChannel={teamChannel}
-							initialTeamMessages={initialTeamMessages}
-							initialGlobalMessages={initialGlobalMessages}
-							currentUserId={user.id}
-						/>
-					</div>
+					{classRecord.current_period !== 3 && (
+						<div className="flex flex-col min-h-0 h-[600px] lg:h-full pb-4 lg:pb-0">
+							<ChatPanel
+								classId={id}
+								teamChannel={teamChannel}
+								initialTeamMessages={initialTeamMessages}
+								initialGlobalMessages={initialGlobalMessages}
+								currentUserId={user.id}
+							/>
+						</div>
+					)}
 				</main>
 			)}
 		</div>

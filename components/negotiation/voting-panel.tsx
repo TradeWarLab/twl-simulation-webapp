@@ -188,7 +188,7 @@ export function VotingPanel({
 						{proposal.vote_summary && (
 							<div className="h-2 bg-muted rounded-full overflow-hidden">
 								<div
-									className="h-full bg-emerald-50 rounded-full transition-all duration-700"
+									className="h-full bg-emerald-500 rounded-full transition-all duration-700"
 									style={{
 										width: `${proposal.vote_summary.total_members > 0 ? (votes.length / proposal.vote_summary.total_members) * 100 : 0}%`,
 									}}

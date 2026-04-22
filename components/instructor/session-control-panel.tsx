@@ -57,10 +57,10 @@ export function SessionControlPanel({
 					<div className="flex-1" />
 					<form action={advanceAction}>
 						<Button
-							disabled={currentPeriod >= periods.length}
-							className="w-full sm:w-auto"
+							disabled={currentPeriod >= periods.length - 1}
+							className="w-full sm:w-auto h-10 px-6 font-bold shadow-sm transition-all bg-indigo-600 hover:bg-indigo-700 text-white"
 						>
-							{currentPeriod === periods.length - 1
+							{currentPeriod >= periods.length - 2
 								? "End Simulation"
 								: "Advance to Next Period →"}
 						</Button>

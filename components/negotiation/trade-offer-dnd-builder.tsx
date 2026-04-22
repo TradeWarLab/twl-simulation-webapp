@@ -10,6 +10,7 @@ import {
 	useDraggable,
 	useDroppable,
 } from "@dnd-kit/core";
+import { GripVertical, Info } from "lucide-react";
 import {
 	type ReactNode,
 	useEffect,
@@ -22,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createClient } from "@/lib/supabase/client";
 import type { TradeItem, TradeProposalItem } from "@/lib/types/domain";
-import { GripVertical, Info } from "lucide-react";
 import { TradeItemDetailModal } from "./trade-item-detail-modal";
 
 type Side = "my" | "opponent";
@@ -115,9 +115,7 @@ function TradeItemCard({
 				className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing hover:bg-foreground/5 rounded-lg py-1 px-1 -ml-0.5 transition-colors"
 			>
 				<GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-				<span className="line-clamp-2 text-left leading-snug">
-					{item.name}
-				</span>
+				<span className="line-clamp-2 text-left leading-snug">{item.name}</span>
 			</div>
 
 			{/* Interactive Elements Area (Non-Draggable) */}
