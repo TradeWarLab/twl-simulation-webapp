@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { DEFAULT_BRIEFINGS } from "@/lib/constants";
+import { sendStudentInviteEmail } from "@/lib/email/invite";
 import { createClient } from "@/lib/supabase/server";
 import type {
 	ClassRosterEntry,
@@ -31,6 +33,33 @@ function normalizeName(name: string) {
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-|-$/g, "");
+}
+
+function resolveAppUrl(
+	requestHeaders: Awaited<ReturnType<typeof headers>>,
+): string {
+	const origin = requestHeaders.get("origin");
+	if (origin) {
+		return origin;
+	}
+
+	const forwardedHost = requestHeaders.get("x-forwarded-host");
+	const host = forwardedHost ?? requestHeaders.get("host");
+	const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
+
+	if (host) {
+		return `${protocol}://${host}`;
+	}
+
+	if (process.env.NEXT_PUBLIC_APP_URL) {
+		return process.env.NEXT_PUBLIC_APP_URL;
+	}
+
+	if (process.env.VERCEL_URL) {
+		return `https://${process.env.VERCEL_URL}`;
+	}
+
+	return "http://localhost:3000";
 }
 
 async function ensureInstructorOwnsClass(
@@ -183,6 +212,21 @@ export async function inviteStudentToClass(formData: FormData): Promise<void> {
 		return;
 	}
 
+	const { data: classRecord, error: classError } = await supabase
+		.from("classes")
+		.select("name, class_code")
+		.eq("id", classId)
+		.single();
+
+	if (classError || !classRecord) {
+		console.error("Error loading class for invite email:", classError);
+		return;
+	}
+
+	const className = classRecord.name;
+	const classCode = classRecord.class_code;
+	const assignedAffiliation: TeamCountry = affiliation;
+
 	const { error: inviteError } = await supabase.from("class_invites").upsert(
 		{
 			class_id: classId,
@@ -206,7 +250,32 @@ export async function inviteStudentToClass(formData: FormData): Promise<void> {
 		.eq("email", email)
 		.maybeSingle();
 
+	const requestHeaders = await headers();
+	const appUrl = resolveAppUrl(requestHeaders);
+	const instructorName =
+		typeof user.user_metadata?.full_name === "string"
+			? user.user_metadata.full_name
+			: null;
+
+	async function sendInviteEmail(accountExists: boolean) {
+		try {
+			await sendStudentInviteEmail({
+				to: email,
+				className,
+				classCode,
+				affiliation: assignedAffiliation,
+				interestBlock,
+				appUrl,
+				accountExists,
+				instructorName,
+			});
+		} catch (error) {
+			console.error("Error sending invite email:", error);
+		}
+	}
+
 	if (!existingUser) {
+		await sendInviteEmail(false);
 		revalidatePath(`/instructor/classes/${classId}`);
 		return;
 	}
@@ -268,6 +337,8 @@ export async function inviteStudentToClass(formData: FormData): Promise<void> {
 	if (statusError) {
 		console.error("Error updating invite status:", statusError);
 	}
+
+	await sendInviteEmail(true);
 
 	revalidatePath(`/instructor/classes/${classId}`);
 }

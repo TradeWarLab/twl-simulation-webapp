@@ -19,11 +19,28 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 
 ## Auth And Environment
 
-- The app only requires the public Supabase URL and publishable key for local development.
+Required local environment variables:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+RESEND_API_KEY=...
+INVITE_FROM_EMAIL="TWL Simulation <onboarding@your-domain.com>"
+```
+
+Optional:
+
+```env
+INVITE_REPLY_TO_EMAIL=...
+NEXT_PUBLIC_APP_URL=...
+```
+
 - Signup and login are handled through Supabase Auth in [`app/actions/auth.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/app/actions/auth.ts:1).
 - Email verification lands on [`app/auth/confirm/route.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/app/auth/confirm/route.ts:1).
 - New users are mirrored into `public.users` by the `handle_new_user()` database trigger.
 - Student signup can include a `class_code`; if present, the trigger auto-enrolls the student and applies any matching invite metadata.
+- `RESEND_API_KEY` is used by the app server for custom invite emails only. Do not expose it to the client.
+- Production and preview deployments need the same server-side variables configured in Vercel.
 
 ## Product Capabilities
 
@@ -100,10 +117,31 @@ Coverage currently focuses on:
 - chat, negotiation, and trade server actions
 - key auth, instructor, student, negotiation, and simulation components
 
-There is also a live Supabase healthcheck in [`__tests__/healthcheck/db-permissions.test.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/__tests__/healthcheck/db-permissions.test.ts:1). It uses `.env.local` credentials and is intended to catch broken schema privileges early.
+## Email Setup
 
-## Known Edges
+There are two separate email paths in the project.
 
-- The negotiation-action bundle flow exists, but most classroom behavior currently centers on `trade_proposals` and vote resolution.
-- The simulation header and student workspace use the current route behavior and constants, even where older SQL comments still mention legacy naming.
-- Deployment assumptions remain Supabase + Next.js hosting; no extra infrastructure is required in local development beyond those services.
+### 1. Custom Invite Emails
+
+- Instructor roster invites send a custom onboarding email from [`app/actions/classes.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/app/actions/classes.ts:187).
+- The send logic lives in [`lib/email/invite.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/lib/email/invite.ts:163).
+- This path uses `RESEND_API_KEY` and `INVITE_FROM_EMAIL`.
+- If either variable is missing, the app skips sending the invite email and logs a warning.
+
+Operational note:
+
+- `INVITE_FROM_EMAIL` must be a sender address verified in Resend.
+
+### 2. Supabase Auth Emails
+
+- Signup confirmation and password reset emails are sent by Supabase Auth, not by the invite-email code.
+- Supabase is already configured to send those emails through Resend.
+- That integration is managed in the Supabase/Resend dashboards, not in app code.
+
+What the next developer should know:
+
+- If invite emails fail, check the app env vars first.
+- If confirmation or reset emails fail, check the Supabase Auth email settings and Resend integration first.
+- Using the same Resend account for both flows is fine, but they are configured separately.
+
+Github/Vercel/Resend set up with tradewarlab@gmail.com email address - Talk to Callie for access
