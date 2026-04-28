@@ -131,6 +131,7 @@ There are two separate email paths in the project.
 Operational note:
 
 - `INVITE_FROM_EMAIL` must be a sender address verified in Resend.
+- A shared/public sender like `@gmail.com` will not work here. Use a domain you control, ideally a dedicated sending subdomain.
 
 ### 2. Supabase Auth Emails
 
