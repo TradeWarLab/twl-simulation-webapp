@@ -90,6 +90,47 @@ export function TradeItemsPanel({
 						: "Internal point system for your team. Asks yield positive points, Concessions cost negative points."}
 				</p>
 
+				<details className="group mb-4 overflow-hidden rounded-xl border border-amber-500/30 bg-[linear-gradient(135deg,rgba(120,53,15,0.08),rgba(245,158,11,0.16))] text-sm text-foreground">
+					<summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
+						<div className="flex items-center gap-3">
+							{/* <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300">
+								Top Secret
+							</span> */}
+							<span className="text-sm font-medium">
+								Classified cost estimate and scoring instructions
+							</span>
+						</div>
+						<span className="grid h-7 w-7 place-items-center rounded-full border border-amber-500/30 bg-background/60 text-base font-medium leading-none text-amber-900 transition-transform group-open:rotate-180 dark:text-amber-200">
+							<span className="group-open:hidden">+</span>
+							<span className="hidden group-open:inline">-</span>
+						</span>
+					</summary>
+					<div className="border-t border-amber-500/20 px-4 pb-4 pt-3">
+						<p className="leading-6">
+							Analysts have privately estimated that the economic cost of a
+							trade war will be <strong>-10</strong> for your country if no
+							deal is reached. This intelligence is classified and should not
+							be shared outside your delegation. The other team does not know
+							whether your cost estimate is higher or lower than theirs.
+							Their costs could range from <strong>-5</strong> to{" "}
+							<strong>-20</strong>.
+						</p>
+						<p className="mt-3 leading-6">
+							While keeping in mind the specific interests outlined in your
+							individual briefings, work with your team to make a list of
+							asks that would best serve your national interest.
+						</p>
+						<p className="mt-3 leading-6">
+							Assign points to each item on the list based on relative
+							importance. Concessions should add up to <strong>-100</strong>{" "}
+							points, and the costlier an issue is for your country to give
+							up, the lower its assigned negative value should be. Your team
+							does not have to address every issue listed here. If an issue
+							should not be raised in negotiations at all, treat it as N/A.
+						</p>
+					</div>
+				</details>
+
 				<div className="grid grid-cols-2 gap-4">
 					<div
 						className={`p-2 rounded border text-xs flex flex-col gap-1 ${asksValid ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-400" : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400"}`}
