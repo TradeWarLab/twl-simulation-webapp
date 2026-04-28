@@ -1,5 +1,5 @@
 # Trade War Lab Transition Setup
-
+ 
 This document is for the next developer picking up the project. It reflects the current app structure, setup requirements, and the product scope that is already implemented in the repository.
 
 ## Quick Start
