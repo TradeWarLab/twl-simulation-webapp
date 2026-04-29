@@ -2,33 +2,21 @@
 
 import {
 	Activity,
-	ArrowRightLeft,
-	BookOpenText,
-	Flag,
 	Radio,
-	ShieldAlert,
-	TrendingDown,
-	TrendingUp,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { inviteStudentToClass } from "@/app/actions/classes";
 import type {
 	InstructorDashboardSnapshot,
 } from "@/app/actions/instructor-dashboard";
-import { removeStudentFromClassAction } from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudentRoster } from "./student-roster";
 import { ManageItemsClient } from "./manage-items-client";
 import { TradeProposalCard } from "../negotiation/trade-proposal-card";
 import { createClient } from "@/lib/supabase/client";
-import { INTEREST_GROUPS } from "@/lib/constants";
 import type {
-	ClassRosterEntry,
 	TeamCountry,
 	TradeItem,
 	TradeProposal,
@@ -62,45 +50,6 @@ type TeamMetric = {
 	unresolvedCount: number;
 	tradeItems: TradeItem[];
 };
-
-function formatShortTime(timestamp: string) {
-	return new Date(timestamp).toLocaleTimeString([], {
-		hour: "2-digit",
-		minute: "2-digit",
-	});
-}
-
-function formatDateTime(timestamp: string) {
-	return `${new Date(timestamp).toLocaleDateString()} • ${formatShortTime(timestamp)}`;
-}
-
-function formatSignedValue(value: number) {
-	return value > 0 ? `+${value}` : `${value}`;
-}
-
-function computeTradeImpact(
-	proposal: TradeProposal,
-	itemById: Map<string, TradeItem>,
-	targetTeamId: string,
-) {
-	let total = 0;
-
-	const applyItems = (items: TradeProposalItem[]) => {
-		for (const item of items) {
-			const liveItem = itemById.get(item.item_id);
-			total += Number(liveItem?.value ?? item.value ?? 0);
-		}
-	};
-
-	if (proposal.proposing_team_id === targetTeamId) {
-		applyItems(proposal.offered_items);
-	}
-	if (proposal.receiving_team_id === targetTeamId) {
-		applyItems(proposal.requested_items);
-	}
-
-	return total;
-}
 
 function SectionCard({
 	title,
@@ -139,15 +88,12 @@ function SectionCard({
 function StandingsCard({
 	label,
 	score,
-	delta,
 	accent,
 }: {
 	label: string;
 	score: number;
-	delta: number;
 	accent: "usa" | "china";
 }) {
-	const isPositive = delta >= 0;
 	return (
 		<div
 			className={cn(
@@ -163,21 +109,6 @@ function StandingsCard({
 						{label}
 					</div>
 					<div className="mt-2 text-5xl font-semibold tracking-tight">{score}</div>
-					<div className="mt-2 inline-flex items-center gap-1 text-sm">
-						{isPositive ? (
-							<TrendingUp className="h-4 w-4 text-emerald-600" />
-						) : (
-							<TrendingDown className="h-4 w-4 text-red-600" />
-						)}
-						<span
-							className={cn(
-								"font-medium",
-								isPositive ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300",
-							)}
-						>
-							{delta === 0 ? "No recent change" : `${formatSignedValue(delta)} from recent activity`}
-						</span>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -188,7 +119,6 @@ function StandingsCard({
 
 export function InstructorLiveDashboard({
 	classRecord,
-	periods,
 	initialSnapshot,
 }: DashboardProps) {
 	const supabase = useMemo(() => createClient(), []);
@@ -263,30 +193,6 @@ export function InstructorLiveDashboard({
 		() => new Map(teamMetrics.map((metric) => [metric.country, metric])),
 		[teamMetrics],
 	);
-
-	const recentScoreDeltaByCountry = useMemo(() => {
-		const deltas: Record<TeamCountry, number> = { USA: 0, China: 0 };
-		for (const proposal of proposals.filter((entry) => entry.status === "executed").slice(-2)) {
-			const proposing = teamById.get(proposal.proposing_team_id);
-			const receiving = teamById.get(proposal.receiving_team_id);
-			if (!proposing || !receiving) continue;
-			deltas[proposing.country] += computeTradeImpact(
-				proposal,
-				itemById,
-				proposal.proposing_team_id,
-			);
-			deltas[receiving.country] += computeTradeImpact(
-				proposal,
-				itemById,
-				proposal.receiving_team_id,
-			);
-		}
-		return deltas;
-	}, [itemById, proposals, teamById]);
-
-
-
-
 
 	useEffect(() => {
 		const hydrateProposal = (proposal: TradeProposal): TradeProposal => ({
@@ -441,7 +347,6 @@ export function InstructorLiveDashboard({
 			<div className="grid gap-4">
 				<SectionCard
 					title="Simulation Situation"
-					description="Who is ahead, by how much, and whether the room is moving toward a deal."
 					icon={<Activity className="h-5 w-5 text-primary" />}
 					action={
 						<Badge
@@ -469,13 +374,11 @@ export function InstructorLiveDashboard({
 						<StandingsCard
 							label="Team USA"
 							score={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
-							delta={recentScoreDeltaByCountry.USA}
 							accent="usa"
 						/>
 						<StandingsCard
 							label="Team PRC"
 							score={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
-							delta={recentScoreDeltaByCountry.China}
 							accent="china"
 						/>
 
@@ -491,7 +394,6 @@ export function InstructorLiveDashboard({
 					<TabsTrigger value="Proposal Queue">Proposal Queue</TabsTrigger>
 					<TabsTrigger value="Trade Breakdown">Trade Breakdown</TabsTrigger>
 					<TabsTrigger value="Roster and Team Assignments">Roster & Teams</TabsTrigger>
-					<TabsTrigger value="Instructor Cheat Sheet">Cheat Sheet</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="Proposal Queue" className="rounded-2xl border border-border/70 bg-card p-5">
@@ -560,50 +462,10 @@ export function InstructorLiveDashboard({
 				</TabsContent>
 
 				<TabsContent value="Roster and Team Assignments" className="rounded-2xl border border-border/70 bg-card p-5">
-					<div className="mb-4 text-sm text-muted-foreground">Invite, filter, and manage students without letting roster mechanics dominate the live teaching surface.</div>
 					<StudentRoster
 						classId={classRecord.id}
 						roster={initialSnapshot.roster}
 					/>
-				</TabsContent>
-
-				<TabsContent value="Instructor Cheat Sheet" className="rounded-2xl border border-border/70 bg-card p-5">
-					<div className="mb-4 text-sm text-muted-foreground">Fast reminders about what students see and what the instructor should watch in each phase.</div>
-					<div className="grid gap-4 xl:grid-cols-3">
-						<div className="rounded-2xl border border-border/70 p-5">
-							<div className="flex items-center gap-2 text-sm font-semibold">
-								<BookOpenText className="h-4 w-4 text-primary" />
-								Phase 1: Domestic
-							</div>
-							<ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-								<li>Students only see team chat, briefings, and issue valuations.</li>
-								<li>Watch declared net and extreme concessions to identify overcommitment.</li>
-								<li>Prompt teams to defend their top asks before the room moves bilateral.</li>
-							</ul>
-						</div>
-						<div className="rounded-2xl border border-border/70 p-5">
-							<div className="flex items-center gap-2 text-sm font-semibold">
-								<ArrowRightLeft className="h-4 w-4 text-indigo-600" />
-								Phase 2: Bilateral
-							</div>
-							<ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-								<li>Students move into global bargaining and formal trade proposals.</li>
-								<li>Pending impact matters more than raw chat volume.</li>
-								<li>Use the proposal queue to spotlight which offer is shaping leverage.</li>
-							</ul>
-						</div>
-						<div className="rounded-2xl border border-border/70 p-5">
-							<div className="flex items-center gap-2 text-sm font-semibold">
-								<ShieldAlert className="h-4 w-4 text-amber-600" />
-								Teaching prompts
-							</div>
-							<ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-								<li>Ask why one side is willing to accept a large concession.</li>
-								<li>Use alerts to call out when negotiations have stalled or become one-sided.</li>
-								<li>Summarize the room using the teaching summary instead of reading raw tables aloud.</li>
-							</ul>
-						</div>
-					</div>
 				</TabsContent>
 			</Tabs>
 		</div>

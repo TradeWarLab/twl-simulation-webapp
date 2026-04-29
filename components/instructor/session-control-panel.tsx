@@ -55,17 +55,17 @@ export function SessionControlPanel({
 						<div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
 							Quick Actions
 						</div>
-						<div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+						<div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
 							<Button variant="outline" className="justify-start" asChild>
 								<Link href={`/instructor/classes/${classId}/briefings`}>
 									Briefings
 								</Link>
 							</Button>
-							<Button variant="outline" className="justify-start" asChild>
+							{/* <Button variant="outline" className="justify-start" asChild>
 								<Link href={`/instructor/classes/${classId}/teams`}>
 									Teams
 								</Link>
-							</Button>
+							</Button> */}
 							<Button variant="outline" className="justify-start" asChild>
 								<Link href={`/instructor/classes/${classId}/items`}>
 									Trade Items

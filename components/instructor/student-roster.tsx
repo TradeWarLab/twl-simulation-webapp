@@ -1,8 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useTransition } from "react";
 import { inviteStudentToClass } from "@/app/actions/classes";
-import { removeStudentFromClassAction } from "@/app/actions/teams";
+import {
+	removeStudentFromClassAction,
+	updateInviteAffiliation,
+	updateStudentTeam,
+	updateInviteInterest,
+	updateStudentInterest,
+} from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +31,74 @@ export function StudentRoster({
 		"name" | "country" | "group" | "status" | "joined"
 	>("country");
 
+	const [localRoster, setLocalRoster] = useState(roster);
+	const [isPending, startTransition] = useTransition();
+
+	useEffect(() => {
+		setLocalRoster(roster);
+	}, [roster]);
+
+	const handleAffiliationChange = async (
+		entry: ClassRosterEntry,
+		newAffiliation: "USA" | "China",
+	) => {
+		if (entry.affiliation === newAffiliation) return;
+
+		const previousRoster = [...localRoster];
+		setLocalRoster((r) =>
+			r.map((st) =>
+				st.email === entry.email ? { ...st, affiliation: newAffiliation } : st,
+			),
+		);
+
+		startTransition(async () => {
+			let res;
+			if (entry.status === "account_created" && entry.user_id) {
+				res = await updateStudentTeam(classId, entry.user_id, newAffiliation);
+			} else {
+				res = await updateInviteAffiliation(classId, entry.email, newAffiliation);
+			}
+
+			if (res.error) {
+				console.error("Rollback", res.error);
+				setLocalRoster(previousRoster);
+				alert(`Failed to update ${entry.email}: ${res.error}`);
+			}
+		});
+	};
+
+	const handleInterestChange = async (
+		entry: ClassRosterEntry,
+		newInterest: string,
+	) => {
+		if (entry.interest_group === newInterest) return;
+
+		const previousRoster = [...localRoster];
+		setLocalRoster((r) =>
+			r.map((st) =>
+				st.email === entry.email ? { ...st, interest_group: newInterest } : st,
+			),
+		);
+
+		startTransition(async () => {
+			let res;
+			if (entry.status === "account_created" && entry.user_id) {
+				res = await updateStudentInterest(classId, entry.user_id, newInterest);
+			} else {
+				res = await updateInviteInterest(classId, entry.email, newInterest);
+			}
+
+			if (res.error) {
+				console.error("Rollback", res.error);
+				setLocalRoster(previousRoster);
+				alert(`Failed to update ${entry.email}: ${res.error}`);
+			}
+		});
+	};
+
 	const filteredRoster = useMemo(() => {
 		const normalizedQuery = query.trim().toLowerCase();
-		const next = roster.filter((entry) => {
+		const next = localRoster.filter((entry) => {
 			const matchesQuery =
 				normalizedQuery.length === 0 ||
 				entry.email.toLowerCase().includes(normalizedQuery) ||
@@ -208,9 +279,37 @@ export function StudentRoster({
 													{entry.email}
 												</div>
 											</div>
-											<div>{entry.affiliation === "China" ? "PRC" : entry.affiliation ?? "—"}</div>
-											<div className="text-muted-foreground">
-												{entry.interest_group ?? "—"}
+											<div className="pr-2">
+												<select
+													className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+													value={entry.affiliation ?? ""}
+													onChange={(e) =>
+														handleAffiliationChange(
+															entry,
+															e.target.value as "USA" | "China",
+														)
+													}
+													disabled={isPending}
+												>
+													<option value="" disabled>Unassigned</option>
+													<option value="USA">Team USA</option>
+													<option value="China">Team PRC</option>
+												</select>
+											</div>
+											<div className="pr-2">
+												<select
+													className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+													value={entry.interest_group ?? ""}
+													onChange={(e) => handleInterestChange(entry, e.target.value)}
+													disabled={isPending}
+												>
+													<option value="" disabled>Unassigned</option>
+													{INTEREST_GROUPS.map((group) => (
+														<option key={group} value={group}>
+															{group}
+														</option>
+													))}
+												</select>
 											</div>
 											<div>
 												<Badge
