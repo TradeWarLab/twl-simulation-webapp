@@ -4,13 +4,19 @@ import { useTransition } from "react";
 import { submitVote } from "@/app/actions/trade-controller";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { TeamCountry, TradeProposal } from "@/lib/types/domain";
+import { Flag } from "lucide-react";
+import type { TeamCountry, TradeProposal, TradeItem } from "@/lib/types/domain";
 
 type Props = {
 	proposal: TradeProposal;
-	currentUserId: string;
-	classId: string;
-	myTeamId: string;
+	currentUserId?: string;
+	classId?: string;
+	myTeamId?: string;
+	mode?: "student" | "instructor";
+	isHighlighted?: boolean;
+	onHighlight?: () => void;
+	totalMembers?: number;
+	itemById?: Map<string, TradeItem>;
 };
 
 export function TradeProposalCard({
@@ -18,19 +24,27 @@ export function TradeProposalCard({
 	currentUserId,
 	classId,
 	myTeamId,
+	mode = "student",
+	isHighlighted,
+	onHighlight,
+	totalMembers,
+	itemById,
 }: Props) {
 	const [isPending, startTransition] = useTransition();
 
 	const proposingCountry = proposal.proposing_team?.country ?? "USA";
-	const isMyProposal = proposal.proposing_team_id === myTeamId;
+	const isMyProposal = mode === "student" && proposal.proposing_team_id === myTeamId;
 	const votes = proposal.votes ?? [];
-	const myVote = votes.find((v) => v.student_id === currentUserId);
+	const myVote = currentUserId ? votes.find((v) => v.student_id === currentUserId) : undefined;
 	const approveCount = votes.filter((v) => v.vote === "approve").length;
 	const rejectCount = votes.filter((v) => v.vote === "reject").length;
 	const totalVotes = votes.length;
+	const isInstructor = mode === "instructor";
 
 	function handleVote(vote: "approve" | "reject") {
+		if (isInstructor) return;
 		startTransition(async () => {
+			if (!proposal.id) return;
 			await submitVote(proposal.id, vote);
 		});
 	}
@@ -47,8 +61,21 @@ export function TradeProposalCard({
 	const flagEmoji = (c: TeamCountry) => (c === "USA" ? "🇺🇸" : "🇨🇳");
 	const timeAgo = getTimeAgo(proposal.created_at);
 
+	function formatSignedValue(value: number) {
+		return value > 0 ? `+${value}` : `${value}`;
+	}
+
+	function renderItem(item: { item_id: string; name: string; value?: number | null }) {
+		if (!isInstructor || !itemById) {
+			return item.name;
+		}
+		const liveItem = itemById.get(item.item_id);
+		const val = Number(liveItem?.value ?? item.value ?? 0);
+		return `${item.name} (${formatSignedValue(val)})`;
+	}
+
 	return (
-		<div className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow">
+		<div className={`rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow ${isHighlighted ? "border-indigo-500 bg-indigo-500/10" : ""}`}>
 			{/* Header */}
 			<div className="flex items-center justify-between mb-3">
 				<div className="flex items-center gap-2">
@@ -67,9 +94,26 @@ export function TradeProposalCard({
 					>
 						{proposal.status}
 					</Badge>
-					<span className="text-xs text-muted-foreground">{timeAgo}</span>
+					{!isInstructor && <span className="text-xs text-muted-foreground">{timeAgo}</span>}
+					{isInstructor && onHighlight && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={onHighlight}
+							className="h-7 w-7 p-0 ml-1"
+						>
+							<Flag className="h-4 w-4" />
+						</Button>
+					)}
 				</div>
 			</div>
+
+			{isInstructor && (
+				<div className="mb-3 text-xs text-muted-foreground">
+					Created by {proposal.creator?.full_name ?? "Unknown"} at{" "}
+					{new Date(proposal.created_at).toLocaleDateString()} • {new Date(proposal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+				</div>
+			)}
 
 			{/* Trade Details */}
 			<div className="grid grid-cols-2 gap-3 mb-3">
@@ -84,7 +128,7 @@ export function TradeProposalCard({
 								key={item.item_id}
 								className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-xs text-blue-800 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-200"
 							>
-								{item.name}
+								{renderItem(item)}
 							</span>
 						))}
 						{proposal.offered_items.length === 0 && (
@@ -104,7 +148,7 @@ export function TradeProposalCard({
 								key={item.item_id}
 								className="inline-flex items-center px-2 py-0.5 rounded-md bg-red-50 border border-red-200 text-xs text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200"
 							>
-								{item.name}
+								{renderItem(item)}
 							</span>
 						))}
 						{proposal.requested_items.length === 0 && (
@@ -124,12 +168,14 @@ export function TradeProposalCard({
 						<span className="text-red-500">✗</span> {rejectCount}
 					</span>
 					<span className="text-muted-foreground/60">
-						{totalVotes} vote{totalVotes !== 1 ? "s" : ""}
+						{isInstructor && totalMembers !== undefined
+							? `${totalVotes}/${totalMembers} cast`
+							: `${totalVotes} vote${totalVotes !== 1 ? "s" : ""}`}
 					</span>
 				</div>
 
 				{/* Vote Buttons — only show for opposing team and pending proposals */}
-				{proposal.status === "pending" && !isMyProposal && (
+				{mode === "student" && proposal.status === "pending" && !isMyProposal && (
 					<div className="flex items-center gap-2">
 						<Button
 							size="sm"
@@ -160,7 +206,7 @@ export function TradeProposalCard({
 					</div>
 				)}
 
-				{proposal.status === "pending" && isMyProposal && (
+				{mode === "student" && proposal.status === "pending" && isMyProposal && (
 					<span className="text-xs text-muted-foreground italic">
 						Awaiting response…
 					</span>

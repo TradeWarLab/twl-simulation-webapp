@@ -1,12 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { getInstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
 import { getClassRoster, updateClassPeriod } from "@/app/actions/classes";
 import { ClassDetailHeader } from "@/components/instructor/class-detail-header";
-import { QuickActionsSidebar } from "@/components/instructor/quick-actions-sidebar";
+import { InstructorLiveDashboard } from "@/components/instructor/instructor-live-dashboard";
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
 import { SessionStepper } from "@/components/instructor/session-stepper";
-import { StudentRoster } from "@/components/instructor/student-roster";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +59,7 @@ async function ClassDetailPageInner({
 	}
 
 	const roster = await getClassRoster(id);
+	const initialSnapshot = await getInstructorDashboardSnapshot(id);
 	const periods = SIMULATION_PERIODS;
 
 	// Server action wrapper for updating period
@@ -92,23 +93,24 @@ async function ClassDetailPageInner({
 				periods={periods}
 			/>
 
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-				{/* Main Content */}
-				<div className="lg:col-span-2 space-y-8">
-					{/* Session Control */}
-					<SessionControlPanel
-						currentPeriod={classData.current_period}
-						periods={periods}
-						advanceAction={advancePeriod}
-						goBackAction={goBackPeriod}
-					/>
+			<div className="space-y-8">
+				<SessionControlPanel
+					classId={id}
+					classCode={classData.class_code}
+					currentPeriod={classData.current_period}
+					periods={periods}
+					advanceAction={advancePeriod}
+					goBackAction={goBackPeriod}
+				/>
 
-					{/* Roster */}
-					<StudentRoster classId={id} roster={roster} />
-				</div>
-
-				{/* Sidebar */}
-				<QuickActionsSidebar classId={id} classCode={classData.class_code} />
+				<InstructorLiveDashboard
+					classRecord={classData}
+					periods={periods}
+					initialSnapshot={{
+						...initialSnapshot,
+						roster,
+					}}
+				/>
 			</div>
 		</div>
 	);

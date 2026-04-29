@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TradeItem } from "@/lib/types/domain";
 
 export function ManageItemsClient({
@@ -16,12 +18,14 @@ export function ManageItemsClient({
 	chinaTeamId,
 	usaItems,
 	chinaItems,
+	readOnly,
 }: {
 	classId: string;
 	usaTeamId: string | null;
 	chinaTeamId: string | null;
 	usaItems: TradeItem[];
 	chinaItems: TradeItem[];
+	readOnly?: boolean;
 }) {
 	const [isPending, startTransition] = useTransition();
 
@@ -87,7 +91,8 @@ export function ManageItemsClient({
 						</div>
 					) : (
 						<div className="space-y-6">
-							<form
+							{!readOnly && (
+								<form
 								onSubmit={(e) => handleCreate(e, teamId)}
 								className={`flex items-end gap-2 rounded-lg border px-3 py-3 ${stripSurface}`}
 							>
@@ -123,51 +128,65 @@ export function ManageItemsClient({
 									Add
 								</Button>
 							</form>
+							)}
 
 							<div className="rounded-md border divide-y overflow-hidden">
 								<div className="flex bg-slate-50 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.07em] text-muted-foreground">
 									<span className="flex-1">Name</span>
 									<span className="w-16 text-right">Value</span>
-									<span className="w-10"></span>
+									{!readOnly && <span className="w-10"></span>}
 								</div>
 								{items.length === 0 ? (
 									<div className="p-4 text-center text-sm text-slate-500">
 										No items added yet.
 									</div>
 								) : (
-									items.map((item) => (
-										<div
-											key={item.id}
-											className="flex items-center p-2 text-sm text-foreground bg-card hover:bg-muted transition-colors"
-										>
-											<span className="flex-1 font-medium">{item.name}</span>
-											<span
-												className={`w-16 text-right font-bold ${
-													item.value > 0
-														? "text-green-600"
-														: item.value < 0
-															? "text-red-600"
-															: "text-muted-foreground"
-												}`}
-											>
-												{item.value > 0
-													? `+${item.value}`
-													: item.value < 0
-														? item.value
-														: "—"}
-											</span>
-											<div className="w-10 text-right">
-												<button
-													onClick={() => handleDelete(item.id)}
-													disabled={isPending}
-													className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-slate-200 text-slate-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-													title="Delete item"
+									<ScrollArea className="h-[250px] w-full">
+										<div className="divide-y">
+											{items.map((item) => (
+												<div
+													key={item.id}
+													className="flex items-center p-2 text-sm text-foreground bg-card hover:bg-muted transition-colors"
 												>
-													✕
-												</button>
-											</div>
+													<span className="flex-1 font-medium flex items-center gap-2">
+														{item.name}
+														{readOnly && (
+															<Badge variant={item.is_resolved ? "default" : "secondary"} className="text-[10px] uppercase h-5">
+																{item.is_resolved ? "Resolved" : "Open"}
+															</Badge>
+														)}
+													</span>
+													<span
+														className={`w-16 text-right font-bold ${
+															item.value > 0
+																? "text-green-600"
+																: item.value < 0
+																	? "text-red-600"
+																	: "text-muted-foreground"
+														}`}
+													>
+														{item.value > 0
+															? `+${item.value}`
+															: item.value < 0
+																? item.value
+																: "—"}
+													</span>
+													{!readOnly && (
+														<div className="w-10 text-right">
+															<button
+																onClick={() => handleDelete(item.id)}
+																disabled={isPending}
+																className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-slate-200 text-slate-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+																title="Delete item"
+															>
+																✕
+															</button>
+														</div>
+													)}
+												</div>
+											))}
 										</div>
-									))
+									</ScrollArea>
 								)}
 							</div>
 						</div>

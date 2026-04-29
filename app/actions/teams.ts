@@ -201,3 +201,11 @@ export async function removeStudentFromClass(
 	revalidatePath(`/instructor/classes/${classId}/teams`);
 	return { success: true };
 }
+
+export async function removeStudentFromClassAction(
+	classId: string,
+	email: string,
+	userId?: string,
+): Promise<void> {
+	await removeStudentFromClass(classId, email, userId);
+}
