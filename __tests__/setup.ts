@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { beforeEach, vi } from "vitest";
+import { mockClient } from "./helpers/supabase-mock";
 
 // ─── Browser / JSDOM Polyfills ────────────────
 class ResizeObserverMock {
@@ -53,6 +54,28 @@ vi.stubGlobal("crypto", {
 // Reset the counter between tests
 beforeEach(() => {
 	uuidCounter = 0;
+	mockClient._builders.clear();
+	mockClient.auth.getUser.mockReset();
+	mockClient.auth.getUser.mockResolvedValue({
+		data: { user: { id: "user-1", email: "test@test.com" } },
+	});
+	mockClient.auth.signInWithPassword.mockReset();
+	mockClient.auth.signInWithPassword.mockResolvedValue({ error: null });
+	mockClient.auth.signUp.mockReset();
+	mockClient.auth.signUp.mockResolvedValue({
+		data: { user: { id: "user-1" }, session: null },
+		error: null,
+	});
+	mockClient.auth.signOut.mockReset();
+	mockClient.auth.signOut.mockResolvedValue({ error: null });
+	mockClient.auth.getClaims.mockReset();
+	mockClient.auth.getClaims.mockResolvedValue({
+		data: { claims: { sub: "user-1" } },
+	});
+	mockClient.from.mockClear();
+	mockClient.rpc.mockReset();
+	mockClient.channel.mockClear();
+	mockClient.removeChannel.mockClear();
 });
 
 // ─── Global Mocks for Next.js and Supabase ────────────────

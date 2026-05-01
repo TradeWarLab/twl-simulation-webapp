@@ -9,8 +9,8 @@ export default defineConfig({
 		include: ["__tests__/**/*.test.ts", "__tests__/**/*.test.tsx"],
 		coverage: {
 			provider: "v8",
-			include: ["lib/**/*.ts", "app/actions/**/*.ts"],
-			exclude: ["lib/supabase/**"],
+			include: ["lib/**/*.ts", "app/actions/**/*.ts", "components/**/*.tsx"],
+			exclude: ["lib/supabase/**", "components/ui/**"],
 		},
 	},
 	resolve: {

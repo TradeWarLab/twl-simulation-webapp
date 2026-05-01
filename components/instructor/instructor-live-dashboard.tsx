@@ -1,20 +1,12 @@
 "use client";
 
-import {
-	Activity,
-	Radio,
-} from "lucide-react";
+import { Activity, Radio } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type {
-	InstructorDashboardSnapshot,
-} from "@/app/actions/instructor-dashboard";
+import type { InstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StudentRoster } from "./student-roster";
-import { ManageItemsClient } from "./manage-items-client";
-import { TradeProposalCard } from "../negotiation/trade-proposal-card";
 import { createClient } from "@/lib/supabase/client";
 import type {
 	TeamCountry,
@@ -24,6 +16,9 @@ import type {
 	Vote,
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
+import { TradeProposalCard } from "../negotiation/trade-proposal-card";
+import { ManageItemsClient } from "./manage-items-client";
+import { StudentRoster } from "./student-roster";
 
 type ClassRecord = {
 	id: string;
@@ -74,7 +69,9 @@ function SectionCard({
 							{title}
 						</CardTitle>
 						{description && (
-							<p className="mt-1 text-sm text-muted-foreground">{description}</p>
+							<p className="mt-1 text-sm text-muted-foreground">
+								{description}
+							</p>
 						)}
 					</div>
 					{action}
@@ -108,30 +105,30 @@ function StandingsCard({
 					<div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
 						{label}
 					</div>
-					<div className="mt-2 text-5xl font-semibold tracking-tight">{score}</div>
+					<div className="mt-2 text-5xl font-semibold tracking-tight">
+						{score}
+					</div>
 				</div>
 			</div>
 		</div>
 	);
 }
 
-
-
 export function InstructorLiveDashboard({
 	classRecord,
 	initialSnapshot,
 }: DashboardProps) {
 	const supabase = useMemo(() => createClient(), []);
-	const [liveClassRecord, setLiveClassRecord] = useState(classRecord);
+	const [_liveClassRecord, setLiveClassRecord] = useState(classRecord);
 	const [tradeItems, setTradeItems] = useState(initialSnapshot.tradeItems);
 	const [proposals, setProposals] = useState(initialSnapshot.proposals);
 	const [votes, setVotes] = useState(initialSnapshot.votes);
 	const [connectionState, setConnectionState] = useState<
 		"connecting" | "live" | "offline"
 	>("connecting");
-	const [highlightedProposalId, setHighlightedProposalId] = useState<string | null>(
-		null,
-	);
+	const [highlightedProposalId, setHighlightedProposalId] = useState<
+		string | null
+	>(null);
 
 	const teams = initialSnapshot.teams;
 	const teamMemberCounts = initialSnapshot.teamMemberCounts;
@@ -239,13 +236,18 @@ export function InstructorLiveDashboard({
 					const oldItem = payload.old as TradeItem;
 
 					if (payload.eventType === "DELETE") {
-						setTradeItems((prev) => prev.filter((item) => item.id !== oldItem.id));
+						setTradeItems((prev) =>
+							prev.filter((item) => item.id !== oldItem.id),
+						);
 						return;
 					}
 
 					setTradeItems((prev) => {
 						const index = prev.findIndex((item) => item.id === nextItem.id);
-						if (index === -1) return [...prev, nextItem].sort((a, b) => a.name.localeCompare(b.name));
+						if (index === -1)
+							return [...prev, nextItem].sort((a, b) =>
+								a.name.localeCompare(b.name),
+							);
 						const updated = [...prev];
 						updated[index] = nextItem;
 						return updated;
@@ -272,11 +274,14 @@ export function InstructorLiveDashboard({
 					}
 
 					setProposals((prev) => {
-						const index = prev.findIndex((proposal) => proposal.id === nextProposal.id);
+						const index = prev.findIndex(
+							(proposal) => proposal.id === nextProposal.id,
+						);
 						if (index === -1) {
 							return [...prev, nextProposal].sort(
 								(a, b) =>
-									new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+									new Date(a.created_at).getTime() -
+									new Date(b.created_at).getTime(),
 							);
 						}
 						const updated = [...prev];
@@ -381,74 +386,84 @@ export function InstructorLiveDashboard({
 							score={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
 							accent="china"
 						/>
-
 					</div>
 				</SectionCard>
-
 			</div>
-
-
 
 			<Tabs defaultValue="Proposal Queue" className="space-y-4">
 				<TabsList className="bg-muted/30 border border-border/70 p-1">
 					<TabsTrigger value="Proposal Queue">Proposal Queue</TabsTrigger>
 					<TabsTrigger value="Trade Breakdown">Trade Breakdown</TabsTrigger>
-					<TabsTrigger value="Roster and Team Assignments">Roster & Teams</TabsTrigger>
+					<TabsTrigger value="Roster and Team Assignments">
+						Roster & Teams
+					</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="Proposal Queue" className="rounded-2xl border border-border/70 bg-card p-5">
-					<div className="mb-4 text-sm text-muted-foreground">Pending and executed deals, with vote state and the ability to spotlight one for discussion.</div>
+				<TabsContent
+					value="Proposal Queue"
+					className="rounded-2xl border border-border/70 bg-card p-5"
+				>
+					<div className="mb-4 text-sm text-muted-foreground">
+						Pending and executed deals, with vote state and the ability to
+						spotlight one for discussion.
+					</div>
 					<ScrollArea className="h-[500px] pr-4">
 						<div className="grid gap-4 xl:grid-cols-2">
 							{proposals.length === 0 ? (
-							<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-								No proposals yet.
-							</div>
-						) : (
-							proposals
-								.slice()
-								.reverse()
-								.map((proposal) => {
-									const proposalVotes = votes.filter(
-										(vote) => vote.proposal_id === proposal.id,
-									);
-									const totalMembers =
-										(teamMemberCounts[proposal.proposing_team_id] ?? 0) +
-										(teamMemberCounts[proposal.receiving_team_id] ?? 0);
-									const isHighlighted = highlightedProposalId === proposal.id;
+								<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+									No proposals yet.
+								</div>
+							) : (
+								proposals
+									.slice()
+									.reverse()
+									.map((proposal) => {
+										const proposalVotes = votes.filter(
+											(vote) => vote.proposal_id === proposal.id,
+										);
+										const totalMembers =
+											(teamMemberCounts[proposal.proposing_team_id] ?? 0) +
+											(teamMemberCounts[proposal.receiving_team_id] ?? 0);
+										const isHighlighted = highlightedProposalId === proposal.id;
 
-									const tradeVotes = proposalVotes.map((v) => ({
-										id: v.id,
-										proposal_id: v.proposal_id,
-										student_id: v.user_id,
-										vote: v.vote,
-										created_at: v.created_at,
-										student: v.user,
-									}));
+										const tradeVotes = proposalVotes.map((v) => ({
+											id: v.id,
+											proposal_id: v.proposal_id,
+											student_id: v.user_id,
+											vote: v.vote,
+											created_at: v.created_at,
+											student: v.user,
+										}));
 
-									return (
-										<TradeProposalCard
-											key={proposal.id}
-											proposal={{...proposal, votes: tradeVotes}}
-											mode="instructor"
-											isHighlighted={isHighlighted}
-											onHighlight={() =>
-												setHighlightedProposalId((current) =>
-													current === proposal.id ? null : proposal.id,
-												)
-											}
-											totalMembers={totalMembers}
-											itemById={itemById}
-										/>
-									);
-								})
+										return (
+											<TradeProposalCard
+												key={proposal.id}
+												proposal={{ ...proposal, votes: tradeVotes }}
+												mode="instructor"
+												isHighlighted={isHighlighted}
+												onHighlight={() =>
+													setHighlightedProposalId((current) =>
+														current === proposal.id ? null : proposal.id,
+													)
+												}
+												totalMembers={totalMembers}
+												itemById={itemById}
+											/>
+										);
+									})
 							)}
 						</div>
 					</ScrollArea>
 				</TabsContent>
 
-				<TabsContent value="Trade Breakdown" className="rounded-2xl border border-border/70 bg-card p-5">
-					<div className="mb-4 text-sm text-muted-foreground">Full item-level breakdown for both teams, preserved but no longer forced into the instructor’s first read.</div>
+				<TabsContent
+					value="Trade Breakdown"
+					className="rounded-2xl border border-border/70 bg-card p-5"
+				>
+					<div className="mb-4 text-sm text-muted-foreground">
+						Full item-level breakdown for both teams, preserved but no longer
+						forced into the instructor’s first read.
+					</div>
 					<div className="pt-2">
 						<ManageItemsClient
 							classId={classRecord.id}
@@ -461,7 +476,10 @@ export function InstructorLiveDashboard({
 					</div>
 				</TabsContent>
 
-				<TabsContent value="Roster and Team Assignments" className="rounded-2xl border border-border/70 bg-card p-5">
+				<TabsContent
+					value="Roster and Team Assignments"
+					className="rounded-2xl border border-border/70 bg-card p-5"
+				>
 					<StudentRoster
 						classId={classRecord.id}
 						roster={initialSnapshot.roster}

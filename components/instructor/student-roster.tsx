@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState, useEffect, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { inviteStudentToClass } from "@/app/actions/classes";
 import {
 	removeStudentFromClassAction,
 	updateInviteAffiliation,
-	updateStudentTeam,
 	updateInviteInterest,
 	updateStudentInterest,
+	updateStudentTeam,
 } from "@/app/actions/teams";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,9 @@ export function StudentRoster({
 	roster: ClassRosterEntry[];
 }) {
 	const [query, setQuery] = useState("");
-	const [countryFilter, setCountryFilter] = useState<"all" | TeamCountry>("all");
+	const [countryFilter, setCountryFilter] = useState<"all" | TeamCountry>(
+		"all",
+	);
 	const [groupFilter, setGroupFilter] = useState("all");
 	const [sortBy, setSortBy] = useState<
 		"name" | "country" | "group" | "status" | "joined"
@@ -56,7 +58,11 @@ export function StudentRoster({
 			if (entry.status === "account_created" && entry.user_id) {
 				res = await updateStudentTeam(classId, entry.user_id, newAffiliation);
 			} else {
-				res = await updateInviteAffiliation(classId, entry.email, newAffiliation);
+				res = await updateInviteAffiliation(
+					classId,
+					entry.email,
+					newAffiliation,
+				);
 			}
 
 			if (res.error) {
@@ -127,7 +133,7 @@ export function StudentRoster({
 		});
 
 		return next;
-	}, [countryFilter, groupFilter, query, roster, sortBy]);
+	}, [countryFilter, groupFilter, query, sortBy, localRoster.filter]);
 
 	return (
 		<Card className="border-0 shadow-none bg-transparent">
@@ -291,7 +297,9 @@ export function StudentRoster({
 													}
 													disabled={isPending}
 												>
-													<option value="" disabled>Unassigned</option>
+													<option value="" disabled>
+														Unassigned
+													</option>
 													<option value="USA">Team USA</option>
 													<option value="China">Team PRC</option>
 												</select>
@@ -300,10 +308,14 @@ export function StudentRoster({
 												<select
 													className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
 													value={entry.interest_group ?? ""}
-													onChange={(e) => handleInterestChange(entry, e.target.value)}
+													onChange={(e) =>
+														handleInterestChange(entry, e.target.value)
+													}
 													disabled={isPending}
 												>
-													<option value="" disabled>Unassigned</option>
+													<option value="" disabled>
+														Unassigned
+													</option>
 													{INTEREST_GROUPS.map((group) => (
 														<option key={group} value={group}>
 															{group}
@@ -319,7 +331,9 @@ export function StudentRoster({
 															: "secondary"
 													}
 												>
-													{entry.status === "account_created" ? "Enrolled" : "Pending"}
+													{entry.status === "account_created"
+														? "Enrolled"
+														: "Pending"}
 												</Badge>
 											</div>
 											<div className="text-xs text-muted-foreground">
@@ -329,7 +343,11 @@ export function StudentRoster({
 											</div>
 											<div className="text-right">
 												<form action={removeAction}>
-													<Button variant="ghost" size="sm" className="text-destructive">
+													<Button
+														variant="ghost"
+														size="sm"
+														className="text-destructive"
+													>
 														Remove
 													</Button>
 												</form>

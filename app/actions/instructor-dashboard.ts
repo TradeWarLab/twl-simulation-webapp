@@ -1,6 +1,7 @@
 "use server";
 
 import { getClassRoster } from "@/app/actions/classes";
+import { createClient } from "@/lib/supabase/server";
 import type {
 	ClassRosterEntry,
 	TeamCountry,
@@ -9,7 +10,6 @@ import type {
 	TradeProposal,
 	Vote,
 } from "@/lib/types/domain";
-import { createClient } from "@/lib/supabase/server";
 
 export type InstructorTeam = {
 	id: string;
@@ -125,10 +125,8 @@ export async function getInstructorDashboardSnapshot(
 			.in(
 				"team_id",
 				(
-					(await supabase
-						.from("teams")
-						.select("id")
-						.eq("class_id", classId)).data ?? []
+					(await supabase.from("teams").select("id").eq("class_id", classId))
+						.data ?? []
 				).map((team) => team.id),
 			)
 			.order("created_at", { ascending: true }),

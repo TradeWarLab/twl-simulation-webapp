@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { signUp } from "@/app/actions/auth";
 import { SignUpForm } from "@/components/auth/sign-up-form";
@@ -23,7 +22,7 @@ describe("SignUpForm Component", () => {
 		expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
-		expect(screen.getByLabelText(/class code/i)).toBeInTheDocument();
+		expect(screen.queryByLabelText(/class code/i)).not.toBeInTheDocument();
 		expect(
 			screen.getByLabelText(/sign up as instructor\?/i),
 		).toBeInTheDocument();
@@ -61,7 +60,10 @@ describe("SignUpForm Component", () => {
 
 	it("shows the email verification state after successful signup", async () => {
 		const mockSignUp = vi.mocked(signUp);
-		mockSignUp.mockResolvedValueOnce({ success: true });
+		mockSignUp.mockImplementationOnce(async (formData) => {
+			expect(formData.get("class_code")).toBeNull();
+			return { success: true };
+		});
 
 		render(<SignUpForm />);
 
@@ -77,9 +79,6 @@ describe("SignUpForm Component", () => {
 		fireEvent.change(screen.getByLabelText(/confirm password/i), {
 			target: { value: "password123" },
 		});
-		fireEvent.change(screen.getByLabelText(/class code/i), {
-			target: { value: "TWL-AB12CD" },
-		});
 
 		const form = screen
 			.getByRole("button", { name: /sign up/i })
@@ -94,5 +93,40 @@ describe("SignUpForm Component", () => {
 		expect(
 			await screen.findByRole("heading", { name: /check your inbox/i }),
 		).toBeInTheDocument();
+	});
+
+	it("submits the instructor role when the checkbox is enabled", async () => {
+		const mockSignUp = vi.mocked(signUp);
+		mockSignUp.mockImplementationOnce(async (formData) => {
+			expect(formData.get("role")).toBe("instructor");
+			return { success: true };
+		});
+
+		render(<SignUpForm />);
+
+		fireEvent.change(screen.getByLabelText(/full name/i), {
+			target: { value: "Professor Plum" },
+		});
+		fireEvent.change(screen.getByLabelText(/email/i), {
+			target: { value: "prof@example.com" },
+		});
+		fireEvent.change(screen.getByLabelText(/^password$/i), {
+			target: { value: "password123" },
+		});
+		fireEvent.change(screen.getByLabelText(/confirm password/i), {
+			target: { value: "password123" },
+		});
+		fireEvent.click(screen.getByLabelText(/sign up as instructor\?/i));
+
+		const form = screen
+			.getByRole("button", { name: /sign up/i })
+			.closest("form");
+		if (form) {
+			fireEvent.submit(form);
+		}
+
+		await waitFor(() => {
+			expect(mockSignUp).toHaveBeenCalledTimes(1);
+		});
 	});
 });

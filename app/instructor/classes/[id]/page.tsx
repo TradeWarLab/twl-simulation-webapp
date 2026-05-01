@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { getInstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
 import { getClassRoster, updateClassPeriod } from "@/app/actions/classes";
+import { getInstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
 import { ClassDetailHeader } from "@/components/instructor/class-detail-header";
 import { InstructorLiveDashboard } from "@/components/instructor/instructor-live-dashboard";
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";

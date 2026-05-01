@@ -5,10 +5,10 @@ import {
 	createTradeItem,
 	deleteTradeItem,
 } from "@/app/actions/trade-controller";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TradeItem } from "@/lib/types/domain";
 
@@ -93,41 +93,41 @@ export function ManageItemsClient({
 						<div className="space-y-6">
 							{!readOnly && (
 								<form
-								onSubmit={(e) => handleCreate(e, teamId)}
-								className={`flex items-end gap-2 rounded-lg border px-3 py-3 ${stripSurface}`}
-							>
-								<div className="flex-1 space-y-1">
-									<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-										Item Name
-									</label>
-									<Input
-										name="name"
-										required
-										placeholder="e.g. End subsidies"
-										disabled={isPending}
-									/>
-								</div>
-								<div className="w-24 space-y-1">
-									<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
-										Value
-									</label>
-									<Input
-										name="value"
-										type="number"
-										required
-										placeholder="10"
-										disabled={isPending}
-									/>
-								</div>
-								<Button
-									type="submit"
-									disabled={isPending}
-									variant="outline"
-									className={actionButton}
+									onSubmit={(e) => handleCreate(e, teamId)}
+									className={`flex items-end gap-2 rounded-lg border px-3 py-3 ${stripSurface}`}
 								>
-									Add
-								</Button>
-							</form>
+									<div className="flex-1 space-y-1">
+										<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+											Item Name
+										</label>
+										<Input
+											name="name"
+											required
+											placeholder="e.g. End subsidies"
+											disabled={isPending}
+										/>
+									</div>
+									<div className="w-24 space-y-1">
+										<label className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+											Value
+										</label>
+										<Input
+											name="value"
+											type="number"
+											required
+											placeholder="10"
+											disabled={isPending}
+										/>
+									</div>
+									<Button
+										type="submit"
+										disabled={isPending}
+										variant="outline"
+										className={actionButton}
+									>
+										Add
+									</Button>
+								</form>
 							)}
 
 							<div className="rounded-md border divide-y overflow-hidden">
@@ -151,7 +151,12 @@ export function ManageItemsClient({
 													<span className="flex-1 font-medium flex items-center gap-2">
 														{item.name}
 														{readOnly && (
-															<Badge variant={item.is_resolved ? "default" : "secondary"} className="text-[10px] uppercase h-5">
+															<Badge
+																variant={
+																	item.is_resolved ? "default" : "secondary"
+																}
+																className="text-[10px] uppercase h-5"
+															>
 																{item.is_resolved ? "Resolved" : "Open"}
 															</Badge>
 														)}

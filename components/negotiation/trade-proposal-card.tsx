@@ -1,11 +1,11 @@
 "use client";
 
+import { Flag } from "lucide-react";
 import { useTransition } from "react";
 import { submitVote } from "@/app/actions/trade-controller";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Flag } from "lucide-react";
-import type { TeamCountry, TradeProposal, TradeItem } from "@/lib/types/domain";
+import type { TeamCountry, TradeItem, TradeProposal } from "@/lib/types/domain";
 
 type Props = {
 	proposal: TradeProposal;
@@ -33,9 +33,12 @@ export function TradeProposalCard({
 	const [isPending, startTransition] = useTransition();
 
 	const proposingCountry = proposal.proposing_team?.country ?? "USA";
-	const isMyProposal = mode === "student" && proposal.proposing_team_id === myTeamId;
+	const isMyProposal =
+		mode === "student" && proposal.proposing_team_id === myTeamId;
 	const votes = proposal.votes ?? [];
-	const myVote = currentUserId ? votes.find((v) => v.student_id === currentUserId) : undefined;
+	const myVote = currentUserId
+		? votes.find((v) => v.student_id === currentUserId)
+		: undefined;
 	const approveCount = votes.filter((v) => v.vote === "approve").length;
 	const rejectCount = votes.filter((v) => v.vote === "reject").length;
 	const totalVotes = votes.length;
@@ -65,7 +68,11 @@ export function TradeProposalCard({
 		return value > 0 ? `+${value}` : `${value}`;
 	}
 
-	function renderItem(item: { item_id: string; name: string; value?: number | null }) {
+	function renderItem(item: {
+		item_id: string;
+		name: string;
+		value?: number | null;
+	}) {
 		if (!isInstructor || !itemById) {
 			return item.name;
 		}
@@ -75,7 +82,9 @@ export function TradeProposalCard({
 	}
 
 	return (
-		<div className={`rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow ${isHighlighted ? "border-indigo-500 bg-indigo-500/10" : ""}`}>
+		<div
+			className={`rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow ${isHighlighted ? "border-indigo-500 bg-indigo-500/10" : ""}`}
+		>
 			{/* Header */}
 			<div className="flex items-center justify-between mb-3">
 				<div className="flex items-center gap-2">
@@ -94,7 +103,9 @@ export function TradeProposalCard({
 					>
 						{proposal.status}
 					</Badge>
-					{!isInstructor && <span className="text-xs text-muted-foreground">{timeAgo}</span>}
+					{!isInstructor && (
+						<span className="text-xs text-muted-foreground">{timeAgo}</span>
+					)}
 					{isInstructor && onHighlight && (
 						<Button
 							variant="ghost"
@@ -111,7 +122,11 @@ export function TradeProposalCard({
 			{isInstructor && (
 				<div className="mb-3 text-xs text-muted-foreground">
 					Created by {proposal.creator?.full_name ?? "Unknown"} at{" "}
-					{new Date(proposal.created_at).toLocaleDateString()} • {new Date(proposal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+					{new Date(proposal.created_at).toLocaleDateString()} •{" "}
+					{new Date(proposal.created_at).toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+					})}
 				</div>
 			)}
 
@@ -175,42 +190,46 @@ export function TradeProposalCard({
 				</div>
 
 				{/* Vote Buttons — only show for opposing team and pending proposals */}
-				{mode === "student" && proposal.status === "pending" && !isMyProposal && (
-					<div className="flex items-center gap-2">
-						<Button
-							size="sm"
-							variant={myVote?.vote === "approve" ? "default" : "outline"}
-							onClick={() => handleVote("approve")}
-							disabled={isPending}
-							className={
-								myVote?.vote === "approve"
-									? "bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7"
-									: "text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs h-7"
-							}
-						>
-							✓ Approve
-						</Button>
-						<Button
-							size="sm"
-							variant={myVote?.vote === "reject" ? "default" : "outline"}
-							onClick={() => handleVote("reject")}
-							disabled={isPending}
-							className={
-								myVote?.vote === "reject"
-									? "bg-red-600 hover:bg-red-700 text-white text-xs h-7"
-									: "text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs h-7"
-							}
-						>
-							✗ Reject
-						</Button>
-					</div>
-				)}
+				{mode === "student" &&
+					proposal.status === "pending" &&
+					!isMyProposal && (
+						<div className="flex items-center gap-2">
+							<Button
+								size="sm"
+								variant={myVote?.vote === "approve" ? "default" : "outline"}
+								onClick={() => handleVote("approve")}
+								disabled={isPending}
+								className={
+									myVote?.vote === "approve"
+										? "bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7"
+										: "text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs h-7"
+								}
+							>
+								✓ Approve
+							</Button>
+							<Button
+								size="sm"
+								variant={myVote?.vote === "reject" ? "default" : "outline"}
+								onClick={() => handleVote("reject")}
+								disabled={isPending}
+								className={
+									myVote?.vote === "reject"
+										? "bg-red-600 hover:bg-red-700 text-white text-xs h-7"
+										: "text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs h-7"
+								}
+							>
+								✗ Reject
+							</Button>
+						</div>
+					)}
 
-				{mode === "student" && proposal.status === "pending" && isMyProposal && (
-					<span className="text-xs text-muted-foreground italic">
-						Awaiting response…
-					</span>
-				)}
+				{mode === "student" &&
+					proposal.status === "pending" &&
+					isMyProposal && (
+						<span className="text-xs text-muted-foreground italic">
+							Awaiting response…
+						</span>
+					)}
 			</div>
 		</div>
 	);

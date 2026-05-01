@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Scoreboard } from "@/components/simulation/scoreboard";
 
 describe("Scoreboard Component", () => {
-	it("renders teams sorted by balance in descending order", () => {
+	it("renders both country labels with their scores", () => {
 		const initialScores = [
 			{
 				id: "s1",
@@ -25,16 +25,14 @@ describe("Scoreboard Component", () => {
 
 		render(<Scoreboard initialScores={initialScores as any} />);
 
-		// Check USA score
-		expect(screen.getByText("🇺🇸 USA")).toBeInTheDocument();
+		expect(screen.getByText("Bilateral Scoreboard")).toBeInTheDocument();
+		expect(screen.getByText("USA")).toBeInTheDocument();
 		expect(screen.getByText("1000")).toBeInTheDocument();
-
-		// Check China score
-		expect(screen.getByText("🇨🇳 PRC")).toBeInTheDocument();
+		expect(screen.getByText("China")).toBeInTheDocument();
 		expect(screen.getByText("2500")).toBeInTheDocument();
 	});
 
-	it("shows accurate active count", () => {
+	it("falls back to zero when a team score is missing", () => {
 		const initialScores = [
 			{
 				id: "s2",
@@ -48,7 +46,9 @@ describe("Scoreboard Component", () => {
 
 		render(<Scoreboard initialScores={initialScores as any} />);
 
+		expect(screen.getByText("USA")).toBeInTheDocument();
+		expect(screen.getByText("China")).toBeInTheDocument();
 		expect(screen.getByText("50")).toBeInTheDocument();
-		expect(screen.getByText("0")).toBeInTheDocument(); // USA default
+		expect(screen.getByText("0")).toBeInTheDocument();
 	});
 });

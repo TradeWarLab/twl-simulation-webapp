@@ -94,7 +94,33 @@ describe("Auth Actions", () => {
 			expect(result).toEqual({ error: "User exists" });
 		});
 
-		it("passes role, class code, and confirm route into Supabase signup", async () => {
+		it("returns a clear error when a student class code is invalid", async () => {
+			mockClient._mockTable("classes", {
+				data: null,
+				error: { message: "No rows found" },
+			});
+
+			const formData = new FormData();
+			formData.set("email", "student@example.com");
+			formData.set("password", "valid");
+			formData.set("full_name", "Student User");
+			formData.set("role", "student");
+			formData.set("class_code", "bad-code");
+
+			const result = await signUp(formData);
+
+			expect(mockClient.auth.signUp).not.toHaveBeenCalled();
+			expect(result).toEqual({
+				error:
+					'Class code "bad-code" was not found. Please double-check the code your instructor gave you and try again.',
+			});
+		});
+
+		it("validates the class code and passes trimmed signup metadata into Supabase", async () => {
+			mockClient._mockTable("classes", {
+				data: { id: "class-1" },
+				error: null,
+			});
 			mockClient.auth.signUp.mockResolvedValueOnce({
 				error: null,
 				data: { session: null, user: { id: "user-student" } },
@@ -105,10 +131,11 @@ describe("Auth Actions", () => {
 			formData.set("password", "valid");
 			formData.set("full_name", "Student User");
 			formData.set("role", "student");
-			formData.set("class_code", "TWL-AB12CD");
+			formData.set("class_code", "  TWL-AB12CD  ");
 
 			const result = await signUp(formData);
 
+			expect(mockClient.from).toHaveBeenCalledWith("classes");
 			expect(mockClient.auth.signUp).toHaveBeenCalledWith({
 				email: "student@example.com",
 				password: "valid",
@@ -124,10 +151,29 @@ describe("Auth Actions", () => {
 			expect(result).toEqual({ success: true });
 		});
 
-		it("redirects to student dashboard if signup succeeds immediately (no email confirm)", async () => {
+		it("repairs roster enrollment for immediate student signup with a validated class code", async () => {
+			mockClient._mockTable("classes", {
+				data: { id: "class-1" },
+				error: null,
+			});
 			mockClient.auth.signUp.mockResolvedValueOnce({
 				error: null,
-				data: { session: { access_token: "token" }, user: { id: "user-new" } },
+				data: {
+					session: { access_token: "token" },
+					user: { id: "user-new" },
+				},
+			});
+			mockClient._mockTable("class_invites", {
+				data: { affiliation: "USA", interest_block: "Industry" },
+				error: null,
+			});
+			mockClient._mockTable("teams", {
+				data: { id: "team-usa" },
+				error: null,
+			});
+			mockClient._mockTable("students_classes", {
+				data: null,
+				error: null,
 			});
 			mockClient._mockTable("users", {
 				data: { role: "student" },
@@ -138,11 +184,15 @@ describe("Auth Actions", () => {
 			formData.set("email", "new@example.com");
 			formData.set("password", "valid");
 			formData.set("full_name", "New User");
+			formData.set("class_code", "TWL-AB12CD");
 
 			try {
 				await signUp(formData);
 				expect.fail("signUp should redirect");
 			} catch (error) {
+				expect(mockClient.from).toHaveBeenCalledWith("class_invites");
+				expect(mockClient.from).toHaveBeenCalledWith("teams");
+				expect(mockClient.from).toHaveBeenCalledWith("students_classes");
 				expect((error as any).name).toBe("RedirectError");
 				expect((error as any).url).toBe("/student/dashboard");
 			}
