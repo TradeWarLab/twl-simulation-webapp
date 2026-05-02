@@ -92,6 +92,11 @@ create policy "Instructors can manage teams."
       select 1 from public.classes
       where id = teams.class_id and instructor_id = auth.uid()
     )
+  ) with check (
+    exists (
+      select 1 from public.classes
+      where id = teams.class_id and instructor_id = auth.uid()
+    )
   );
 
 
@@ -300,6 +305,11 @@ create policy "Teams can update their own trade items."
 
 create policy "Instructors can manage trade items."
   on public.trade_items for all using (
+    exists (
+      select 1 from public.classes
+      where id = trade_items.class_id and instructor_id = auth.uid()
+    )
+  ) with check (
     exists (
       select 1 from public.classes
       where id = trade_items.class_id and instructor_id = auth.uid()
