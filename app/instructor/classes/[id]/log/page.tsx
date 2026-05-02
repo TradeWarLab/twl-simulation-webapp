@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { getSimulationLog } from "@/app/actions/log";
+import { getSimulationLogSnapshot } from "@/app/actions/log";
 import { LogClient } from "@/components/instructor/log-client";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
@@ -52,7 +52,7 @@ async function LogDashboardInner({
 		redirect("/instructor/dashboard");
 	}
 
-	const logs = await getSimulationLog(id);
+	const snapshot = await getSimulationLogSnapshot(id);
 
 	return (
 		<div className="container mx-auto p-8 max-w-5xl">
@@ -64,13 +64,13 @@ async function LogDashboardInner({
 					<div>
 						<h1 className="text-3xl font-bold">{classData.name} - Log</h1>
 						<p className="text-sm font-medium opacity-80 mt-1">
-							Chronological history of chat interactions and trade proposals.
+							Live view of chat, value updates, and proposed trades.
 						</p>
 					</div>
 				</div>
 			</div>
 
-			<LogClient logs={logs} className="w-full" />
+			<LogClient classId={id} initialSnapshot={snapshot} className="w-full" />
 		</div>
 	);
 }

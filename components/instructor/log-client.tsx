@@ -1,51 +1,291 @@
 "use client";
 
-import { Download } from "lucide-react";
-import type { LogEvent } from "@/app/actions/log";
+import { Download, Radio } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import type { MessageRecord, SimulationLogSnapshot } from "@/app/actions/log";
+import { TradeProposalCard } from "@/components/negotiation/trade-proposal-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createClient } from "@/lib/supabase/client";
+import type {
+	TeamCountry,
+	TradeItem,
+	TradeProposal,
+	TradeProposalItem,
+	Vote,
+} from "@/lib/types/domain";
+import { cn } from "@/lib/utils";
+
+type ValueUpdate = {
+	id: string;
+	itemId: string;
+	name: string;
+	team: TeamCountry | "Unknown";
+	value: number;
+	timestamp: string;
+};
 
 export function LogClient({
-	logs,
+	classId,
+	initialSnapshot,
 	className,
 }: {
-	logs: LogEvent[];
+	classId: string;
+	initialSnapshot: SimulationLogSnapshot;
 	className?: string;
 }) {
-	// Convert current logs to a CSV blob and download
+	const supabase = useMemo(() => createClient(), []);
+	const [messages, setMessages] = useState(initialSnapshot.messages);
+	const [tradeItems, setTradeItems] = useState(initialSnapshot.tradeItems);
+	const [proposals, setProposals] = useState(initialSnapshot.proposals);
+	const [votes, setVotes] = useState(initialSnapshot.votes);
+	const [valueUpdates, setValueUpdates] = useState<ValueUpdate[]>([]);
+	const [connectionState, setConnectionState] = useState<
+		"connecting" | "live" | "offline"
+	>("connecting");
+
+	const teams = initialSnapshot.teams;
+	const teamById = useMemo(
+		() => new Map(teams.map((team) => [team.id, team])),
+		[teams],
+	);
+	const teamIds = useMemo(() => new Set(teams.map((team) => team.id)), [teams]);
+	const userById = useMemo(
+		() => new Map(initialSnapshot.users.map((user) => [user.id, user])),
+		[initialSnapshot.users],
+	);
+	const itemById = useMemo(
+		() => new Map(tradeItems.map((item) => [item.id, item])),
+		[tradeItems],
+	);
+
+	useEffect(() => {
+		const hydrateProposal = (proposal: TradeProposal): TradeProposal => ({
+			...proposal,
+			offered_items: (proposal.offered_items ?? []) as TradeProposalItem[],
+			requested_items: (proposal.requested_items ?? []) as TradeProposalItem[],
+			proposing_team: {
+				id: proposal.proposing_team_id,
+				country: teamById.get(proposal.proposing_team_id)?.country ?? "USA",
+			},
+			receiving_team: {
+				country: teamById.get(proposal.receiving_team_id)?.country ?? "China",
+			},
+			creator: {
+				full_name: userById.get(proposal.created_by)?.full_name ?? null,
+			},
+		});
+
+		const channel = supabase
+			.channel(`instructor-log:${classId}`)
+			.on(
+				"postgres_changes",
+				{
+					event: "INSERT",
+					schema: "public",
+					table: "messages",
+					filter: `class_id=eq.${classId}`,
+				},
+				(payload) => {
+					const incoming = payload.new as MessageRecord;
+					const sender = userById.get(incoming.sender_id);
+					setMessages((prev) => {
+						if (prev.some((message) => message.id === incoming.id)) return prev;
+						return [
+							...prev,
+							{
+								...incoming,
+								sender: sender
+									? {
+											full_name: sender.full_name,
+											email: sender.email ?? "",
+										}
+									: null,
+							},
+						].sort(
+							(a, b) =>
+								new Date(a.created_at).getTime() -
+								new Date(b.created_at).getTime(),
+						);
+					});
+				},
+			)
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "trade_items",
+					filter: `class_id=eq.${classId}`,
+				},
+				(payload) => {
+					const nextItem = payload.new as TradeItem;
+					const oldItem = payload.old as TradeItem;
+
+					if (payload.eventType === "DELETE") {
+						setTradeItems((prev) =>
+							prev.filter((item) => item.id !== oldItem.id),
+						);
+						return;
+					}
+
+					setTradeItems((prev) => {
+						const index = prev.findIndex((item) => item.id === nextItem.id);
+						if (index === -1) {
+							return [...prev, nextItem].sort((a, b) =>
+								a.name.localeCompare(b.name),
+							);
+						}
+						const updated = [...prev];
+						updated[index] = nextItem;
+						return updated;
+					});
+
+					if (payload.eventType === "UPDATE") {
+						const team = (teamById.get(nextItem.team_id)?.country ??
+							"Unknown") as TeamCountry | "Unknown";
+						setValueUpdates((prev) =>
+							[
+								{
+									id: `${nextItem.id}:${Date.now()}`,
+									itemId: nextItem.id,
+									name: nextItem.name,
+									team,
+									value: Number(nextItem.value),
+									timestamp: new Date().toISOString(),
+								},
+								...prev,
+							].slice(0, 30),
+						);
+					}
+				},
+			)
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "trade_proposals",
+					filter: `class_id=eq.${classId}`,
+				},
+				(payload) => {
+					const nextProposal = hydrateProposal(payload.new as TradeProposal);
+					const oldProposal = payload.old as TradeProposal;
+
+					if (payload.eventType === "DELETE") {
+						setProposals((prev) =>
+							prev.filter((proposal) => proposal.id !== oldProposal.id),
+						);
+						return;
+					}
+
+					setProposals((prev) => {
+						const index = prev.findIndex(
+							(proposal) => proposal.id === nextProposal.id,
+						);
+						if (index === -1) {
+							return [...prev, nextProposal].sort(
+								(a, b) =>
+									new Date(a.created_at).getTime() -
+									new Date(b.created_at).getTime(),
+							);
+						}
+						const updated = [...prev];
+						updated[index] = { ...updated[index], ...nextProposal };
+						return updated;
+					});
+				},
+			)
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "votes",
+				},
+				(payload) => {
+					const nextVote = payload.new as Vote;
+					const oldVote = payload.old as Vote;
+					const targetTeamId = nextVote?.team_id ?? oldVote?.team_id;
+					if (!targetTeamId || !teamIds.has(targetTeamId)) return;
+
+					if (payload.eventType === "DELETE") {
+						setVotes((prev) => prev.filter((vote) => vote.id !== oldVote.id));
+						return;
+					}
+
+					const hydratedVote: Vote = {
+						...nextVote,
+						user: {
+							full_name: userById.get(nextVote.user_id)?.full_name ?? null,
+						},
+					};
+
+					setVotes((prev) => {
+						const index = prev.findIndex((vote) => vote.id === hydratedVote.id);
+						if (index === -1) return [...prev, hydratedVote];
+						const updated = [...prev];
+						updated[index] = hydratedVote;
+						return updated;
+					});
+				},
+			)
+			.subscribe((status) => {
+				if (status === "SUBSCRIBED") {
+					setConnectionState("live");
+					return;
+				}
+				if (
+					status === "CHANNEL_ERROR" ||
+					status === "TIMED_OUT" ||
+					status === "CLOSED"
+				) {
+					setConnectionState("offline");
+					return;
+				}
+				setConnectionState("connecting");
+			});
+
+		return () => {
+			supabase.removeChannel(channel);
+		};
+	}, [classId, supabase, teamById, teamIds, userById]);
+
 	const handleDownloadCSV = () => {
 		let csvContent = "Timestamp,Event Type,Actor,Details,Status\n";
 
-		logs.forEach((log) => {
-			const date = new Date(log.timestamp).toISOString();
+		for (const msg of messages) {
+			const date = new Date(msg.created_at).toISOString();
+			const actor = msg.sender?.full_name ?? msg.sender?.email ?? "Unknown";
+			const details = `[${msg.channel}] ${msg.content}`.replace(/"/g, '""');
+			csvContent += `"${date}",Message,"${actor.replace(/"/g, '""')}","${details}",""\n`;
+		}
 
-			if (log.type === "message") {
-				const msg = log.data;
-				const actor = msg.sender?.full_name ?? msg.sender?.email ?? "Unknown";
-				// Escape quotes and wrap in quotes for CSV
-				const details = `[${msg.channel}] ${msg.content}`.replace(/"/g, '""');
-				csvContent += `"${date}",Message,"${actor.replace(/"/g, '""')}","${details}",""\n`;
-			} else if (log.type === "trade") {
-				const trade = log.data;
-				const actor = trade.creator?.full_name ?? "System";
-
-				// Summarize items
-				const offered = trade.offered_items
-					.map((i) => `${i.name}(${i.value})`)
-					.join(", ");
-				const requested = trade.requested_items
-					.map((i) => `${i.name}(${i.value})`)
-					.join(", ");
-
-				const details =
-					`${trade.proposing_team?.country ?? "Unknown"} offered [${offered}] to ${trade.receiving_team?.country ?? "Unknown"} for [${requested}]`.replace(
-						/"/g,
-						'""',
-					);
-				csvContent += `"${date}",Trade,"${actor.replace(/"/g, '""')}","${details}","${trade.status}"\n`;
-			}
-		});
+		for (const trade of proposals) {
+			const date = new Date(trade.created_at).toISOString();
+			const actor = trade.creator?.full_name ?? "System";
+			const offered = trade.offered_items
+				.map(
+					(item) =>
+						`${item.name}(${formatSignedValue(getItemValue(item, itemById))})`,
+				)
+				.join(", ");
+			const requested = trade.requested_items
+				.map(
+					(item) =>
+						`${item.name}(${formatSignedValue(getItemValue(item, itemById))})`,
+				)
+				.join(", ");
+			const details =
+				`${trade.proposing_team?.country ?? "Unknown"} offered [${offered}] to ${trade.receiving_team?.country ?? "Unknown"} for [${requested}]`.replace(
+					/"/g,
+					'""',
+				);
+			csvContent += `"${date}",Trade,"${actor.replace(/"/g, '""')}","${details}","${trade.status}"\n`;
+		}
 
 		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 		const url = URL.createObjectURL(blob);
@@ -58,141 +298,324 @@ export function LogClient({
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	};
 
 	return (
-		<div className={className}>
-			<div className="flex justify-between items-end mb-6">
+		<div className={cn("space-y-5", className)}>
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
 				<div>
-					<h2 className="text-xl font-bold tracking-tight">Timeline</h2>
+					<h2 className="text-xl font-bold tracking-tight">Live Log</h2>
 					<p className="text-sm text-muted-foreground">
-						Combined view of all messages and trades ({logs.length} events)
+						Monitor team chat, value changes, and formal trade proposals.
 					</p>
 				</div>
-				<Button
-					onClick={handleDownloadCSV}
-					size="sm"
-					variant="outline"
-					className="gap-2"
-				>
-					<Download className="w-4 h-4" />
-					Export CSV
-				</Button>
+				<div className="flex items-center gap-2">
+					<Badge
+						variant="outline"
+						className={cn(
+							"gap-2",
+							connectionState === "live" &&
+								"border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
+							connectionState === "connecting" &&
+								"border-amber-500/40 text-amber-700 dark:text-amber-300",
+							connectionState === "offline" &&
+								"border-red-500/40 text-red-700 dark:text-red-300",
+						)}
+					>
+						<Radio className="h-3.5 w-3.5" />
+						{connectionState === "live"
+							? "Live"
+							: connectionState === "connecting"
+								? "Connecting"
+								: "Offline"}
+					</Badge>
+					<Button
+						onClick={handleDownloadCSV}
+						size="sm"
+						variant="outline"
+						className="gap-2"
+					>
+						<Download className="w-4 h-4" />
+						Export CSV
+					</Button>
+				</div>
 			</div>
 
-			<div className="space-y-4">
-				{logs.length === 0 ? (
-					<Card className="bg-muted/30">
-						<CardContent className="py-8 text-center text-muted-foreground">
-							No log events exist for this simulation yet.
-						</CardContent>
-					</Card>
-				) : (
-					logs.map((log) => {
-						const isMessage = log.type === "message";
+			<Tabs defaultValue="chat" className="space-y-4">
+				<TabsList className="bg-muted/30 border border-border/70 p-1">
+					<TabsTrigger value="chat">Chat</TabsTrigger>
+					<TabsTrigger value="values">Value Updates</TabsTrigger>
+					<TabsTrigger value="trades">Proposed Trades</TabsTrigger>
+				</TabsList>
 
-						if (isMessage) {
-							const msg = log.data;
-							return (
-								<Card key={msg.id} className="opacity-90">
-									<div className="flex p-4 gap-4 items-start">
-										<div className="mt-1">
-											<Badge
-												variant="outline"
-												className="bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300"
-											>
-												MSG
-											</Badge>
-										</div>
-										<div className="flex-1 min-w-0">
-											<div className="flex items-baseline gap-2 mb-1">
-												<span className="font-semibold text-sm">
-													{msg.sender?.full_name ??
-														msg.sender?.email ??
-														"Unknown"}
-												</span>
-												<span className="text-xs text-muted-foreground">
-													to #{msg.channel}
-												</span>
-												<span className="text-xs text-muted-foreground ml-auto">
-													{new Date(log.timestamp).toLocaleTimeString([], {
-														hour: "2-digit",
-														minute: "2-digit",
-													})}{" "}
-													• {new Date(log.timestamp).toLocaleDateString()}
-												</span>
-											</div>
-											<p className="text-sm">{msg.content}</p>
-										</div>
-									</div>
-								</Card>
-							);
-						} else {
-							const trade = log.data;
-							return (
-								<Card
-									key={trade.id}
-									className="border-l-4 border-l-primary shadow-sm bg-blue-50/30 dark:bg-blue-900/10"
-								>
-									<div className="flex p-4 gap-4 items-start">
-										<div className="mt-1 flex flex-col gap-1 items-center">
-											<Badge className="bg-blue-600 hover:bg-blue-700 text-white">
-												TRADE
-											</Badge>
-										</div>
-										<div className="flex-1 min-w-0">
-											<div className="flex items-baseline gap-2 mb-1">
-												<span className="font-semibold text-sm">
-													{trade.creator?.full_name ?? "System"}
-												</span>
-												<span className="text-xs text-muted-foreground">
-													{trade.proposing_team?.country} ↔{" "}
-													{trade.receiving_team?.country}
-												</span>
-												<Badge
-													variant="secondary"
-													className="ml-2 text-[10px] py-0 h-4"
-												>
-													{trade.status.toUpperCase()}
-												</Badge>
-												<span className="text-xs text-muted-foreground ml-auto">
-													{new Date(log.timestamp).toLocaleTimeString([], {
-														hour: "2-digit",
-														minute: "2-digit",
-													})}{" "}
-													• {new Date(log.timestamp).toLocaleDateString()}
-												</span>
-											</div>
-											<div className="text-sm grid gap-1 mt-2">
-												<div className="flex gap-2">
-													<span className="font-medium">Offered:</span>
-													<span className="text-muted-foreground">
-														{trade.offered_items.length > 0
-															? trade.offered_items
-																	.map((i) => `${i.name} (${i.value})`)
-																	.join(", ")
-															: "Nothing"}
-													</span>
-												</div>
-												<div className="flex gap-2">
-													<span className="font-medium">Requested:</span>
-													<span className="text-muted-foreground">
-														{trade.requested_items.length > 0
-															? trade.requested_items
-																	.map((i) => `${i.name} (${i.value})`)
-																	.join(", ")
-															: "Nothing"}
-													</span>
-												</div>
-											</div>
-										</div>
-									</div>
-								</Card>
-							);
-						}
-					})
-				)}
-			</div>
+				<TabsContent value="chat">
+					<ChatPerspectives messages={messages} />
+				</TabsContent>
+
+				<TabsContent value="values">
+					<ValueMonitor
+						tradeItems={tradeItems}
+						teams={teams}
+						valueUpdates={valueUpdates}
+					/>
+				</TabsContent>
+
+				<TabsContent value="trades">
+					<TradeMonitor
+						proposals={proposals}
+						votes={votes}
+						itemById={itemById}
+					/>
+				</TabsContent>
+			</Tabs>
 		</div>
 	);
+}
+
+function ChatPerspectives({ messages }: { messages: MessageRecord[] }) {
+	const channels = [
+		{ value: "team_usa", label: "Team USA" },
+		{ value: "team_china", label: "Team China" },
+		{ value: "global", label: "Global" },
+	];
+
+	return (
+		<Card>
+			<CardContent className="p-4">
+				<Tabs defaultValue="team_usa" className="space-y-4">
+					<TabsList variant="line" className="w-full justify-start">
+						{channels.map((channel) => (
+							<TabsTrigger key={channel.value} value={channel.value}>
+								{channel.label}
+								<Badge variant="secondary" className="ml-1 h-5 px-1.5">
+									{
+										messages.filter((msg) => msg.channel === channel.value)
+											.length
+									}
+								</Badge>
+							</TabsTrigger>
+						))}
+					</TabsList>
+
+					{channels.map((channel) => (
+						<TabsContent key={channel.value} value={channel.value}>
+							<MessageList
+								messages={messages.filter(
+									(message) => message.channel === channel.value,
+								)}
+							/>
+						</TabsContent>
+					))}
+				</Tabs>
+			</CardContent>
+		</Card>
+	);
+}
+
+function MessageList({ messages }: { messages: MessageRecord[] }) {
+	return (
+		<ScrollArea className="h-[560px] pr-4">
+			<div className="space-y-3">
+				{messages.length === 0 ? (
+					<div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+						No messages in this channel yet.
+					</div>
+				) : (
+					messages.map((msg) => (
+						<div key={msg.id} className="rounded-xl border bg-card p-4">
+							<div className="mb-1 flex flex-wrap items-center gap-2">
+								<span className="font-semibold text-sm">
+									{msg.sender?.full_name ?? msg.sender?.email ?? "Unknown"}
+								</span>
+								<span className="text-xs text-muted-foreground">
+									{formatDateTime(msg.created_at)}
+								</span>
+							</div>
+							<p className="whitespace-pre-wrap text-sm leading-6">
+								{msg.content}
+							</p>
+						</div>
+					))
+				)}
+			</div>
+		</ScrollArea>
+	);
+}
+
+function ValueMonitor({
+	tradeItems,
+	teams,
+	valueUpdates,
+}: {
+	tradeItems: TradeItem[];
+	teams: { id: string; country: TeamCountry }[];
+	valueUpdates: ValueUpdate[];
+}) {
+	return (
+		<div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+			<div className="grid gap-4 md:grid-cols-2">
+				{teams.map((team) => (
+					<Card key={team.id}>
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base">Team {team.country}</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<div className="space-y-2">
+								{tradeItems.filter((item) => item.team_id === team.id)
+									.length === 0 ? (
+									<div className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
+										No trade items configured.
+									</div>
+								) : (
+									tradeItems
+										.filter((item) => item.team_id === team.id)
+										.map((item) => (
+											<div
+												key={item.id}
+												className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-3 py-2"
+											>
+												<span className="min-w-0 truncate text-sm">
+													{item.name}
+												</span>
+												<Badge
+													variant="outline"
+													className={cn(
+														"font-mono tabular-nums",
+														Number(item.value) > 0 &&
+															"text-emerald-700 dark:text-emerald-300",
+														Number(item.value) < 0 &&
+															"text-red-700 dark:text-red-300",
+													)}
+												>
+													{formatSignedValue(Number(item.value))}
+												</Badge>
+											</div>
+										))
+								)}
+							</div>
+						</CardContent>
+					</Card>
+				))}
+			</div>
+
+			<Card>
+				<CardHeader className="pb-3">
+					<CardTitle className="text-base">Live Changes</CardTitle>
+					<p className="text-xs text-muted-foreground">
+						Shows updates received while this page is open.
+					</p>
+				</CardHeader>
+				<CardContent>
+					<ScrollArea className="h-[500px] pr-3">
+						<div className="space-y-2">
+							{valueUpdates.length === 0 ? (
+								<div className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
+									No value updates observed yet.
+								</div>
+							) : (
+								valueUpdates.map((update) => (
+									<div
+										key={update.id}
+										className="rounded-lg border p-3 text-sm"
+									>
+										<div className="mb-1 flex items-center justify-between gap-2">
+											<Badge variant="secondary">Team {update.team}</Badge>
+											<span className="text-xs text-muted-foreground">
+												{formatTime(update.timestamp)}
+											</span>
+										</div>
+										<div className="font-medium">{update.name}</div>
+										<div className="text-muted-foreground">
+											updated to{" "}
+											<span className="font-mono text-foreground">
+												{formatSignedValue(update.value)}
+											</span>
+										</div>
+									</div>
+								))
+							)}
+						</div>
+					</ScrollArea>
+				</CardContent>
+			</Card>
+		</div>
+	);
+}
+
+function TradeMonitor({
+	proposals,
+	votes,
+	itemById,
+}: {
+	proposals: TradeProposal[];
+	votes: Vote[];
+	itemById: Map<string, TradeItem>;
+}) {
+	const newestFirst = proposals
+		.slice()
+		.sort(
+			(a, b) =>
+				new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+		);
+
+	return (
+		<Card>
+			<CardContent className="p-5">
+				<ScrollArea className="h-[560px] pr-4">
+					<div className="grid gap-4 xl:grid-cols-2">
+						{newestFirst.length === 0 ? (
+							<div className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">
+								No trade proposals yet.
+							</div>
+						) : (
+							newestFirst.map((proposal) => {
+								const tradeVotes = votes
+									.filter((vote) => vote.proposal_id === proposal.id)
+									.map((vote) => ({
+										id: vote.id,
+										proposal_id: vote.proposal_id,
+										student_id: vote.user_id,
+										vote: vote.vote,
+										created_at: vote.created_at,
+										student: vote.user,
+									}));
+
+								return (
+									<TradeProposalCard
+										key={proposal.id}
+										proposal={{ ...proposal, votes: tradeVotes }}
+										mode="instructor"
+										itemById={itemById}
+									/>
+								);
+							})
+						)}
+					</div>
+				</ScrollArea>
+			</CardContent>
+		</Card>
+	);
+}
+
+function getItemValue(
+	item: TradeProposalItem,
+	itemById: Map<string, TradeItem>,
+) {
+	return Number(itemById.get(item.item_id)?.value ?? item.value ?? 0);
+}
+
+function formatSignedValue(value: number) {
+	return value > 0 ? `+${value}` : `${value}`;
+}
+
+function formatTime(date: string) {
+	return new Date(date).toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+}
+
+function formatDateTime(date: string) {
+	return `${new Date(date).toLocaleDateString()} ${formatTime(date)}`;
 }

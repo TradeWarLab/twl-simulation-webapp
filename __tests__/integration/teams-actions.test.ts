@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	removeStudentFromClass,
-	updateStudentTeam,
-} from "@/app/actions/teams";
+import { removeStudentFromClass, updateStudentTeam } from "@/app/actions/teams";
 import { createClient } from "@/lib/supabase/server";
 import { createChainableBuilder } from "../helpers/supabase-mock";
 

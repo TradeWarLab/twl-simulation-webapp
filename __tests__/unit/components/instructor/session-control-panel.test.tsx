@@ -87,6 +87,8 @@ describe("SessionControlPanel", () => {
 			/>,
 		);
 
-		expect(screen.getByRole("button", { name: /end simulation/i })).toBeDisabled();
+		expect(
+			screen.getByRole("button", { name: /end simulation/i }),
+		).toBeDisabled();
 	});
 });
