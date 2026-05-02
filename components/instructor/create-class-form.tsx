@@ -13,7 +13,7 @@ export function CreateClassForm() {
 				<form action={createClass} className="flex flex-col gap-4">
 					<Input
 						name="name"
-						placeholder="Class Name (e.g. Spring 2026)"
+						placeholder="Class Name (e.g. POLS 170 - Spring 2026)"
 						required
 					/>
 					<Input

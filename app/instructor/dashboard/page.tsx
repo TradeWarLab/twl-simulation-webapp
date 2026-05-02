@@ -48,7 +48,7 @@ async function InstructorDashboardInner() {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+			<div className="grid grid-cols-1 items-start gap-8 md:grid-cols-2">
 				<CreateClassForm />
 				<InstructorClassList classes={classes} />
 			</div>
