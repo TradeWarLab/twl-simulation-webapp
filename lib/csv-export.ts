@@ -111,6 +111,7 @@ export function downloadChatsCsv({
 	);
 }
 
+// tbh, you can likely delete this. TradeItemValues should have everything we need
 export function downloadTradeDataCsv({
 	className,
 	proposals,

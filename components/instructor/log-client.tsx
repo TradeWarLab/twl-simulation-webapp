@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	downloadChatsCsv,
-	downloadTradeDataCsv,
+	// downloadTradeDataCsv,
 	downloadTradeItemValuesCsv,
 } from "@/lib/csv-export";
 import { createClient } from "@/lib/supabase/client";
@@ -302,9 +302,9 @@ export function LogClient({
 						className="gap-2"
 					>
 						<Download className="w-4 h-4" />
-						Chats CSV
+						Chat Data
 					</Button>
-					<Button
+					{/* <Button
 						onClick={() =>
 							downloadTradeDataCsv({
 								className: simulationName,
@@ -320,7 +320,7 @@ export function LogClient({
 					>
 						<Download className="w-4 h-4" />
 						Trades CSV
-					</Button>
+					</Button> */}
 					<Button
 						onClick={() =>
 							downloadTradeItemValuesCsv({
@@ -334,7 +334,7 @@ export function LogClient({
 						className="gap-2"
 					>
 						<Download className="w-4 h-4" />
-						Values CSV
+						Trade Data
 					</Button>
 				</div>
 			</div>
