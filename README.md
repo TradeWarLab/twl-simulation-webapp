@@ -2,7 +2,7 @@
 
 This is a web-based simulation for U.S.-China trade negotiations. Instructors create and manage classes, invite students, assign teams, advance the simulation through each phase, and review negotiation activity. Students join classes, receive team-specific briefings, negotiate in real time, chat in team/global channels, and vote on trade proposals
 
-## Current Scope
+## Current Scope 
 
 - Instructor authentication and dashboard
 - Student authentication and dashboard
