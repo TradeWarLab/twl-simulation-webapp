@@ -130,7 +130,7 @@ export function downloadTradeDataCsv({
 			(a, b) =>
 				new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
 		)
-		.flatMap((proposal) => {
+		.map((proposal) => {
 			const proposalVotes = votes.filter(
 				(vote) => vote.proposal_id === proposal.id,
 			);
@@ -140,7 +140,20 @@ export function downloadTradeDataCsv({
 			const rejections = proposalVotes.filter(
 				(vote) => vote.vote === "reject",
 			).length;
-			const base = [
+			const formatProposalItems = (
+				items:
+					| TradeProposal["offered_items"]
+					| TradeProposal["requested_items"],
+			) =>
+				items
+					.map((item) => {
+						const liveItem = itemById.get(item.item_id);
+						const value = Number(liveItem?.value ?? item.value ?? 0);
+						return `${item.name} (${value})`;
+					})
+					.join("; ");
+
+			return [
 				className,
 				proposal.id,
 				new Date(proposal.created_at).toISOString(),
@@ -156,39 +169,9 @@ export function downloadTradeDataCsv({
 				proposalVotes.length,
 				approvals,
 				rejections,
+				formatProposalItems(proposal.offered_items),
+				formatProposalItems(proposal.requested_items),
 			];
-
-			const offeredRows = proposal.offered_items.map((item) => {
-				const liveItem = itemById.get(item.item_id);
-				return [
-					...base,
-					"offered",
-					item.item_id,
-					item.name,
-					liveItem?.role ?? "",
-					liveItem?.is_resolved ? "true" : "false",
-					Number(liveItem?.value ?? item.value ?? 0),
-				];
-			});
-
-			const requestedRows = proposal.requested_items.map((item) => {
-				const liveItem = itemById.get(item.item_id);
-				return [
-					...base,
-					"requested",
-					item.item_id,
-					item.name,
-					liveItem?.role ?? "",
-					liveItem?.is_resolved ? "true" : "false",
-					Number(liveItem?.value ?? item.value ?? 0),
-				];
-			});
-
-			if (offeredRows.length === 0 && requestedRows.length === 0) {
-				return [[...base, "", "", "", "", "", ""]];
-			}
-
-			return [...offeredRows, ...requestedRows];
 		});
 
 	downloadCsv(
@@ -206,12 +189,8 @@ export function downloadTradeDataCsv({
 				"Votes Cast",
 				"Approve Votes",
 				"Reject Votes",
-				"Item Side",
-				"Item ID",
-				"Item Name",
-				"Item Role",
-				"Item Resolved",
-				"Current Item Value",
+				"Offered Items",
+				"Requested Items",
 			],
 			rows,
 		),
@@ -227,23 +206,55 @@ export function downloadTradeItemValuesCsv({
 	tradeItems: TradeItem[];
 	teamById: TeamLookup;
 }) {
-	const rows = tradeItems
-		.slice()
-		.sort((a, b) => {
-			const teamA = teamById.get(a.team_id)?.country ?? "";
-			const teamB = teamById.get(b.team_id)?.country ?? "";
-			return teamA.localeCompare(teamB) || a.name.localeCompare(b.name);
-		})
+	const itemsByIssue = new Map<
+		string,
+		{
+			name: string;
+			issueId: string;
+			usaValue: number | null;
+			chinaValue: number | null;
+			usaRole: string;
+			chinaRole: string;
+			resolved: boolean;
+		}
+	>();
+
+	for (const item of tradeItems) {
+		const team = teamById.get(item.team_id)?.country;
+		const key = item.issue_id ?? item.name;
+		const row = itemsByIssue.get(key) ?? {
+			name: item.name,
+			issueId: item.issue_id ?? "",
+			usaValue: null,
+			chinaValue: null,
+			usaRole: "",
+			chinaRole: "",
+			resolved: false,
+		};
+
+		if (team === "USA") {
+			row.usaValue = Number(item.value);
+			row.usaRole = item.role ?? "";
+		}
+		if (team === "China") {
+			row.chinaValue = Number(item.value);
+			row.chinaRole = item.role ?? "";
+		}
+		row.resolved = row.resolved || item.is_resolved;
+		itemsByIssue.set(key, row);
+	}
+
+	const rows = Array.from(itemsByIssue.values())
+		.sort((a, b) => a.name.localeCompare(b.name))
 		.map((item) => [
 			className,
-			teamById.get(item.team_id)?.country ?? "",
-			item.id,
-			item.issue_id ?? "",
+			item.issueId,
 			item.name,
-			item.role ?? "",
-			Number(item.value),
-			item.is_resolved ? "true" : "false",
-			new Date(item.created_at).toISOString(),
+			item.usaValue ?? "",
+			item.chinaValue ?? "",
+			item.usaRole,
+			item.chinaRole,
+			item.resolved ? "true" : "false",
 		]);
 
 	downloadCsv(
@@ -251,14 +262,13 @@ export function downloadTradeItemValuesCsv({
 		buildCsv(
 			[
 				"Class",
-				"Team",
-				"Trade Item ID",
 				"Issue ID",
 				"Item Name",
-				"Role",
-				"Current Value",
+				"USA Final Value",
+				"China Final Value",
+				"USA Role",
+				"China Role",
 				"Resolved",
-				"Created At",
 			],
 			rows,
 		),
