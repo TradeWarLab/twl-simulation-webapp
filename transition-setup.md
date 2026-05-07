@@ -140,9 +140,7 @@ Operational note:
 - That integration is managed in the Supabase/Resend dashboards, not in app code.
 
 What the next developer should know:
-
-- If invite emails fail, check the app env vars first.
 - If confirmation or reset emails fail, check the Supabase Auth email settings and Resend integration first.
 - Using the same Resend account for both flows is fine, but they are configured separately.
 
-Github/Vercel/Resend set up with tradewarlab@gmail.com email address - Talk to Callie for access
+Github/Vercel set up with tradewarlab@gmail.com email address - Talk to Callie for access
