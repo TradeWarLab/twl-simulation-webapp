@@ -1,12 +1,21 @@
 "use client";
 
-import { Activity, Radio } from "lucide-react";
+import { Activity, Download, Radio } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import type { InstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
+import type {
+	InstructorDashboardSnapshot,
+	InstructorMessage,
+} from "@/app/actions/instructor-dashboard";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	downloadChatsCsv,
+	downloadTradeDataCsv,
+	downloadTradeItemValuesCsv,
+} from "@/lib/csv-export";
 import { createClient } from "@/lib/supabase/client";
 import type {
 	TeamCountry,
@@ -119,10 +128,11 @@ export function InstructorLiveDashboard({
 	initialSnapshot,
 }: DashboardProps) {
 	const supabase = useMemo(() => createClient(), []);
-	const [_liveClassRecord, setLiveClassRecord] = useState(classRecord);
+	const [liveClassRecord, setLiveClassRecord] = useState(classRecord);
 	const [tradeItems, setTradeItems] = useState(initialSnapshot.tradeItems);
 	const [proposals, setProposals] = useState(initialSnapshot.proposals);
 	const [votes, setVotes] = useState(initialSnapshot.votes);
+	const [messages, setMessages] = useState(initialSnapshot.messages);
 	const [connectionState, setConnectionState] = useState<
 		"connecting" | "live" | "offline"
 	>("connecting");
@@ -221,6 +231,38 @@ export function InstructorLiveDashboard({
 				(payload) => {
 					const next = payload.new as Partial<ClassRecord>;
 					setLiveClassRecord((prev) => ({ ...prev, ...next }));
+				},
+			)
+			.on(
+				"postgres_changes",
+				{
+					event: "INSERT",
+					schema: "public",
+					table: "messages",
+					filter: `class_id=eq.${classRecord.id}`,
+				},
+				(payload) => {
+					const incoming = payload.new as InstructorMessage;
+					const sender = userLookup.get(incoming.sender_id);
+					setMessages((prev) => {
+						if (prev.some((message) => message.id === incoming.id)) return prev;
+						return [
+							...prev,
+							{
+								...incoming,
+								sender: sender
+									? {
+											full_name: sender.full_name,
+											email: sender.email,
+										}
+									: null,
+							},
+						].sort(
+							(a, b) =>
+								new Date(a.created_at).getTime() -
+								new Date(b.created_at).getTime(),
+						);
+					});
 				},
 			)
 			.on(
@@ -354,25 +396,76 @@ export function InstructorLiveDashboard({
 					title="Simulation Situation"
 					icon={<Activity className="h-5 w-5 text-primary" />}
 					action={
-						<Badge
-							variant="outline"
-							className={cn(
-								"gap-2",
-								connectionState === "live" &&
-									"border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
-								connectionState === "connecting" &&
-									"border-amber-500/40 text-amber-700 dark:text-amber-300",
-								connectionState === "offline" &&
-									"border-red-500/40 text-red-700 dark:text-red-300",
-							)}
-						>
-							<Radio className="h-3.5 w-3.5" />
-							{connectionState === "live"
-								? "Live"
-								: connectionState === "connecting"
-									? "Connecting"
-									: "Offline"}
-						</Badge>
+						<div className="flex flex-wrap justify-end gap-2">
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								className="gap-2"
+								onClick={() =>
+									downloadChatsCsv({
+										className: liveClassRecord.name,
+										messages,
+									})
+								}
+							>
+								<Download className="h-3.5 w-3.5" />
+								Chats CSV
+							</Button>
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								className="gap-2"
+								onClick={() =>
+									downloadTradeDataCsv({
+										className: liveClassRecord.name,
+										proposals,
+										votes,
+										itemById,
+										teamById,
+									})
+								}
+							>
+								<Download className="h-3.5 w-3.5" />
+								Trades CSV
+							</Button>
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								className="gap-2"
+								onClick={() =>
+									downloadTradeItemValuesCsv({
+										className: liveClassRecord.name,
+										tradeItems,
+										teamById,
+									})
+								}
+							>
+								<Download className="h-3.5 w-3.5" />
+								Values CSV
+							</Button>
+							<Badge
+								variant="outline"
+								className={cn(
+									"gap-2",
+									connectionState === "live" &&
+										"border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
+									connectionState === "connecting" &&
+										"border-amber-500/40 text-amber-700 dark:text-amber-300",
+									connectionState === "offline" &&
+										"border-red-500/40 text-red-700 dark:text-red-300",
+								)}
+							>
+								<Radio className="h-3.5 w-3.5" />
+								{connectionState === "live"
+									? "Live"
+									: connectionState === "connecting"
+										? "Connecting"
+										: "Offline"}
+							</Badge>
+						</div>
 					}
 				>
 					<div className="grid gap-4 xl:grid-cols-2">
@@ -392,11 +485,11 @@ export function InstructorLiveDashboard({
 
 			<Tabs defaultValue="Proposal Queue" className="space-y-4">
 				<TabsList className="bg-muted/30 border border-border/70 p-1">
-					<TabsTrigger value="Proposal Queue">Proposal Queue</TabsTrigger>
-					<TabsTrigger value="Trade Breakdown">Trade Breakdown</TabsTrigger>
 					<TabsTrigger value="Roster and Team Assignments">
 						Roster & Teams
 					</TabsTrigger>
+					<TabsTrigger value="Trade Breakdown">Trade Breakdown</TabsTrigger>
+					<TabsTrigger value="Proposal Queue">Proposal Queue</TabsTrigger>
 				</TabsList>
 
 				<TabsContent

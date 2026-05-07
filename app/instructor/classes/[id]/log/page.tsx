@@ -70,7 +70,12 @@ async function LogDashboardInner({
 				</div>
 			</div>
 
-			<LogClient classId={id} initialSnapshot={snapshot} className="w-full" />
+			<LogClient
+				classId={id}
+				simulationName={classData.name}
+				initialSnapshot={snapshot}
+				className="w-full"
+			/>
 		</div>
 	);
 }

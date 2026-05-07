@@ -137,8 +137,7 @@ export async function getInstructorDashboardSnapshot(
 				sender:sender_id (full_name, email)
 			`)
 			.eq("class_id", classId)
-			.order("created_at", { ascending: true })
-			.limit(250),
+			.order("created_at", { ascending: true }),
 	]);
 
 	const teamMemberCounts: Record<string, number> = {};

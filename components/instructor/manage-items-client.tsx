@@ -141,7 +141,7 @@ export function ManageItemsClient({
 										No items added yet.
 									</div>
 								) : (
-									<ScrollArea className="h-[250px] w-full">
+									<ScrollArea className="h-[400px] w-full">
 										<div className="divide-y">
 											{items.map((item) => (
 												<div

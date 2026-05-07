@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	downloadChatsCsv,
+	downloadTradeDataCsv,
+	downloadTradeItemValuesCsv,
+} from "@/lib/csv-export";
 import { createClient } from "@/lib/supabase/client";
 import type {
 	TeamCountry,
@@ -30,10 +35,12 @@ type ValueUpdate = {
 
 export function LogClient({
 	classId,
+	simulationName,
 	initialSnapshot,
 	className,
 }: {
 	classId: string;
+	simulationName: string;
 	initialSnapshot: SimulationLogSnapshot;
 	className?: string;
 }) {
@@ -254,53 +261,6 @@ export function LogClient({
 		};
 	}, [classId, supabase, teamById, teamIds, userById]);
 
-	const handleDownloadCSV = () => {
-		let csvContent = "Timestamp,Event Type,Actor,Details,Status\n";
-
-		for (const msg of messages) {
-			const date = new Date(msg.created_at).toISOString();
-			const actor = msg.sender?.full_name ?? msg.sender?.email ?? "Unknown";
-			const details = `[${msg.channel}] ${msg.content}`.replace(/"/g, '""');
-			csvContent += `"${date}",Message,"${actor.replace(/"/g, '""')}","${details}",""\n`;
-		}
-
-		for (const trade of proposals) {
-			const date = new Date(trade.created_at).toISOString();
-			const actor = trade.creator?.full_name ?? "System";
-			const offered = trade.offered_items
-				.map(
-					(item) =>
-						`${item.name}(${formatSignedValue(getItemValue(item, itemById))})`,
-				)
-				.join(", ");
-			const requested = trade.requested_items
-				.map(
-					(item) =>
-						`${item.name}(${formatSignedValue(getItemValue(item, itemById))})`,
-				)
-				.join(", ");
-			const details =
-				`${trade.proposing_team?.country ?? "Unknown"} offered [${offered}] to ${trade.receiving_team?.country ?? "Unknown"} for [${requested}]`.replace(
-					/"/g,
-					'""',
-				);
-			csvContent += `"${date}",Trade,"${actor.replace(/"/g, '""')}","${details}","${trade.status}"\n`;
-		}
-
-		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.setAttribute("href", url);
-		link.setAttribute(
-			"download",
-			`simulation_log_${new Date().toISOString().split("T")[0]}.csv`,
-		);
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
-	};
-
 	return (
 		<div className={cn("space-y-5", className)}>
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -331,13 +291,50 @@ export function LogClient({
 								: "Offline"}
 					</Badge>
 					<Button
-						onClick={handleDownloadCSV}
+						onClick={() =>
+							downloadChatsCsv({
+								className: simulationName,
+								messages,
+							})
+						}
 						size="sm"
 						variant="outline"
 						className="gap-2"
 					>
 						<Download className="w-4 h-4" />
-						Export CSV
+						Chats CSV
+					</Button>
+					<Button
+						onClick={() =>
+							downloadTradeDataCsv({
+								className: simulationName,
+								proposals,
+								votes,
+								itemById,
+								teamById,
+							})
+						}
+						size="sm"
+						variant="outline"
+						className="gap-2"
+					>
+						<Download className="w-4 h-4" />
+						Trades CSV
+					</Button>
+					<Button
+						onClick={() =>
+							downloadTradeItemValuesCsv({
+								className: simulationName,
+								tradeItems,
+								teamById,
+							})
+						}
+						size="sm"
+						variant="outline"
+						className="gap-2"
+					>
+						<Download className="w-4 h-4" />
+						Values CSV
 					</Button>
 				</div>
 			</div>
@@ -596,13 +593,6 @@ function TradeMonitor({
 			</CardContent>
 		</Card>
 	);
-}
-
-function getItemValue(
-	item: TradeProposalItem,
-	itemById: Map<string, TradeItem>,
-) {
-	return Number(itemById.get(item.item_id)?.value ?? item.value ?? 0);
 }
 
 function formatSignedValue(value: number) {
