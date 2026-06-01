@@ -1,3 +1,4 @@
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
@@ -21,18 +22,21 @@ export function SimulationHeader({
 		<header
 			className={`flex justify-between items-center mb-4 pb-4 border-b ${className ?? ""}`}
 		>
-			<div>
-				<div className="flex items-center gap-3">
-					<Link
-						href="/student/dashboard"
-						className="text-sm text-muted-foreground hover:underline"
+			<div className="space-y-0.5">
+				<h1 className="text-2xl font-bold tracking-tight">{classRecord.name}</h1>
+				<div className="flex items-center gap-2 text-sm">
+					<span
+						className={`font-semibold ${teamRecord?.country === "USA" ? "text-blue-600" : "text-red-600"}`}
 					>
-						Exit Simulation
-					</Link>
-					<ThemeSwitcher />
-					<ProfileMenu email={userEmail} />
+						{teamRecord?.country || "Unassigned"}
+					</span>
+					{interestGroup && (
+						<>
+							<span className="text-muted-foreground">/</span>
+							<span className="text-muted-foreground">{interestGroup}</span>
+						</>
+					)}
 				</div>
-				<h1 className="text-2xl font-bold">{classRecord.name}</h1>
 			</div>
 			<div className="text-center">
 				<div className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -42,20 +46,16 @@ export function SimulationHeader({
 					{periods[classRecord.current_period]}
 				</div>
 			</div>
-			<div className="text-right">
-				<div className="text-xs uppercase tracking-wide text-muted-foreground">
-					My Team
-				</div>
-				<div
-					className={`font-bold text-lg ${teamRecord?.country === "USA" ? "text-blue-600" : "text-red-600"}`}
+			<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
+				<ThemeSwitcher />
+				<ProfileMenu email={userEmail} />
+				<Link
+					href="/student/dashboard"
+					aria-label="Exit simulation"
+					className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground border border-border transition-colors hover:text-foreground hover:bg-muted"
 				>
-					{teamRecord?.country || "Unassigned"}
-					{interestGroup && (
-						<span className="ml-2 text-lg font-medium opacity-80">
-							— {interestGroup}
-						</span>
-					)}
-				</div>
+					<LogOut size={17} />
+				</Link>
 			</div>
 		</header>
 	);

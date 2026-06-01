@@ -91,22 +91,15 @@ export function TradeItemsPanel({
 						: "Internal point system for your team. Asks yield positive points, Concessions cost negative points."}
 				</p>
 
-				<details className="group mb-4 overflow-hidden rounded-xl border border-amber-500/30 bg-amber-100 text-sm text-foreground">
+				<details className="group mb-4 overflow-hidden rounded-xl border border-slate-300 bg-slate-100 text-sm text-foreground dark:border-slate-600 dark:bg-slate-800">
 					<summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
 						<div className="flex items-center gap-3">
-							{/* <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-800 dark:text-amber-300">
-								Top Secret
-							</span> */}
 							<span className="text-sm font-medium">
 								Classified cost estimate and scoring instructions
 							</span>
 						</div>
-						<span className="grid h-7 w-7 place-items-center rounded border border-amber-500 bg-background/60 text-base font-medium leading-none text-amber-900 transition-transform group-open:rotate-180 dark:text-amber-200">
-							<span className="group-open:hidden">+</span>
-							<span className="hidden group-open:inline">-</span>
-						</span>
 					</summary>
-					<div className="border-t border-amber-700 px-4 pb-4 pt-3">
+					<div className="border-t border-slate-300 px-4 pb-4 pt-3 dark:border-slate-600">
 						<p className="leading-6">
 							Analysts have privately estimated that the economic cost of a
 							trade war will be <strong>-10</strong> for your country if no deal
@@ -198,7 +191,6 @@ export function TradeItemsPanel({
 											onChange={(e) =>
 												handleValueChange(item.id, e.target.value)
 											}
-											// Submit to server on blur or Enter key
 											onBlur={() => handleBlurOrSubmit(item.id, item.value)}
 											onKeyDown={(e) => {
 												if (e.key === "Enter") {

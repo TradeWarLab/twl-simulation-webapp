@@ -3,7 +3,6 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 
 const THEME_PREFERENCE_KEY = "twl-theme-preference";
 
@@ -29,21 +28,18 @@ const ThemeSwitcher = () => {
 	}
 
 	return (
-		<Button
-			variant="ghost"
-			size="sm"
+		<button
 			onClick={toggle}
 			aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-			className="gap-2 text-muted-foreground hover:text-foreground"
+			className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground border border-border transition-colors hover:text-foreground hover:bg-muted"
 			id="theme-toggle"
 		>
 			{isDark ? (
-				<Sun size={16} className="text-amber-400" />
+				<Sun size={17} className="text-amber-400" />
 			) : (
-				<Moon size={16} className="text-indigo-500" />
+				<Moon size={17} className="text-indigo-500" />
 			)}
-			<span className="text-xs font-medium">{isDark ? "Light" : "Dark"}</span>
-		</Button>
+		</button>
 	);
 };
 
