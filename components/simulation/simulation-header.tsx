@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 
 export function SimulationHeader({
@@ -7,12 +8,14 @@ export function SimulationHeader({
 	teamRecord,
 	interestGroup,
 	periods,
+	userEmail,
 }: {
 	className?: string;
 	classRecord: { name: string; current_period: number };
 	teamRecord: { country: string } | null;
 	interestGroup?: string | null;
 	periods: string[];
+	userEmail: string;
 }) {
 	return (
 		<header
@@ -27,6 +30,7 @@ export function SimulationHeader({
 						Exit Simulation
 					</Link>
 					<ThemeSwitcher />
+					<ProfileMenu email={userEmail} />
 				</div>
 				<h1 className="text-2xl font-bold">{classRecord.name}</h1>
 			</div>

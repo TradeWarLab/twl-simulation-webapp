@@ -137,6 +137,7 @@ async function SimulationPageInner({
 					teamRecord={teamRecord}
 					interestGroup={enrollment.interest_block}
 					periods={periods}
+					userEmail={user.email ?? ""}
 				/>
 			</div>
 

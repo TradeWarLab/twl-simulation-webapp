@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getInstructorClasses } from "@/app/actions/classes";
 import { CreateClassForm } from "@/components/instructor/create-class-form";
 import { InstructorClassList } from "@/components/instructor/instructor-class-list";
+import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeInitializer } from "@/components/shared/theme-initializer";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { createClient } from "@/lib/supabase/server";
@@ -40,11 +41,9 @@ async function InstructorDashboardInner() {
 			<ThemeInitializer userRole="instructor" />
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-bold">Instructor Dashboard</h1>
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-3">
 					<ThemeSwitcher />
-					<div className="text-sm text-muted-foreground">
-						Logged in as: {user.email}
-					</div>
+					<ProfileMenu email={user.email ?? ""} />
 				</div>
 			</div>
 

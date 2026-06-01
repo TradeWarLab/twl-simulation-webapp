@@ -361,7 +361,7 @@ export function InstructorLiveDashboard({
 						return updated;
 					});
 				},
-			)
+			);
 		return () => {
 			supabase.removeChannel(channel);
 		};

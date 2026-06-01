@@ -156,66 +156,68 @@ export function TradeItemsPanel({
 				</div>
 			</div>
 			<ScrollArea className="h-[420px]">
-			<div className="p-4">
-				<div className="space-y-4">
-					{items.map((item) => (
-						<div
-							key={item.id}
-							className={`flex flex-col gap-2 bg-card p-3 rounded-lg border shadow-sm ${item.is_resolved ? "opacity-60 grayscale" : ""}`}
-						>
-							<div className="flex items-start justify-between gap-4">
-								<div className="flex-1">
-									<Label
-										htmlFor={`item-${item.id}`}
-										className="font-medium flex items-center gap-2"
-									>
-										{item.name}
-									</Label>
-									<div className="flex items-center gap-2 mt-2">
-										<Badge
-											variant={item.role === "ask" ? "default" : "secondary"}
-											className="text-[10px] uppercase"
+				<div className="p-4">
+					<div className="space-y-4">
+						{items.map((item) => (
+							<div
+								key={item.id}
+								className={`flex flex-col gap-2 bg-card p-3 rounded-lg border shadow-sm ${item.is_resolved ? "opacity-60 grayscale" : ""}`}
+							>
+								<div className="flex items-start justify-between gap-4">
+									<div className="flex-1">
+										<Label
+											htmlFor={`item-${item.id}`}
+											className="font-medium flex items-center gap-2"
 										>
-											{item.role || "Item"}
-										</Badge>
-										{item.is_resolved && (
+											{item.name}
+										</Label>
+										<div className="flex items-center gap-2 mt-2">
 											<Badge
-												variant="outline"
-												className="text-[10px] text-green-600 border-green-600"
+												variant={item.role === "ask" ? "default" : "secondary"}
+												className="text-[10px] uppercase"
 											>
-												RESOLVED
+												{item.role || "Item"}
 											</Badge>
+											{item.is_resolved && (
+												<Badge
+													variant="outline"
+													className="text-[10px] text-green-600 border-green-600"
+												>
+													RESOLVED
+												</Badge>
+											)}
+										</div>
+									</div>
+									<div className="w-24 relative shrink-0">
+										<Input
+											id={`item-${item.id}`}
+											type="number"
+											value={item.value}
+											max={item.role === "ask" ? undefined : 0}
+											min={item.role === "ask" ? 0 : undefined}
+											onChange={(e) =>
+												handleValueChange(item.id, e.target.value)
+											}
+											// Submit to server on blur or Enter key
+											onBlur={() => handleBlurOrSubmit(item.id, item.value)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													handleBlurOrSubmit(item.id, item.value);
+													(e.target as HTMLInputElement).blur();
+												}
+											}}
+											disabled={isLocked || isPending || item.is_resolved}
+											className={`text-right ${isLocked || item.is_resolved ? "bg-muted cursor-not-allowed" : ""}`}
+										/>
+										{isPending && (
+											<div className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin opacity-50" />
 										)}
 									</div>
 								</div>
-								<div className="w-24 relative shrink-0">
-									<Input
-										id={`item-${item.id}`}
-										type="number"
-										value={item.value}
-										max={item.role === "ask" ? undefined : 0}
-										min={item.role === "ask" ? 0 : undefined}
-										onChange={(e) => handleValueChange(item.id, e.target.value)}
-										// Submit to server on blur or Enter key
-										onBlur={() => handleBlurOrSubmit(item.id, item.value)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter") {
-												handleBlurOrSubmit(item.id, item.value);
-												(e.target as HTMLInputElement).blur();
-											}
-										}}
-										disabled={isLocked || isPending || item.is_resolved}
-										className={`text-right ${isLocked || item.is_resolved ? "bg-muted cursor-not-allowed" : ""}`}
-									/>
-									{isPending && (
-										<div className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin opacity-50" />
-									)}
-								</div>
 							</div>
-						</div>
-					))}
+						))}
+					</div>
 				</div>
-			</div>
 			</ScrollArea>
 		</div>
 	);

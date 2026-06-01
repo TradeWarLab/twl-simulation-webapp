@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentClasses } from "@/app/actions/classes";
+import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeInitializer } from "@/components/shared/theme-initializer";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { JoinClassForm } from "@/components/student/join-class-form";
@@ -45,11 +46,9 @@ async function StudentDashboardInner() {
 			<ThemeInitializer userRole="student" />
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-bold">Student Dashboard</h1>
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-3">
 					<ThemeSwitcher />
-					<div className="text-sm text-muted-foreground">
-						Welcome, {user.email}
-					</div>
+					<ProfileMenu email={user.email ?? ""} />
 				</div>
 			</div>
 
