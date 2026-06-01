@@ -24,8 +24,14 @@ export function InstructorClassList({ classes }: { classes: any[] }) {
 										className="flex justify-between items-center"
 									>
 										<span className="font-medium">{cls.name}</span>
-										<span className="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-											{cls.status}
+										<span
+											className={`text-sm px-2 py-1 rounded-full ${
+												cls.status === "active"
+													? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+													: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+											}`}
+										>
+											{cls.status === "active" ? "Active" : "Completed"}
 										</span>
 									</Link>
 								</li>

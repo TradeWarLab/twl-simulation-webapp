@@ -1,7 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { getClassRoster, updateClassPeriod } from "@/app/actions/classes";
+import {
+	getClassRoster,
+	updateClassPeriod,
+	endSimulation,
+} from "@/app/actions/classes";
 import { getInstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
 import { ClassDetailHeader } from "@/components/instructor/class-detail-header";
 import { InstructorLiveDashboard } from "@/components/instructor/instructor-live-dashboard";
@@ -68,8 +72,9 @@ async function ClassDetailPageInner({
 		"use server";
 		if (classData.current_period < periods.length - 1) {
 			await updateClassPeriod(id, classData.current_period + 1);
-		} else if (classData.current_period === periods.length - 1) {
-			// TODO: Implement end simulation logic (e.g., archive class, disable actions, upload data, etc.)
+		}
+		if (classData.current_period === periods.length - 2) {
+			await endSimulation(id);
 		}
 	}
 

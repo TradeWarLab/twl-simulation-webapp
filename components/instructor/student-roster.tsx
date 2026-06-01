@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { inviteStudentToClass } from "@/app/actions/classes";
 import {
 	removeStudentFromClassAction,
@@ -35,10 +35,35 @@ export function StudentRoster({
 
 	const [localRoster, setLocalRoster] = useState(roster);
 	const [isPending, startTransition] = useTransition();
+	const inviteFormRef = useRef<HTMLFormElement>(null);
 
 	useEffect(() => {
 		setLocalRoster(roster);
 	}, [roster]);
+
+	const handleInvite = async (formData: FormData) => {
+		const email = String(formData.get("email") ?? "").trim().toLowerCase();
+		const affiliation = String(formData.get("affiliation") ?? "").trim() as "USA" | "China";
+		const interestBlock = String(formData.get("interest_block") ?? "").trim();
+
+		setLocalRoster((prev) => {
+			if (prev.some((entry) => entry.email.toLowerCase() === email)) return prev;
+			return [
+				...prev,
+				{
+					email,
+					full_name: null,
+					affiliation,
+					interest_group: interestBlock || null,
+					status: "pending" as const,
+					joined_at: null,
+				},
+			];
+		});
+
+		inviteFormRef.current?.reset();
+		await inviteStudentToClass(formData);
+	};
 
 	const handleAffiliationChange = async (
 		entry: ClassRosterEntry,
@@ -161,7 +186,8 @@ export function StudentRoster({
 			</CardHeader>
 			<CardContent className="space-y-5 px-0 pb-0">
 				<form
-					action={inviteStudentToClass}
+					ref={inviteFormRef}
+					action={handleInvite}
 					className="grid gap-3 rounded-xl border border-border/70 bg-muted/20 p-4 xl:grid-cols-[minmax(0,1.2fr)_150px_190px_auto]"
 				>
 					<input type="hidden" name="class_id" value={classId} />

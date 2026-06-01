@@ -17,12 +17,14 @@ export function ChatPanel({
 	initialTeamMessages,
 	initialGlobalMessages,
 	currentUserId,
+	hideGlobal = false,
 }: {
 	classId: string;
 	teamChannel: string;
 	initialTeamMessages: Message[];
 	initialGlobalMessages: Message[];
 	currentUserId: string;
+	hideGlobal?: boolean;
 }) {
 	const [activeTab, setActiveTab] = useState<"team" | "global">("team");
 
@@ -369,16 +371,18 @@ export function ChatPanel({
 				>
 					Team Chat
 				</button>
-				<button
-					onClick={() => setActiveTab("global")}
-					className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-muted ${
-						activeTab === "global"
-							? "border-b-2 border-primary text-primary"
-							: "text-muted-foreground"
-					}`}
-				>
-					Global Debate
-				</button>
+				{!hideGlobal && (
+					<button
+						onClick={() => setActiveTab("global")}
+						className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-muted ${
+							activeTab === "global"
+								? "border-b-2 border-primary text-primary"
+								: "text-muted-foreground"
+						}`}
+					>
+						Global Debate
+					</button>
+				)}
 			</div>
 
 			<div ref={scrollAreaRef} className="flex-1 min-h-0">

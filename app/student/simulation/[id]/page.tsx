@@ -228,6 +228,7 @@ async function SimulationPageInner({
 								initialTeamMessages={initialTeamMessages}
 								initialGlobalMessages={initialGlobalMessages}
 								currentUserId={user.id}
+								hideGlobal={classRecord.current_period === 1 || classRecord.current_period === 0} // Hide global chat before bilateral negotiations
 							/>
 						</div>
 					)}

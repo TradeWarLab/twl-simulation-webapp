@@ -84,11 +84,10 @@ export function TradeItemsPanel({
 	return (
 		<div className="flex flex-col bg-muted rounded-md border">
 			<div className="p-4 border-b bg-card rounded-t-md">
-				<h3 className="font-semibold text-sm">Target Issue Values</h3>
 				<p className="text-xs text-muted-foreground mt-1 mb-4">
 					{isLocked
 						? "Values can only be edited during the Domestic Negotiation phase."
-						: "Internal point system for your team. Asks yield positive points, Concessions cost negative points."}
+						: "Assign values based on your interest group priorities. Asks must sum to 100, concessions to -100."}
 				</p>
 
 				<details className="group mb-4 overflow-hidden rounded-xl border border-slate-300 bg-slate-100 text-sm text-foreground dark:border-slate-600 dark:bg-slate-800">

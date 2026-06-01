@@ -539,3 +539,17 @@ export async function updateClassPeriod(classId: string, period: number) {
 	revalidatePath(`/instructor/classes/${classId}`);
 	return { success: true };
 }
+
+export async function endSimulation(classId: string) {
+	const supabase = await createClient();
+
+	const { error } = await supabase
+		.from("classes")
+		.update({ status: "archived" })
+		.eq("id", classId);
+
+	if (error) return { error: error.message };
+	revalidatePath(`/instructor/classes/${classId}`);
+	revalidatePath("/instructor/dashboard");
+	return { success: true };
+}
