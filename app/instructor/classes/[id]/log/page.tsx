@@ -6,6 +6,8 @@ import { getSimulationLogSnapshot } from "@/app/actions/log";
 import { LogClient } from "@/components/instructor/log-client";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { ProfileMenu } from "@/components/shared/profile-menu";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 
 export default function LogDashboardPage({
 	params,
@@ -57,9 +59,15 @@ async function LogDashboardInner({
 	return (
 		<div className="container mx-auto p-8 max-w-5xl">
 			<div className="mb-4">
+				<div className="flex justify-between items-center mb-8">
 				<Button variant="ghost" asChild className="mb-4">
 					<Link href={`/instructor/classes/${id}`}>← Back to Dashboard</Link>
 				</Button>
+				<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
+					<ThemeSwitcher />
+					<ProfileMenu email={user.email ?? ""} />
+				</div>
+				</div>
 				<div className="flex justify-between items-center bg-slate-900 border-border text-slate-100 p-6 rounded-lg shadow-sm border mb-8">
 					<div>
 						<h1 className="text-3xl font-bold">{classData.name} - Log</h1>

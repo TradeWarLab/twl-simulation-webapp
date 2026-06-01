@@ -6,6 +6,8 @@ import { getTeamTradeItems } from "@/app/actions/trade-controller";
 import { ManageItemsClient } from "@/components/instructor/manage-items-client";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { ProfileMenu } from "@/components/shared/profile-menu";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 
 export default function ItemsDashboardPage({
 	params,
@@ -67,9 +69,15 @@ async function ItemsDashboardInner({
 	return (
 		<div className="container mx-auto p-8">
 			<div className="mb-4">
+			<div className="flex justify-between items-center mb-8">
 				<Button variant="ghost" asChild className="mb-4">
 					<Link href={`/instructor/classes/${id}`}>← Back to Dashboard</Link>
 				</Button>
+				<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
+					<ThemeSwitcher />
+					<ProfileMenu email={user.email ?? ""} />
+				</div>
+			</div>
 				<div className="mb-8 flex items-center justify-between rounded-lg border border-slate-800 bg-[#0f1e3a] p-6 text-slate-100 shadow-sm">
 					<div>
 						<h1 className="text-3xl font-bold">

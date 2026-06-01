@@ -10,6 +10,7 @@ import { SessionStepper } from "@/components/instructor/session-stepper";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+import { ProfileMenu } from "@/components/shared/profile-menu";
 
 export default function ClassDetailPage({
 	params,
@@ -84,7 +85,10 @@ async function ClassDetailPageInner({
 			{/* Header Section */}
 			<div className="flex justify-between items-start">
 				<ClassDetailHeader classData={classData} />
+			<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
 				<ThemeSwitcher />
+				<ProfileMenu email={user.email ?? ""} />
+			</div>
 			</div>
 
 			{/* Stepper */}

@@ -8,7 +8,7 @@ const THEME_PREFERENCE_KEY = "twl-theme-preference";
 
 const ThemeSwitcher = () => {
 	const [mounted, setMounted] = useState(false);
-	const { theme, setTheme, resolvedTheme } = useTheme();
+	const { setTheme, resolvedTheme } = useTheme();
 
 	useEffect(() => {
 		setMounted(true);

@@ -46,7 +46,7 @@ async function StudentDashboardInner() {
 			<ThemeInitializer userRole="student" />
 			<div className="flex justify-between items-center mb-8">
 				<h1 className="text-3xl font-bold">Student Dashboard</h1>
-				<div className="flex items-center gap-3">
+				<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
 					<ThemeSwitcher />
 					<ProfileMenu email={user.email ?? ""} />
 				</div>
