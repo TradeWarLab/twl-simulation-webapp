@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getClassBriefings } from "@/app/actions/briefings";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -88,38 +87,12 @@ async function BriefingsDashboardInner({
 						</CardContent>
 					</Card>
 				) : (
-					briefings.map((briefing) => (
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					{briefings.map((briefing) => (
 						<Card key={briefing.id}>
 							<CardHeader className="pb-2">
 								<div className="flex justify-between items-start">
 									<CardTitle className="text-xl">{briefing.title}</CardTitle>
-									<div className="space-x-2 flex">
-										<Badge
-											variant={
-												briefing.target_role === "All" ? "secondary" : "outline"
-											}
-											className={
-												briefing.target_role === "USA"
-													? "border-blue-500 text-blue-700"
-													: briefing.target_role === "China"
-														? "border-red-500 text-red-700"
-														: ""
-											}
-										>
-											{briefing.target_role === "China"
-												? "PRC"
-												: briefing.target_role}
-										</Badge>
-										{briefing.interest_group &&
-											briefing.interest_group !== "All" && (
-												<Badge
-													variant="outline"
-													className="border-purple-500 text-purple-700"
-												>
-													{briefing.interest_group}
-												</Badge>
-											)}
-									</div>
 								</div>
 								<CardDescription>
 									Published {new Date(briefing.created_at).toLocaleDateString()}
@@ -158,7 +131,8 @@ async function BriefingsDashboardInner({
 								)}
 							</CardContent>
 						</Card>
-					))
+					))}
+					</div>
 				)}
 			</div>
 		</div>

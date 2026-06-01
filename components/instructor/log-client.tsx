@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Radio } from "lucide-react";
+import { Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { MessageRecord, SimulationLogSnapshot } from "@/app/actions/log";
 import { TradeProposalCard } from "@/components/negotiation/trade-proposal-card";
@@ -50,9 +50,6 @@ export function LogClient({
 	const [proposals, setProposals] = useState(initialSnapshot.proposals);
 	const [votes, setVotes] = useState(initialSnapshot.votes);
 	const [valueUpdates, setValueUpdates] = useState<ValueUpdate[]>([]);
-	const [connectionState, setConnectionState] = useState<
-		"connecting" | "live" | "offline"
-	>("connecting");
 
 	const teams = initialSnapshot.teams;
 	const teamById = useMemo(
@@ -240,22 +237,6 @@ export function LogClient({
 					});
 				},
 			)
-			.subscribe((status) => {
-				if (status === "SUBSCRIBED") {
-					setConnectionState("live");
-					return;
-				}
-				if (
-					status === "CHANNEL_ERROR" ||
-					status === "TIMED_OUT" ||
-					status === "CLOSED"
-				) {
-					setConnectionState("offline");
-					return;
-				}
-				setConnectionState("connecting");
-			});
-
 		return () => {
 			supabase.removeChannel(channel);
 		};
@@ -271,25 +252,6 @@ export function LogClient({
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
-					<Badge
-						variant="outline"
-						className={cn(
-							"gap-2",
-							connectionState === "live" &&
-								"border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
-							connectionState === "connecting" &&
-								"border-amber-500/40 text-amber-700 dark:text-amber-300",
-							connectionState === "offline" &&
-								"border-red-500/40 text-red-700 dark:text-red-300",
-						)}
-					>
-						<Radio className="h-3.5 w-3.5" />
-						{connectionState === "live"
-							? "Live"
-							: connectionState === "connecting"
-								? "Connecting"
-								: "Offline"}
-					</Badge>
 					<Button
 						onClick={() =>
 							downloadChatsCsv({

@@ -1,12 +1,11 @@
 "use client";
 
-import { Activity, Download, Radio } from "lucide-react";
+import { Activity, Download } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type {
 	InstructorDashboardSnapshot,
 	InstructorMessage,
 } from "@/app/actions/instructor-dashboard";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -133,9 +132,6 @@ export function InstructorLiveDashboard({
 	const [proposals, setProposals] = useState(initialSnapshot.proposals);
 	const [votes, setVotes] = useState(initialSnapshot.votes);
 	const [messages, setMessages] = useState(initialSnapshot.messages);
-	const [connectionState, setConnectionState] = useState<
-		"connecting" | "live" | "offline"
-	>("connecting");
 	const [highlightedProposalId, setHighlightedProposalId] = useState<
 		string | null
 	>(null);
@@ -366,24 +362,6 @@ export function InstructorLiveDashboard({
 					});
 				},
 			)
-			.subscribe((status) => {
-				if (status === "SUBSCRIBED") {
-					setConnectionState("live");
-					return;
-				}
-
-				if (
-					status === "CHANNEL_ERROR" ||
-					status === "TIMED_OUT" ||
-					status === "CLOSED"
-				) {
-					setConnectionState("offline");
-					return;
-				}
-
-				setConnectionState("connecting");
-			});
-
 		return () => {
 			supabase.removeChannel(channel);
 		};
@@ -446,25 +424,6 @@ export function InstructorLiveDashboard({
 								<Download className="h-3.5 w-3.5" />
 								Values CSV
 							</Button>
-							<Badge
-								variant="outline"
-								className={cn(
-									"gap-2",
-									connectionState === "live" &&
-										"border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
-									connectionState === "connecting" &&
-										"border-amber-500/40 text-amber-700 dark:text-amber-300",
-									connectionState === "offline" &&
-										"border-red-500/40 text-red-700 dark:text-red-300",
-								)}
-							>
-								<Radio className="h-3.5 w-3.5" />
-								{connectionState === "live"
-									? "Live"
-									: connectionState === "connecting"
-										? "Connecting"
-										: "Offline"}
-							</Badge>
 						</div>
 					}
 				>
