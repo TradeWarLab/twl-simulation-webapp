@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function StudentSimulationsList({
 	enrolledClasses,
@@ -23,26 +24,28 @@ export function StudentSimulationsList({
 						</p>
 					</div>
 				) : (
-					<div className="grid gap-4">
-						{enrolledClasses.map((cls) => (
-							<div
-								key={cls.id}
-								className="border p-4 rounded-md flex justify-between items-center"
-							>
-								<div>
-									<h3 className="font-semibold text-lg">{cls.name}</h3>
-									<p className="text-sm text-muted-foreground">
-										Team: {cls.team_country}
-									</p>
+					<ScrollArea className="max-h-[400px]">
+						<div className="grid gap-4">
+							{enrolledClasses.map((cls) => (
+								<div
+									key={cls.id}
+									className="border p-4 rounded-md flex justify-between items-center"
+								>
+									<div>
+										<h3 className="font-semibold text-lg">{cls.name}</h3>
+										<p className="text-sm text-muted-foreground">
+											Team: {cls.team_country}
+										</p>
+									</div>
+									<Button asChild>
+										<Link href={`/student/simulation/${cls.id}`}>
+											Enter Simulation
+										</Link>
+									</Button>
 								</div>
-								<Button asChild>
-									<Link href={`/student/simulation/${cls.id}`}>
-										Enter Simulation
-									</Link>
-								</Button>
-							</div>
-						))}
-					</div>
+							))}
+						</div>
+					</ScrollArea>
 				)}
 			</CardContent>
 		</Card>

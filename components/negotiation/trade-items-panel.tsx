@@ -5,6 +5,7 @@ import { updateTradeItemValue } from "@/app/actions/trade-controller";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { TradeItem } from "@/lib/types/domain";
 
 export function TradeItemsPanel({
@@ -154,6 +155,7 @@ export function TradeItemsPanel({
 					</div>
 				</div>
 			</div>
+			<ScrollArea className="h-[420px]">
 			<div className="p-4">
 				<div className="space-y-4">
 					{items.map((item) => (
@@ -214,6 +216,7 @@ export function TradeItemsPanel({
 					))}
 				</div>
 			</div>
+			</ScrollArea>
 		</div>
 	);
 }
