@@ -15,26 +15,34 @@ describe("CreateClassForm Component", () => {
 	it("renders required elements", () => {
 		render(<CreateClassForm />);
 		expect(screen.getByText("Create New Class")).toBeInTheDocument();
-		expect(screen.getByPlaceholderText(/Class Name/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/Class Name/i)).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", { name: "Create Class" }),
 		).toBeInTheDocument();
 	});
 
-	it("submits the form successfully tracking loading states", async () => {
+	it("renders the NotebookLM URL field with a default value", () => {
+		render(<CreateClassForm />);
+		const urlInput = screen.getByLabelText(/NotebookLM URL/i);
+		expect(urlInput).toBeInTheDocument();
+		expect(urlInput).toHaveValue(
+			"https://notebooklm.google.com/notebook/6a4d5fed-304b-4640-b573-ae55edd18d91",
+		);
+	});
+
+	it("submits the form successfully", async () => {
 		const mockCreate = vi.mocked(createClass) as any;
 		mockCreate.mockResolvedValueOnce({ success: true });
 
 		render(<CreateClassForm />);
 
-		const input = screen.getByPlaceholderText(/Class Name/i);
+		const input = screen.getByLabelText(/Class Name/i);
 		const submitButton = screen.getByRole("button", { name: "Create Class" });
 
 		fireEvent.change(input, { target: { value: "Advanced Econ" } });
 		const form = submitButton.closest("form");
 		if (form) fireEvent.submit(form);
 
-		// Verifies the createClass mock was hit with a FormData wrapper
 		expect(mockCreate).toHaveBeenCalledTimes(1);
 	});
 });
