@@ -308,7 +308,9 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 			<Tabs defaultValue="Trade Breakdown" className="space-y-4">
 				<TabsList className="bg-muted/30 border border-border/70 p-1">
 					<TabsTrigger value="Trade Breakdown">Trade Breakdown</TabsTrigger>
-					<TabsTrigger value="Roster and Team Assignments">Roster & Teams</TabsTrigger>
+					<TabsTrigger value="Roster and Team Assignments">
+						Roster & Teams
+					</TabsTrigger>
 					<TabsTrigger value="Proposal Queue">Proposal Queue</TabsTrigger>
 				</TabsList>
 

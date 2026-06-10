@@ -109,11 +109,7 @@ export function StudentRoster({
 
 		startTransition(async () => {
 			try {
-				await removeStudentFromClassAction(
-					classId,
-					entry.email,
-					entry.user_id,
-				);
+				await removeStudentFromClassAction(classId, entry.email, entry.user_id);
 			} catch {
 				setLocalRoster(previousRoster);
 				alert(`Failed to remove ${entry.email}`);
