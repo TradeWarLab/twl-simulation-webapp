@@ -103,6 +103,24 @@ export function StudentRoster({
 		});
 	};
 
+	const handleRemove = async (entry: ClassRosterEntry) => {
+		const previousRoster = [...localRoster];
+		setLocalRoster((r) => r.filter((st) => st.email !== entry.email));
+
+		startTransition(async () => {
+			try {
+				await removeStudentFromClassAction(
+					classId,
+					entry.email,
+					entry.user_id,
+				);
+			} catch {
+				setLocalRoster(previousRoster);
+				alert(`Failed to remove ${entry.email}`);
+			}
+		});
+	};
+
 	const handleInterestChange = async (
 		entry: ClassRosterEntry,
 		newInterest: string,
@@ -163,7 +181,7 @@ export function StudentRoster({
 		});
 
 		return next;
-	}, [countryFilter, groupFilter, query, sortBy, localRoster.filter]);
+	}, [countryFilter, groupFilter, query, sortBy, localRoster]);
 
 	return (
 		<Card className="border-0 shadow-none bg-transparent">
@@ -296,13 +314,6 @@ export function StudentRoster({
 								</div>
 							) : (
 								filteredRoster.map((entry) => {
-									const removeAction = removeStudentFromClassAction.bind(
-										null,
-										classId,
-										entry.email,
-										entry.user_id,
-									);
-
 									return (
 										<div
 											key={entry.email}
@@ -373,15 +384,15 @@ export function StudentRoster({
 													: "—"}
 											</div>
 											<div className="text-right">
-												<form action={removeAction}>
-													<Button
-														variant="ghost"
-														size="sm"
-														className="text-destructive"
-													>
-														Remove
-													</Button>
-												</form>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="text-destructive"
+													disabled={isPending}
+													onClick={() => handleRemove(entry)}
+												>
+													Remove
+												</Button>
 											</div>
 										</div>
 									);
