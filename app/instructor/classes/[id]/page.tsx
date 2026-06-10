@@ -2,19 +2,20 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import {
+	endSimulation,
 	getClassRoster,
 	updateClassPeriod,
-	endSimulation,
 } from "@/app/actions/classes";
-import { getInstructorDashboardSnapshot } from "@/app/actions/instructor-dashboard";
+import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
 import { ClassDetailHeader } from "@/components/instructor/class-detail-header";
 import { InstructorLiveDashboard } from "@/components/instructor/instructor-live-dashboard";
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
 import { SessionStepper } from "@/components/instructor/session-stepper";
+import { RealtimeClassProvider } from "@/components/realtime/realtime-class-provider";
+import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
-import { ProfileMenu } from "@/components/shared/profile-menu";
 
 export default function ClassDetailPage({
 	params,
@@ -64,7 +65,8 @@ async function ClassDetailPageInner({
 	}
 
 	const roster = await getClassRoster(id);
-	const initialSnapshot = await getInstructorDashboardSnapshot(id);
+	const snapshot = await getRealtimeSnapshot(id);
+	if (!snapshot) notFound();
 	const periods = SIMULATION_PERIODS;
 
 	// Server action wrapper for updating period
@@ -90,10 +92,10 @@ async function ClassDetailPageInner({
 			{/* Header Section */}
 			<div className="flex justify-between items-start">
 				<ClassDetailHeader classData={classData} />
-			<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
-				<ThemeSwitcher />
-				<ProfileMenu email={user.email ?? ""} />
-			</div>
+				<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
+					<ThemeSwitcher />
+					<ProfileMenu email={user.email ?? ""} />
+				</div>
 			</div>
 
 			{/* Stepper */}
@@ -112,14 +114,13 @@ async function ClassDetailPageInner({
 					goBackAction={goBackPeriod}
 				/>
 
-				<InstructorLiveDashboard
-					classRecord={classData}
-					periods={periods}
-					initialSnapshot={{
-						...initialSnapshot,
-						roster,
-					}}
-				/>
+				<RealtimeClassProvider
+					classId={id}
+					snapshot={snapshot}
+					refetchSnapshot={getRealtimeSnapshot}
+				>
+					<InstructorLiveDashboard roster={roster} />
+				</RealtimeClassProvider>
 			</div>
 		</div>
 	);

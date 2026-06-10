@@ -1,11 +1,7 @@
 "use client";
 
 import { Activity, Download } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import type {
-	InstructorDashboardSnapshot,
-	InstructorMessage,
-} from "@/app/actions/instructor-dashboard";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,31 +11,28 @@ import {
 	downloadTradeDataCsv,
 	downloadTradeItemValuesCsv,
 } from "@/lib/csv-export";
-import { createClient } from "@/lib/supabase/client";
+import { enrichProposal } from "@/lib/realtime/derive";
+import {
+	useClassRecord,
+	useClassStore,
+	useMessages,
+	useProposals,
+	useTradeItems,
+	useUserNames,
+	useVotes,
+} from "@/lib/realtime/hooks";
 import type {
+	ClassRosterEntry,
 	TeamCountry,
 	TradeItem,
-	TradeProposal,
-	TradeProposalItem,
-	Vote,
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 import { TradeProposalCard } from "../negotiation/trade-proposal-card";
 import { ManageItemsClient } from "./manage-items-client";
 import { StudentRoster } from "./student-roster";
 
-type ClassRecord = {
-	id: string;
-	name: string;
-	class_code: string | null;
-	current_period: number;
-	status: string;
-};
-
 type DashboardProps = {
-	classRecord: ClassRecord;
-	periods: string[];
-	initialSnapshot: InstructorDashboardSnapshot;
+	roster: ClassRosterEntry[];
 };
 
 type TeamMetric = {
@@ -122,33 +115,30 @@ function StandingsCard({
 	);
 }
 
-export function InstructorLiveDashboard({
-	classRecord,
-	initialSnapshot,
-}: DashboardProps) {
-	const supabase = useMemo(() => createClient(), []);
-	const [liveClassRecord, setLiveClassRecord] = useState(classRecord);
-	const [tradeItems, setTradeItems] = useState(initialSnapshot.tradeItems);
-	const [proposals, setProposals] = useState(initialSnapshot.proposals);
-	const [votes, setVotes] = useState(initialSnapshot.votes);
-	const [messages, setMessages] = useState(initialSnapshot.messages);
+export function InstructorLiveDashboard({ roster }: DashboardProps) {
+	const store = useClassStore();
+	const classRecord = useClassRecord();
+	const tradeItems = useTradeItems();
+	const rawProposals = useProposals();
+	const votes = useVotes();
+	const rawMessages = useMessages();
+	const userNames = useUserNames();
 	const [highlightedProposalId, setHighlightedProposalId] = useState<
 		string | null
 	>(null);
 
-	const teams = initialSnapshot.teams;
-	const teamMemberCounts = initialSnapshot.teamMemberCounts;
+	const teams = store.teams;
+	const teamMemberCounts = store.teamMemberCounts;
 	const teamById = useMemo(
 		() => new Map(teams.map((team) => [team.id, team])),
 		[teams],
 	);
-	const teamIds = useMemo(() => new Set(teams.map((team) => team.id)), [teams]);
 	const userLookup = useMemo(() => {
 		const lookup = new Map<
 			string,
 			{ full_name: string | null; email: string | null }
 		>();
-		for (const entry of initialSnapshot.roster) {
+		for (const entry of roster) {
 			if (!entry.user_id) continue;
 			lookup.set(entry.user_id, {
 				full_name: entry.full_name,
@@ -156,11 +146,54 @@ export function InstructorLiveDashboard({
 			});
 		}
 		return lookup;
-	}, [initialSnapshot.roster]);
+	}, [roster]);
 
 	const itemById = useMemo(
 		() => new Map(tradeItems.map((item) => [item.id, item])),
 		[tradeItems],
+	);
+
+	const proposals = useMemo(
+		() =>
+			rawProposals.map((proposal) =>
+				enrichProposal(proposal, {
+					votes,
+					totalMembers:
+						(teamMemberCounts[proposal.proposing_team_id] ?? 0) +
+						(teamMemberCounts[proposal.receiving_team_id] ?? 0),
+					teamById,
+					userNames,
+				}),
+			),
+		[rawProposals, votes, teamMemberCounts, teamById, userNames],
+	);
+
+	const messages = useMemo(
+		() =>
+			rawMessages.map((message) => ({
+				...message,
+				sender:
+					userLookup.get(message.sender_id) ??
+					(message.users?.full_name != null
+						? { full_name: message.users.full_name, email: null }
+						: null),
+			})),
+		[rawMessages, userLookup],
+	);
+
+	const hydratedVotes = useMemo(
+		() =>
+			votes.map((vote) => ({
+				...vote,
+				user: {
+					full_name:
+						vote.user?.full_name ??
+						userLookup.get(vote.user_id)?.full_name ??
+						userNames.get(vote.user_id) ??
+						null,
+				},
+			})),
+		[votes, userLookup, userNames],
 	);
 
 	const teamMetrics = useMemo<TeamMetric[]>(() => {
@@ -197,176 +230,6 @@ export function InstructorLiveDashboard({
 		[teamMetrics],
 	);
 
-	useEffect(() => {
-		const hydrateProposal = (proposal: TradeProposal): TradeProposal => ({
-			...proposal,
-			offered_items: (proposal.offered_items ?? []) as TradeProposalItem[],
-			requested_items: (proposal.requested_items ?? []) as TradeProposalItem[],
-			proposing_team: {
-				id: proposal.proposing_team_id,
-				country: teamById.get(proposal.proposing_team_id)?.country ?? "USA",
-			},
-			receiving_team: {
-				country: teamById.get(proposal.receiving_team_id)?.country ?? "China",
-			},
-			creator: {
-				full_name: userLookup.get(proposal.created_by)?.full_name ?? null,
-			},
-		});
-
-		const channel = supabase
-			.channel(`instructor-dashboard:${classRecord.id}`)
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "classes",
-					filter: `id=eq.${classRecord.id}`,
-				},
-				(payload) => {
-					const next = payload.new as Partial<ClassRecord>;
-					setLiveClassRecord((prev) => ({ ...prev, ...next }));
-				},
-			)
-			.on(
-				"postgres_changes",
-				{
-					event: "INSERT",
-					schema: "public",
-					table: "messages",
-					filter: `class_id=eq.${classRecord.id}`,
-				},
-				(payload) => {
-					const incoming = payload.new as InstructorMessage;
-					const sender = userLookup.get(incoming.sender_id);
-					setMessages((prev) => {
-						if (prev.some((message) => message.id === incoming.id)) return prev;
-						return [
-							...prev,
-							{
-								...incoming,
-								sender: sender
-									? {
-											full_name: sender.full_name,
-											email: sender.email,
-										}
-									: null,
-							},
-						].sort(
-							(a, b) =>
-								new Date(a.created_at).getTime() -
-								new Date(b.created_at).getTime(),
-						);
-					});
-				},
-			)
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "trade_items",
-					filter: `class_id=eq.${classRecord.id}`,
-				},
-				(payload) => {
-					const nextItem = payload.new as TradeItem;
-					const oldItem = payload.old as TradeItem;
-
-					if (payload.eventType === "DELETE") {
-						setTradeItems((prev) =>
-							prev.filter((item) => item.id !== oldItem.id),
-						);
-						return;
-					}
-
-					setTradeItems((prev) => {
-						const index = prev.findIndex((item) => item.id === nextItem.id);
-						if (index === -1)
-							return [...prev, nextItem].sort((a, b) =>
-								a.name.localeCompare(b.name),
-							);
-						const updated = [...prev];
-						updated[index] = nextItem;
-						return updated;
-					});
-				},
-			)
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "trade_proposals",
-					filter: `class_id=eq.${classRecord.id}`,
-				},
-				(payload) => {
-					const nextProposal = hydrateProposal(payload.new as TradeProposal);
-					const oldProposal = payload.old as TradeProposal;
-
-					if (payload.eventType === "DELETE") {
-						setProposals((prev) =>
-							prev.filter((proposal) => proposal.id !== oldProposal.id),
-						);
-						return;
-					}
-
-					setProposals((prev) => {
-						const index = prev.findIndex(
-							(proposal) => proposal.id === nextProposal.id,
-						);
-						if (index === -1) {
-							return [...prev, nextProposal].sort(
-								(a, b) =>
-									new Date(a.created_at).getTime() -
-									new Date(b.created_at).getTime(),
-							);
-						}
-						const updated = [...prev];
-						updated[index] = { ...updated[index], ...nextProposal };
-						return updated;
-					});
-				},
-			)
-			.on(
-				"postgres_changes",
-				{
-					event: "*",
-					schema: "public",
-					table: "votes",
-				},
-				(payload) => {
-					const nextVote = payload.new as Vote;
-					const oldVote = payload.old as Vote;
-					const targetTeamId = nextVote?.team_id ?? oldVote?.team_id;
-					if (!targetTeamId || !teamIds.has(targetTeamId)) return;
-
-					if (payload.eventType === "DELETE") {
-						setVotes((prev) => prev.filter((vote) => vote.id !== oldVote.id));
-						return;
-					}
-
-					const hydratedVote: Vote = {
-						...nextVote,
-						user: {
-							full_name: userLookup.get(nextVote.user_id)?.full_name ?? null,
-						},
-					};
-
-					setVotes((prev) => {
-						const index = prev.findIndex((vote) => vote.id === hydratedVote.id);
-						if (index === -1) return [...prev, hydratedVote];
-						const updated = [...prev];
-						updated[index] = hydratedVote;
-						return updated;
-					});
-				},
-			);
-		return () => {
-			supabase.removeChannel(channel);
-		};
-	}, [classRecord.id, supabase, teamById, teamIds, userLookup]);
-
 	return (
 		<div className="space-y-6">
 			<div className="grid gap-4">
@@ -382,7 +245,7 @@ export function InstructorLiveDashboard({
 								className="gap-2"
 								onClick={() =>
 									downloadChatsCsv({
-										className: liveClassRecord.name,
+										className: classRecord.name,
 										messages,
 									})
 								}
@@ -397,7 +260,7 @@ export function InstructorLiveDashboard({
 								className="gap-2"
 								onClick={() =>
 									downloadTradeDataCsv({
-										className: liveClassRecord.name,
+										className: classRecord.name,
 										proposals,
 										votes,
 										itemById,
@@ -415,7 +278,7 @@ export function InstructorLiveDashboard({
 								className="gap-2"
 								onClick={() =>
 									downloadTradeItemValuesCsv({
-										className: liveClassRecord.name,
+										className: classRecord.name,
 										tradeItems,
 										teamById,
 									})
@@ -470,7 +333,7 @@ export function InstructorLiveDashboard({
 									.slice()
 									.reverse()
 									.map((proposal) => {
-										const proposalVotes = votes.filter(
+										const proposalVotes = hydratedVotes.filter(
 											(vote) => vote.proposal_id === proposal.id,
 										);
 										const totalMembers =
@@ -532,10 +395,7 @@ export function InstructorLiveDashboard({
 					value="Roster and Team Assignments"
 					className="rounded-2xl border border-border/70 bg-card p-5"
 				>
-					<StudentRoster
-						classId={classRecord.id}
-						roster={initialSnapshot.roster}
-					/>
+					<StudentRoster classId={classRecord.id} roster={roster} />
 				</TabsContent>
 			</Tabs>
 		</div>

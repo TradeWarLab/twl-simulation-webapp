@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getClassBriefings } from "@/app/actions/briefings";
+import { ProfileMenu } from "@/components/shared/profile-menu";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -12,8 +14,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import { ProfileMenu } from "@/components/shared/profile-menu";
-import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 
 export default function BriefingsDashboardPage({
 	params,
@@ -65,11 +65,10 @@ async function BriefingsDashboardInner({
 	return (
 		<div className="container mx-auto p-8">
 			<div className="mb-4">
-			<div className="flex justify-between items-center mb-8">
-
-				<Button variant="ghost" asChild className="mb-4">
-					<Link href={`/instructor/classes/${id}`}>← Back to Dashboard</Link>
-				</Button>
+				<div className="flex justify-between items-center mb-8">
+					<Button variant="ghost" asChild className="mb-4">
+						<Link href={`/instructor/classes/${id}`}>← Back to Dashboard</Link>
+					</Button>
 					<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
 						<ThemeSwitcher />
 						<ProfileMenu email={user.email ?? ""} />

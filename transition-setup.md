@@ -2,6 +2,20 @@
  
 This document is for the next developer picking up the project. It reflects the current app structure, setup requirements, and the product scope that is already implemented in the repository.
 
+## Stack
+
+- Next.js App Router
+- React 19
+- TypeScript
+- Tailwind CSS
+- Radix UI / shadcn-style primitives
+- Supabase Auth, Postgres, and Realtime
+- Vitest + Testing Library
+- Bun for package management and scripts*
+- Biome for linting/formatting checks*
+
+*both optional, I just like working with them
+
 ## Quick Start
 
 1. Install dependencies with `bun install`.
@@ -117,7 +131,7 @@ Coverage currently focuses on:
 - chat, negotiation, and trade server actions
 - key auth, instructor, student, negotiation, and simulation components
 
-## Email Setup
+## Email Setup -- Not Set Up yet
 
 There are two separate email paths in the project.
 
@@ -144,3 +158,13 @@ What the next developer should know:
 - Using the same Resend account for both flows is fine, but they are configured separately.
 
 Github/Vercel set up with tradewarlab@gmail.com email address - Talk to Callie for access
+
+## Fun things you can try if bored or need resume bullet points
+- Supabase is just a PostgresSQL wrapper, try migrating away from Supabase to AWS, could be a good resume bullet
+  - NextAuth/Clerk for Auth?
+  - Ably/Web sockets for realtime?
+- If you have fun with that, move away from Vercel and switch the frontend to AWS too. Now you're a **'Fullstack Cloud Engineer'**
+  - AWS Amplify: closest to Vercel's DX. Supports Next.js App Router natively (SSR, API routes, ISR).
+  - SST (Serverless Stack): deploys Next.js to Lambda + CloudFront via OpenNext. More control, infrastructure-as-code, pairs naturally with RDS Postgres in the same AWS account.
+  - ECS/Fargate: run Next.js as a Docker container. Full control, but you manage scaling, load balancers, and deployments yourself.
+- I mean while you're at it switch Resend to AWS SES too. None of this is free ofc but maybe KU will pay for it?

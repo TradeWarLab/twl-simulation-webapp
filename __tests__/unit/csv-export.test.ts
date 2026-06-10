@@ -154,9 +154,7 @@ describe("downloadTradeItemValuesCsv", () => {
 	});
 
 	it("handles items without matching pair", () => {
-		const teamById = new Map([
-			["t-usa", { country: "USA" as const }],
-		]);
+		const teamById = new Map([["t-usa", { country: "USA" as const }]]);
 
 		const tradeItems: TradeItem[] = [
 			{

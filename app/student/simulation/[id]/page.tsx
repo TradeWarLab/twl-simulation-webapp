@@ -1,20 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
-import { getMessages } from "@/app/actions/chat";
+import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
 import {
 	getScoreboard,
 	getSimulationAnalytics,
-	getTeamTradeItems,
-	getTradeProposals,
 } from "@/app/actions/trade-controller";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { NegotiationAnalytics } from "@/components/negotiation/negotiation-analytics";
 import { NegotiationController } from "@/components/negotiation/negotiation-controller";
 import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
+import { RealtimeClassProvider } from "@/components/realtime/realtime-class-provider";
 import { FinalResults } from "@/components/simulation/final-results";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
-import { SimulationRealtimeProvider } from "@/components/simulation/simulation-realtime-provider";
 import { BriefingPanel } from "@/components/student/briefing-panel";
 import { UnassignedState } from "@/components/student/unassigned-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,19 +70,10 @@ async function SimulationPageInner({
 
 	const periods = SIMULATION_PERIODS;
 
-	// Fetch initial chat messages
+	const snapshot = await getRealtimeSnapshot(id);
+	if (!snapshot) notFound();
+
 	const teamChannel = `team_${teamRecord?.country?.toLowerCase() || "unassigned"}`;
-	const initialTeamMessages = await getMessages(id, teamChannel);
-	const initialGlobalMessages = await getMessages(id, "global");
-
-	// Fetch initial trade items for my team
-	const allTradeItems = teamRecord
-		? await getTeamTradeItems(id, teamRecord.id)
-		: [];
-
-	// Categorize: Concessions are items I "own" and can give. Asks are items the opponent "owns" and I can request.
-	const myTeamItems = allTradeItems.filter((i) => i.role === "concession");
-	const opponentTeamItems = allTradeItems.filter((i) => i.role === "ask");
 
 	const isTradeLocked = classRecord.current_period !== 1;
 
@@ -115,8 +104,7 @@ async function SimulationPageInner({
 		}
 	}
 
-	// Fetch trade proposals and scoreboard
-	const proposals = await getTradeProposals(id);
+	// Fetch scoreboard for the results phase
 	const scores = await getScoreboard(id);
 
 	// Fetch full analytics (reveal) if in phase 3
@@ -129,111 +117,114 @@ async function SimulationPageInner({
 	}
 
 	return (
-		<div className="container mx-auto p-2 md:p-4 min-h-screen flex flex-col lg:h-screen lg:max-h-screen">
-			<SimulationRealtimeProvider classId={id} />
-			<div className="shrink-0">
-				<SimulationHeader
-					classRecord={classRecord}
-					teamRecord={teamRecord}
-					interestGroup={enrollment.interest_block}
-					periods={periods}
-					userEmail={user.email ?? ""}
-				/>
-			</div>
+		<RealtimeClassProvider
+			classId={id}
+			snapshot={snapshot}
+			refetchSnapshot={getRealtimeSnapshot}
+		>
+			<div className="container mx-auto p-2 md:p-4 min-h-screen flex flex-col lg:h-screen lg:max-h-screen">
+				<div className="shrink-0">
+					<SimulationHeader
+						classRecord={classRecord}
+						teamRecord={teamRecord}
+						interestGroup={enrollment.interest_block}
+						periods={periods}
+						userEmail={user.email ?? ""}
+					/>
+				</div>
 
-			{!teamRecord ? (
-				<UnassignedState />
-			) : (
-				<main
-					className={`flex-1 grid gap-4 min-h-0 ${
-						classRecord.current_period === 3
-							? "grid-cols-1 max-w-4xl mx-auto w-full"
-							: "grid-cols-1 lg:grid-cols-[330px_1fr_390px]"
-					}`}
-				>
-					{/* Left Panel: Dashboard (Target Values) or Resources */}
-					{classRecord.current_period !== 3 && (
-						<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
-							<div className="pb-4">
-								<BriefingPanel
-									briefings={briefings}
-									notebooklmUrl={classRecord?.notebooklm_url || null}
-								/>
-							</div>
-						</div>
-					)}
-
-					{/* Center Panel: Action Center (Negotiation Controller) */}
-					<Card
-						className={`flex flex-col min-h-0 h-[600px] lg:h-auto ${
-							classRecord.current_period === 3 ? "border-2" : ""
+				{!teamRecord ? (
+					<UnassignedState />
+				) : (
+					<main
+						className={`flex-1 grid gap-4 min-h-0 ${
+							classRecord.current_period === 3
+								? "grid-cols-1 max-w-4xl mx-auto w-full"
+								: "grid-cols-1 lg:grid-cols-[330px_1fr_390px]"
 						}`}
 					>
-						<CardHeader
-							className={`py-3 shrink-0 ${classRecord.current_period === 3 ? "text-center border-b" : ""}`}
-						>
-							<CardTitle
-								className={
-									classRecord.current_period === 3 ? "text-xl" : "text-md"
-								}
-							>
-								{classRecord.current_period === 3
-									? "Simulation Results"
-									: "Action Center"}
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
-							{classRecord.current_period === 0 && (
-								<div className="flex items-center justify-center h-full text-muted-foreground">
-									Wait for the domestic negotiation phase to start.
+						{/* Left Panel: Dashboard (Target Values) or Resources */}
+						{classRecord.current_period !== 3 && (
+							<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
+								<div className="pb-4">
+									<BriefingPanel
+										briefings={briefings}
+										notebooklmUrl={classRecord?.notebooklm_url || null}
+									/>
 								</div>
-							)}
-							{classRecord.current_period === 1 && teamRecord && (
-								<TradeItemsPanel
-									classId={id}
-									initialItems={allTradeItems}
-									isLocked={isTradeLocked}
-								/>
-							)}
-							{classRecord.current_period === 2 && teamRecord && (
-								<NegotiationController
-									classId={id}
-									currentUserId={user.id}
-									myTeamId={teamRecord.id}
-									opponentTeamId={opponentTeamId}
-									myTeamCountry={teamRecord.country}
-									opponentTeamCountry={opponentTeamCountry}
-									myTeamItems={myTeamItems}
-									opponentTeamItems={opponentTeamItems}
-									initialProposals={proposals}
-								/>
-							)}
-							{classRecord.current_period === 3 && teamRecord && (
-								<div className="space-y-12 pb-12">
-									<FinalResults scores={scores} />
-									{analyticsData && (
-										<NegotiationAnalytics data={analyticsData} />
-									)}
-								</div>
-							)}
-						</CardContent>
-					</Card>
+							</div>
+						)}
 
-					{/* Right Panel: Chat */}
-					{classRecord.current_period !== 3 && (
-						<div className="flex flex-col min-h-0 h-[600px] lg:h-full pb-4 lg:pb-0">
-							<ChatPanel
-								classId={id}
-								teamChannel={teamChannel}
-								initialTeamMessages={initialTeamMessages}
-								initialGlobalMessages={initialGlobalMessages}
-								currentUserId={user.id}
-								hideGlobal={classRecord.current_period === 1 || classRecord.current_period === 0} // Hide global chat before bilateral negotiations
-							/>
-						</div>
-					)}
-				</main>
-			)}
-		</div>
+						{/* Center Panel: Action Center (Negotiation Controller) */}
+						<Card
+							className={`flex flex-col min-h-0 h-[600px] lg:h-auto ${
+								classRecord.current_period === 3 ? "border-2" : ""
+							}`}
+						>
+							<CardHeader
+								className={`py-3 shrink-0 ${classRecord.current_period === 3 ? "text-center border-b" : ""}`}
+							>
+								<CardTitle
+									className={
+										classRecord.current_period === 3 ? "text-xl" : "text-md"
+									}
+								>
+									{classRecord.current_period === 3
+										? "Simulation Results"
+										: "Action Center"}
+								</CardTitle>
+							</CardHeader>
+							<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
+								{classRecord.current_period === 0 && (
+									<div className="flex items-center justify-center h-full text-muted-foreground">
+										Wait for the domestic negotiation phase to start.
+									</div>
+								)}
+								{classRecord.current_period === 1 && teamRecord && (
+									<TradeItemsPanel
+										classId={id}
+										teamId={teamRecord.id}
+										isLocked={isTradeLocked}
+									/>
+								)}
+								{classRecord.current_period === 2 && teamRecord && (
+									<NegotiationController
+										classId={id}
+										currentUserId={user.id}
+										myTeamId={teamRecord.id}
+										opponentTeamId={opponentTeamId}
+										myTeamCountry={teamRecord.country}
+										opponentTeamCountry={opponentTeamCountry}
+									/>
+								)}
+								{classRecord.current_period === 3 && teamRecord && (
+									<div className="space-y-12 pb-12">
+										<FinalResults scores={scores} />
+										{analyticsData && (
+											<NegotiationAnalytics data={analyticsData} />
+										)}
+									</div>
+								)}
+							</CardContent>
+						</Card>
+
+						{/* Right Panel: Chat */}
+						{classRecord.current_period !== 3 && (
+							<div className="flex flex-col min-h-0 h-[600px] lg:h-full pb-4 lg:pb-0">
+								<ChatPanel
+									classId={id}
+									teamChannel={teamChannel}
+									currentUserId={user.id}
+									hideGlobal={
+										classRecord.current_period === 1 ||
+										classRecord.current_period === 0
+									} // Hide global chat before bilateral negotiations
+								/>
+							</div>
+						)}
+					</main>
+				)}
+			</div>
+		</RealtimeClassProvider>
 	);
 }

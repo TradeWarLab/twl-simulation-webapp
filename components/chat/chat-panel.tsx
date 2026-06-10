@@ -1,55 +1,43 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-	getMessagesBefore,
-	type Message,
-	sendMessage,
-} from "@/app/actions/chat";
+import { type Message, sendMessage } from "@/app/actions/chat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createClient } from "@/lib/supabase/client";
+import { byCreatedAt } from "@/lib/realtime/class-store";
+import {
+	useMessages,
+	useResolveUserName,
+	useUserNames,
+} from "@/lib/realtime/hooks";
+
+type LocalMessage = Message & { local_status: "optimistic" | "failed" };
 
 export function ChatPanel({
 	classId,
 	teamChannel,
-	initialTeamMessages,
-	initialGlobalMessages,
 	currentUserId,
 	hideGlobal = false,
 }: {
 	classId: string;
 	teamChannel: string;
-	initialTeamMessages: Message[];
-	initialGlobalMessages: Message[];
 	currentUserId: string;
 	hideGlobal?: boolean;
 }) {
 	const [activeTab, setActiveTab] = useState<"team" | "global">("team");
+	const storeMessages = useMessages();
+	const userNames = useUserNames();
+	const resolveUserName = useResolveUserName();
 
-	type ChatMessage = Message & { local_status?: "optimistic" | "failed" };
-	const [teamMessages, setTeamMessages] =
-		useState<ChatMessage[]>(initialTeamMessages);
-	const [globalMessages, setGlobalMessages] = useState<ChatMessage[]>(
-		initialGlobalMessages,
-	);
-
+	// Optimistic sends not yet confirmed by the realtime echo
+	const [localMessages, setLocalMessages] = useState<LocalMessage[]>([]);
 	const [input, setInput] = useState("");
 	const [isPending, setIsPending] = useState(false);
-	const [loadingOlder, setLoadingOlder] = useState(false);
-	const [hasMoreTeam, setHasMoreTeam] = useState(
-		initialTeamMessages.length >= 100,
-	);
-	const [hasMoreGlobal, setHasMoreGlobal] = useState(
-		initialGlobalMessages.length >= 100,
-	);
+
 	const bottomRef = useRef<HTMLDivElement>(null);
 	const scrollAreaRef = useRef<HTMLDivElement>(null);
 	const isAtBottomRef = useRef(true);
-	const nameCacheRef = useRef<Map<string, string | null>>(new Map());
-
-	const supabase = useMemo(() => createClient(), []);
 
 	const getViewportEl = useCallback(() => {
 		return scrollAreaRef.current?.querySelector(
@@ -69,88 +57,46 @@ export function ChatPanel({
 		[getViewportEl],
 	);
 
-	const upsertMessage = useCallback(
-		(list: ChatMessage[], msg: ChatMessage): ChatMessage[] => {
-			const next = [...list];
-			const byClientId =
-				msg.client_message_id != null
-					? next.findIndex(
-							(item) => item.client_message_id === msg.client_message_id,
-						)
-					: -1;
-			if (byClientId >= 0) {
-				next[byClientId] = {
-					...next[byClientId],
-					...msg,
-					local_status: undefined,
-				};
-				return next;
-			}
-			const byId = next.findIndex((item) => item.id === msg.id);
-			if (byId >= 0) {
-				next[byId] = { ...next[byId], ...msg, local_status: undefined };
-				return next;
-			}
-			next.push(msg);
-			next.sort(
-				(a, b) =>
-					new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-			);
-			return next;
-		},
-		[],
-	);
-
-	const resolveSenderName = useCallback(
-		async (senderId: string) => {
-			if (nameCacheRef.current.has(senderId)) {
-				return nameCacheRef.current.get(senderId) ?? null;
-			}
-			const { data } = await supabase
-				.from("users")
-				.select("full_name")
-				.eq("id", senderId)
-				.maybeSingle();
-			const name = data?.full_name ?? null;
-			nameCacheRef.current.set(senderId, name);
-			return name;
-		},
-		[supabase],
-	);
-
-	const handleIncomingMessage = useCallback(
-		(msg: ChatMessage) => {
-			if (msg.channel === teamChannel) {
-				setTeamMessages((prev) => upsertMessage(prev, msg));
-			} else if (msg.channel === "global") {
-				setGlobalMessages((prev) => upsertMessage(prev, msg));
-			}
-			const shouldScroll =
-				isAtBottomRef.current || msg.sender_id === currentUserId;
-			if (shouldScroll) {
-				setTimeout(() => scrollToBottom(true), 50);
-			}
-		},
-		[currentUserId, scrollToBottom, teamChannel, upsertMessage],
-	);
-
+	// Drop optimistic copies once the store has the real row
 	useEffect(() => {
-		setTeamMessages((prev) => {
-			let next = prev;
-			for (const msg of initialTeamMessages) {
-				next = upsertMessage(next, msg);
-			}
-			return next;
-		});
-		setGlobalMessages((prev) => {
-			let next = prev;
-			for (const msg of initialGlobalMessages) {
-				next = upsertMessage(next, msg);
-			}
-			return next;
-		});
-	}, [initialTeamMessages, initialGlobalMessages, upsertMessage]);
+		setLocalMessages((prev) =>
+			prev.filter(
+				(local) =>
+					!storeMessages.some(
+						(message) =>
+							message.client_message_id != null &&
+							message.client_message_id === local.client_message_id,
+					),
+			),
+		);
+	}, [storeMessages]);
 
+	// Resolve sender names that didn't arrive with a join
+	useEffect(() => {
+		for (const message of storeMessages) {
+			if (
+				message.sender_id !== currentUserId &&
+				!message.users?.full_name &&
+				!userNames.has(message.sender_id)
+			) {
+				void resolveUserName(message.sender_id);
+			}
+		}
+	}, [storeMessages, currentUserId, userNames, resolveUserName]);
+
+	const activeChannel = activeTab === "team" ? teamChannel : "global";
+
+	const messages = useMemo(() => {
+		const base = storeMessages.filter(
+			(message) => message.channel === activeChannel,
+		);
+		const pending = localMessages.filter(
+			(message) => message.channel === activeChannel,
+		);
+		return [...base, ...pending].sort(byCreatedAt);
+	}, [storeMessages, localMessages, activeChannel]);
+
+	// Track whether the viewer is pinned to the bottom
 	useEffect(() => {
 		const viewport = getViewportEl();
 		if (!viewport) return;
@@ -164,46 +110,47 @@ export function ChatPanel({
 		return () => viewport.removeEventListener("scroll", onScroll);
 	}, [getViewportEl]);
 
+	// Stick to the bottom when new messages arrive (or on my own sends)
+	const lastMessage = messages[messages.length - 1];
 	useEffect(() => {
-		const channel = supabase
-			.channel(`messages:${classId}`)
-			.on(
-				"postgres_changes",
-				{
-					event: "INSERT",
-					schema: "public",
-					table: "messages",
-					filter: `class_id=eq.${classId}`,
-				},
-				async (payload) => {
-					const incoming = payload.new as Message;
-					const fullName =
-						incoming.users?.full_name ??
-						(incoming.sender_id === currentUserId
-							? "Me"
-							: await resolveSenderName(incoming.sender_id));
-					handleIncomingMessage({
-						...incoming,
-						users: { full_name: fullName },
-					});
-				},
-			)
-			.subscribe();
+		if (!lastMessage) return;
+		if (isAtBottomRef.current || lastMessage.sender_id === currentUserId) {
+			setTimeout(() => scrollToBottom(true), 50);
+		}
+	}, [lastMessage, currentUserId, scrollToBottom]);
 
-		return () => {
-			supabase.removeChannel(channel);
-		};
-	}, [
-		classId,
-		currentUserId,
-		supabase,
-		resolveSenderName,
-		handleIncomingMessage,
-	]);
+	// Start at the bottom on mount
+	useEffect(() => {
+		scrollToBottom(false);
+	}, [scrollToBottom]);
 
-	const activeChannel = activeTab === "team" ? teamChannel : "global";
-	const messages = activeTab === "team" ? teamMessages : globalMessages;
-	const hasMore = activeTab === "team" ? hasMoreTeam : hasMoreGlobal;
+	function displayName(message: Message): string {
+		if (message.sender_id === currentUserId) return "Me";
+		return (
+			message.users?.full_name ?? userNames.get(message.sender_id) ?? "Unknown"
+		);
+	}
+
+	async function deliver(
+		content: string,
+		channel: string,
+		clientMessageId: string,
+	) {
+		try {
+			await sendMessage(classId, channel, content, clientMessageId);
+		} catch (error) {
+			console.error("Failed to send message", error);
+			setLocalMessages((prev) =>
+				prev.map((message) =>
+					message.client_message_id === clientMessageId
+						? { ...message, local_status: "failed" as const }
+						: message,
+				),
+			);
+		} finally {
+			setIsPending(false);
+		}
+	}
 
 	async function handleSend(e: React.FormEvent) {
 		e.preventDefault();
@@ -211,150 +158,41 @@ export function ChatPanel({
 
 		setIsPending(true);
 		const content = input.trim();
-		setInput(""); // Optimistic clear
+		setInput("");
 		const clientMessageId =
 			typeof crypto !== "undefined" && "randomUUID" in crypto
 				? crypto.randomUUID()
 				: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-		// Add optimistic message
-		const optimisticMsg: ChatMessage = {
-			id: `temp-${Date.now()}`,
-			class_id: classId,
-			channel: activeChannel,
-			content,
-			sender_id: currentUserId,
-			created_at: new Date().toISOString(),
-			client_message_id: clientMessageId,
-			users: { full_name: "Me" },
-			local_status: "optimistic",
-		};
-
-		if (activeTab === "team") {
-			setTeamMessages((prev) => [...prev, optimisticMsg]);
-		} else {
-			setGlobalMessages((prev) => [...prev, optimisticMsg]);
-		}
-
-		setTimeout(() => scrollToBottom(true), 50);
-
-		try {
-			const res = await sendMessage(
-				classId,
-				activeChannel,
+		setLocalMessages((prev) => [
+			...prev,
+			{
+				id: `temp-${clientMessageId}`,
+				class_id: classId,
+				channel: activeChannel,
 				content,
-				clientMessageId,
-			);
-			if (res?.message) {
-				handleIncomingMessage(res.message);
-			}
-		} catch (error) {
-			console.error("Failed to send message", error);
-			const markFailed = (list: ChatMessage[]) =>
-				list.map((msg) =>
-					msg.client_message_id === clientMessageId
-						? { ...msg, local_status: "failed" as const }
-						: msg,
-				);
-			if (activeTab === "team") {
-				setTeamMessages((prev) => markFailed(prev));
-			} else {
-				setGlobalMessages((prev) => markFailed(prev));
-			}
-		} finally {
-			setIsPending(false);
-		}
+				sender_id: currentUserId,
+				created_at: new Date().toISOString(),
+				client_message_id: clientMessageId,
+				users: { full_name: "Me" },
+				local_status: "optimistic",
+			},
+		]);
+		setTimeout(() => scrollToBottom(true), 50);
+		await deliver(content, activeChannel, clientMessageId);
 	}
 
-	async function retryMessage(msg: ChatMessage) {
-		if (isPending) return;
+	async function retryMessage(message: LocalMessage) {
+		if (isPending || !message.client_message_id) return;
 		setIsPending(true);
-		const clientMessageId =
-			msg.client_message_id ??
-			(typeof crypto !== "undefined" && "randomUUID" in crypto
-				? crypto.randomUUID()
-				: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
-
-		const markOptimistic = (list: ChatMessage[]) =>
-			list.map((item) =>
-				item.id === msg.id
-					? {
-							...item,
-							local_status: "optimistic" as const,
-							client_message_id: clientMessageId,
-						}
-					: item,
-			);
-
-		if (msg.channel === teamChannel) {
-			setTeamMessages((prev) => markOptimistic(prev));
-		} else if (msg.channel === "global") {
-			setGlobalMessages((prev) => markOptimistic(prev));
-		}
-
-		try {
-			const res = await sendMessage(
-				classId,
-				msg.channel,
-				msg.content,
-				clientMessageId,
-			);
-			if (res?.message) {
-				handleIncomingMessage(res.message);
-			}
-		} catch (error) {
-			console.error("Failed to resend message", error);
-			const markFailed = (list: ChatMessage[]) =>
-				list.map((item) =>
-					item.id === msg.id
-						? { ...item, local_status: "failed" as const }
-						: item,
-				);
-			if (msg.channel === teamChannel) {
-				setTeamMessages((prev) => markFailed(prev));
-			} else if (msg.channel === "global") {
-				setGlobalMessages((prev) => markFailed(prev));
-			}
-		} finally {
-			setIsPending(false);
-		}
-	}
-
-	async function loadOlderMessages() {
-		if (loadingOlder || !hasMore) return;
-		setLoadingOlder(true);
-		const activeList = activeTab === "team" ? teamMessages : globalMessages;
-		const oldest = activeList[0]?.created_at;
-		if (!oldest) {
-			setLoadingOlder(false);
-			return;
-		}
-
-		const viewport = getViewportEl();
-		const prevScrollHeight = viewport?.scrollHeight ?? 0;
-
-		const older = await getMessagesBefore(classId, activeChannel, oldest, 50);
-		if (older.length === 0) {
-			if (activeTab === "team") setHasMoreTeam(false);
-			else setHasMoreGlobal(false);
-			setLoadingOlder(false);
-			return;
-		}
-		if (activeTab === "team") {
-			setTeamMessages((prev) => [...older, ...prev]);
-			setHasMoreTeam(older.length >= 50);
-		} else {
-			setGlobalMessages((prev) => [...older, ...prev]);
-			setHasMoreGlobal(older.length >= 50);
-		}
-		setTimeout(() => {
-			const nextViewport = getViewportEl();
-			if (!nextViewport) return;
-			const nextScrollHeight = nextViewport.scrollHeight;
-			nextViewport.scrollTop =
-				nextScrollHeight - prevScrollHeight + nextViewport.scrollTop;
-		}, 0);
-		setLoadingOlder(false);
+		setLocalMessages((prev) =>
+			prev.map((m) =>
+				m.client_message_id === message.client_message_id
+					? { ...m, local_status: "optimistic" as const }
+					: m,
+			),
+		);
+		await deliver(message.content, message.channel, message.client_message_id);
 	}
 
 	return (
@@ -362,6 +200,7 @@ export function ChatPanel({
 			{/* Tabs */}
 			<div className="flex border-b">
 				<button
+					type="button"
 					onClick={() => setActiveTab("team")}
 					className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-muted ${
 						activeTab === "team"
@@ -373,6 +212,7 @@ export function ChatPanel({
 				</button>
 				{!hideGlobal && (
 					<button
+						type="button"
 						onClick={() => setActiveTab("global")}
 						className={`flex-1 py-2 px-4 text-center font-medium text-xs transition-colors hover:bg-muted ${
 							activeTab === "global"
@@ -388,18 +228,6 @@ export function ChatPanel({
 			<div ref={scrollAreaRef} className="flex-1 min-h-0">
 				<ScrollArea className="flex-1 p-4 min-h-0">
 					<div className="space-y-4">
-						{hasMore && (
-							<div className="flex justify-center">
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={loadOlderMessages}
-									disabled={loadingOlder}
-								>
-									{loadingOlder ? "Loading..." : "Load earlier messages"}
-								</Button>
-							</div>
-						)}
 						{messages.length === 0 ? (
 							<p className="text-sm text-center text-muted-foreground my-10">
 								No messages in this chat yet. Say hello!
@@ -407,7 +235,8 @@ export function ChatPanel({
 						) : (
 							messages.map((msg) => {
 								const isMe = msg.sender_id === currentUserId;
-								const isFailed = msg.local_status === "failed";
+								const isFailed =
+									(msg as LocalMessage).local_status === "failed";
 								return (
 									<div
 										key={msg.id}
@@ -422,7 +251,7 @@ export function ChatPanel({
 										>
 											{!isMe && (
 												<p className="text-xs font-semibold mb-1 opacity-80">
-													{msg.users?.full_name || "Unknown"}
+													{displayName(msg)}
 												</p>
 											)}
 											<p className="text-sm">{msg.content}</p>
@@ -437,7 +266,7 @@ export function ChatPanel({
 											{isFailed && (
 												<button
 													type="button"
-													onClick={() => retryMessage(msg)}
+													onClick={() => retryMessage(msg as LocalMessage)}
 													className="text-[10px] text-destructive underline underline-offset-2"
 												>
 													Failed — retry

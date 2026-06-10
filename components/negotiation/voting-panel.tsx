@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import {
-	getVotesForProposal,
-	submitVote,
-} from "@/app/actions/trade-controller";
+import { submitVote } from "@/app/actions/trade-controller";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { TradeProposal, Vote, VoteChoice } from "@/lib/types/domain";
+import {
+	useResolveUserName,
+	useUserNames,
+	useVotes,
+} from "@/lib/realtime/hooks";
+import type { TradeProposal, VoteChoice } from "@/lib/types/domain";
 
 type VotingPanelProps = {
 	proposal: TradeProposal;
@@ -23,35 +25,30 @@ export function VotingPanel({
 	// myTeamId,
 	onClose,
 }: VotingPanelProps) {
-	const [votes, setVotes] = useState<Vote[]>([]);
+	const votes = useVotes(proposal.id);
+	const userNames = useUserNames();
+	const resolveUserName = useResolveUserName();
 	const [isPending, startTransition] = useTransition();
-	const [hasVoted, setHasVoted] = useState(false);
-	const [myVote, setMyVote] = useState<VoteChoice | null>(null);
+	const [optimisticVote, setOptimisticVote] = useState<VoteChoice | null>(null);
 
-	// Fetch votes on mount and when proposal changes
+	const myVote =
+		votes.find((vote) => vote.user_id === currentUserId)?.vote ??
+		optimisticVote;
+	const hasVoted = myVote !== null;
+
+	// Resolve display names for live votes that arrived without the join
 	useEffect(() => {
-		async function loadVotes() {
-			const data = await getVotesForProposal(proposal.id);
-			setVotes(data);
-			const existing = data.find((v) => v.user_id === currentUserId);
-			if (existing) {
-				setHasVoted(true);
-				setMyVote(existing.vote);
+		for (const vote of votes) {
+			if (!vote.user?.full_name && !userNames.has(vote.user_id)) {
+				void resolveUserName(vote.user_id);
 			}
 		}
-		loadVotes();
-	}, [proposal.id, currentUserId]);
+	}, [votes, userNames, resolveUserName]);
 
 	const handleVote = (vote: VoteChoice) => {
 		startTransition(async () => {
 			const result = await submitVote(proposal.id, vote);
-			if (!result.error) {
-				setHasVoted(true);
-				setMyVote(vote);
-				// Refresh votes
-				const data = await getVotesForProposal(proposal.id);
-				setVotes(data);
-			}
+			if (!result.error) setOptimisticVote(vote);
 		});
 	};
 
@@ -213,7 +210,11 @@ export function VotingPanel({
 										key={v.id}
 										className="flex items-center justify-between text-xs px-3 py-1.5 rounded-md bg-card border"
 									>
-										<span>{v.user?.full_name ?? "Unknown"}</span>
+										<span>
+											{v.user?.full_name ??
+												userNames.get(v.user_id) ??
+												"Unknown"}
+										</span>
 										<Badge
 											variant="secondary"
 											className={`text-[10px] ${

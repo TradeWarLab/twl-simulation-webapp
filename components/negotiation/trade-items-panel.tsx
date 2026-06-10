@@ -6,19 +6,29 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { TradeItem } from "@/lib/types/domain";
+import { useTradeItems } from "@/lib/realtime/hooks";
 
 export function TradeItemsPanel({
 	classId,
-	initialItems,
+	teamId,
 	isLocked,
 }: {
 	classId: string;
-	initialItems: TradeItem[];
+	teamId: string;
 	isLocked: boolean;
 }) {
-	const [items, setItems] = useState<TradeItem[]>(initialItems);
+	const storeItems = useTradeItems(teamId);
+	// Values the local user is editing. They win over incoming store values
+	// until the server echo catches up, so a teammate's update can't clobber
+	// an in-progress edit.
+	const [overrides, setOverrides] = useState<Record<string, number>>({});
 	const [isPending, startTransition] = useTransition();
+
+	const items = storeItems.map((item) =>
+		overrides[item.id] !== undefined
+			? { ...item, value: overrides[item.id] }
+			: item,
+	);
 
 	const asks = items.filter((i) => i.role === "ask");
 	const concessions = items.filter((i) => i.role === "concession");
@@ -35,40 +45,52 @@ export function TradeItemsPanel({
 	const asksValid = asksTotal === 100;
 	const concessionsValid = concessionsTotal === -100;
 
-	// Sync state when new props arrive (realtime trigger)
+	// Release overrides once the store reflects them
 	useEffect(() => {
-		setItems(initialItems);
-	}, [initialItems]);
+		setOverrides((prev) => {
+			let changed = false;
+			const next = { ...prev };
+			for (const item of storeItems) {
+				if (
+					next[item.id] !== undefined &&
+					Number(item.value) === next[item.id]
+				) {
+					delete next[item.id];
+					changed = true;
+				}
+			}
+			return changed ? next : prev;
+		});
+	}, [storeItems]);
 
 	const handleValueChange = (itemId: string, newStrValue: string) => {
-		// Optimistic update locally
-		setItems((prev) =>
-			prev.map((item) =>
-				item.id === itemId ? { ...item, value: Number(newStrValue) } : item,
-			),
-		);
+		setOverrides((prev) => ({ ...prev, [itemId]: Number(newStrValue) }));
 	};
 
 	const handleBlurOrSubmit = (itemId: string, newValue: number) => {
 		if (isLocked) return;
 
-		let validValue = newValue;
 		const item = items.find((i) => i.id === itemId);
-		if (item) {
-			if (item.role === "ask" && validValue < 0)
-				validValue = Math.abs(validValue);
-			else if (item.role === "concession" && validValue > 0)
-				validValue = -Math.abs(validValue);
+		if (!item) return;
 
-			if (validValue !== newValue) {
-				setItems((prev) =>
-					prev.map((i) => (i.id === itemId ? { ...i, value: validValue } : i)),
-				);
-			}
+		let validValue = newValue;
+		if (item.role === "ask" && validValue < 0) {
+			validValue = Math.abs(validValue);
+		} else if (item.role === "concession" && validValue > 0) {
+			validValue = -Math.abs(validValue);
 		}
+		setOverrides((prev) => ({ ...prev, [itemId]: validValue }));
 
 		startTransition(async () => {
-			await updateTradeItemValue(itemId, classId, validValue);
+			const result = await updateTradeItemValue(itemId, classId, validValue);
+			if (result?.error) {
+				// Revert to the live value on failure
+				setOverrides((prev) => {
+					const next = { ...prev };
+					delete next[itemId];
+					return next;
+				});
+			}
 		});
 	};
 

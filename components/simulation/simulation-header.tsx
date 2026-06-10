@@ -23,7 +23,9 @@ export function SimulationHeader({
 			className={`flex justify-between items-center mb-4 pb-4 border-b ${className ?? ""}`}
 		>
 			<div className="space-y-0.5">
-				<h1 className="text-2xl font-bold tracking-tight">{classRecord.name}</h1>
+				<h1 className="text-2xl font-bold tracking-tight">
+					{classRecord.name}
+				</h1>
 				<div className="flex items-center gap-2 text-sm">
 					<span
 						className={`font-semibold ${teamRecord?.country === "USA" ? "text-blue-600" : "text-red-600"}`}

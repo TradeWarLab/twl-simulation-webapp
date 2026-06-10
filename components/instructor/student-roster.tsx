@@ -42,12 +42,17 @@ export function StudentRoster({
 	}, [roster]);
 
 	const handleInvite = async (formData: FormData) => {
-		const email = String(formData.get("email") ?? "").trim().toLowerCase();
-		const affiliation = String(formData.get("affiliation") ?? "").trim() as "USA" | "China";
+		const email = String(formData.get("email") ?? "")
+			.trim()
+			.toLowerCase();
+		const affiliation = String(formData.get("affiliation") ?? "").trim() as
+			| "USA"
+			| "China";
 		const interestBlock = String(formData.get("interest_block") ?? "").trim();
 
 		setLocalRoster((prev) => {
-			if (prev.some((entry) => entry.email.toLowerCase() === email)) return prev;
+			if (prev.some((entry) => entry.email.toLowerCase() === email))
+				return prev;
 			return [
 				...prev,
 				{

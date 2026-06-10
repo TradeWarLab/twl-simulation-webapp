@@ -62,7 +62,11 @@ describe("Briefing Actions", () => {
 				data: { user: null },
 			});
 
-			const result = await getStudentBriefings("class-1", "USA", "Pro-Globalization");
+			const result = await getStudentBriefings(
+				"class-1",
+				"USA",
+				"Pro-Globalization",
+			);
 			expect(result).toEqual([]);
 		});
 
