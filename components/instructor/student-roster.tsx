@@ -299,15 +299,15 @@ export function StudentRoster({
 
 				<div className="overflow-hidden rounded-xl border border-border/70">
 					<div className="grid grid-cols-[minmax(210px,1.2fr)_110px_170px_110px_110px_90px] gap-3 border-b bg-muted/40 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-						<div>Student</div>
+						<div>Students</div>
 						<div>Country</div>
 						<div>Interest Group</div>
 						<div>Status</div>
 						<div>Joined</div>
 						<div className="text-right">Action</div>
 					</div>
-					<ScrollArea className="h-[340px]">
-						<div className="divide-y">
+					<ScrollArea className="max-h-[420px]">
+						<div className="divide-y divide-border/70 [&>*:last-child]:border-b [&>*:last-child]:border-border/70">
 							{filteredRoster.length === 0 ? (
 								<div className="p-8 text-center text-sm text-muted-foreground">
 									No roster entries match the current filters.
