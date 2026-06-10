@@ -14,6 +14,32 @@ import {
 
 type LocalMessage = Message & { local_status: "optimistic" | "failed" };
 
+const MESSAGE_TRUNCATE_LENGTH = 300;
+
+function CollapsibleMessage({ content }: { content: string }) {
+	const [expanded, setExpanded] = useState(false);
+	const isLong = content.length > MESSAGE_TRUNCATE_LENGTH;
+
+	return (
+		<>
+			<p className="text-sm break-words whitespace-pre-wrap">
+				{isLong && !expanded
+					? `${content.slice(0, MESSAGE_TRUNCATE_LENGTH)}…`
+					: content}
+			</p>
+			{isLong && (
+				<button
+					type="button"
+					onClick={() => setExpanded((prev) => !prev)}
+					className="text-[11px] mt-1 underline underline-offset-2 opacity-70 hover:opacity-100"
+				>
+					{expanded ? "Show less" : "Show more"}
+				</button>
+			)}
+		</>
+	);
+}
+
 export function ChatPanel({
 	classId,
 	teamChannel,
@@ -226,7 +252,7 @@ export function ChatPanel({
 			</div>
 
 			<div ref={scrollAreaRef} className="flex-1 min-h-0">
-				<ScrollArea className="flex-1 p-4 min-h-0">
+				<ScrollArea className="h-full p-4">
 					<div className="space-y-4">
 						{messages.length === 0 ? (
 							<p className="text-sm text-center text-muted-foreground my-10">
@@ -254,7 +280,7 @@ export function ChatPanel({
 													{displayName(msg)}
 												</p>
 											)}
-											<p className="text-sm">{msg.content}</p>
+											<CollapsibleMessage content={msg.content} />
 										</div>
 										<div className="flex items-center gap-2 mt-1">
 											<span className="text-[10px] text-muted-foreground">
