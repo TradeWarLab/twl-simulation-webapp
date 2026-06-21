@@ -32,6 +32,8 @@ yarn-error.log*
 *.log
 build_output.txt
 *.txt
+.playwright-mcp/
+.claude/
 
 
 # env files
