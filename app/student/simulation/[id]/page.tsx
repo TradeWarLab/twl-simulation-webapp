@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
 import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
@@ -13,6 +13,7 @@ import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
 import { RealtimeClassProvider } from "@/components/realtime/realtime-class-provider";
 import { FinalResults } from "@/components/simulation/final-results";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
+import { SimulationLayout } from "@/components/simulation/simulation-layout";
 import { BriefingPanel } from "@/components/student/briefing-panel";
 import { UnassignedState } from "@/components/student/unassigned-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,7 +62,7 @@ async function SimulationPageInner({
 		.single();
 
 	if (error || !enrollment) {
-		notFound();
+		redirect("/student/dashboard");
 	}
 
 	const { classes: classData, teams: teamData } = enrollment;
@@ -71,7 +72,7 @@ async function SimulationPageInner({
 	const periods = SIMULATION_PERIODS;
 
 	const snapshot = await getRealtimeSnapshot(id);
-	if (!snapshot) notFound();
+	if (!snapshot) redirect("/student/dashboard");
 
 	const teamChannel = `team_${teamRecord?.country?.toLowerCase() || "unassigned"}`;
 
@@ -135,94 +136,77 @@ async function SimulationPageInner({
 
 				{!teamRecord ? (
 					<UnassignedState />
-				) : (
-					<main
-						className={`flex-1 grid gap-4 min-h-0 ${
-							classRecord.current_period === 3
-								? "grid-cols-1 max-w-4xl mx-auto w-full"
-								: "grid-cols-1 lg:grid-cols-[330px_1fr_390px]"
-						}`}
-					>
-						{/* Left Panel: Dashboard (Target Values) or Resources */}
-						{classRecord.current_period !== 3 && (
-							<div className="flex flex-col gap-4 overflow-y-auto min-h-0 pr-1">
-								<div className="pb-4">
-									<BriefingPanel
-										briefings={briefings}
-										notebooklmUrl={classRecord?.notebooklm_url || null}
-									/>
-								</div>
-							</div>
-						)}
-
-						{/* Center Panel: Action Center (Negotiation Controller) */}
-						<Card
-							className={`flex flex-col min-h-0 h-[600px] lg:h-auto ${
-								classRecord.current_period === 3 ? "border-2" : ""
-							}`}
-						>
-							<CardHeader
-								className={`py-3 shrink-0 ${classRecord.current_period === 3 ? "text-center border-b" : ""}`}
-							>
-								<CardTitle
-									className={
-										classRecord.current_period === 3 ? "text-xl" : "text-md"
-									}
-								>
-									{classRecord.current_period === 3
-										? "Simulation Results"
-										: "Action Center"}
+				) : classRecord.current_period === 3 ? (
+					<main className="flex-1 grid gap-4 min-h-0 grid-cols-1 max-w-4xl mx-auto w-full">
+						<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto border-2">
+							<CardHeader className="py-3 shrink-0 text-center border-b">
+								<CardTitle className="text-xl">
+									Simulation Results
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
-								{classRecord.current_period === 0 && (
-									<div className="flex items-center justify-center h-full text-muted-foreground">
-										Wait for the domestic negotiation phase to start.
-									</div>
-								)}
-								{classRecord.current_period === 1 && teamRecord && (
-									<TradeItemsPanel
-										classId={id}
-										teamId={teamRecord.id}
-										isLocked={isTradeLocked}
-									/>
-								)}
-								{classRecord.current_period === 2 && teamRecord && (
-									<NegotiationController
-										classId={id}
-										currentUserId={user.id}
-										myTeamId={teamRecord.id}
-										opponentTeamId={opponentTeamId}
-										myTeamCountry={teamRecord.country}
-										opponentTeamCountry={opponentTeamCountry}
-									/>
-								)}
-								{classRecord.current_period === 3 && teamRecord && (
-									<div className="space-y-12 pb-12">
-										<FinalResults scores={scores} />
-										{analyticsData && (
-											<NegotiationAnalytics data={analyticsData} />
-										)}
-									</div>
-								)}
+								<div className="space-y-12 pb-12">
+									<FinalResults scores={scores} />
+									{analyticsData && (
+										<NegotiationAnalytics data={analyticsData} />
+									)}
+								</div>
 							</CardContent>
 						</Card>
-
-						{/* Right Panel: Chat */}
-						{classRecord.current_period !== 3 && (
-							<div className="flex flex-col min-h-0 h-[600px] lg:h-full pb-4 lg:pb-0">
-								<ChatPanel
-									classId={id}
-									teamChannel={teamChannel}
-									currentUserId={user.id}
-									hideGlobal={
-										classRecord.current_period === 1 ||
-										classRecord.current_period === 0
-									} // Hide global chat before bilateral negotiations
-								/>
-							</div>
-						)}
 					</main>
+				) : (
+					<SimulationLayout
+						leftPanel={
+							<BriefingPanel
+								briefings={briefings}
+								notebooklmUrl={classRecord?.notebooklm_url || null}
+							/>
+						}
+						centerPanel={
+							<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto">
+								<CardHeader className="py-3 shrink-0">
+									<CardTitle className="text-md">
+										Action Center
+									</CardTitle>
+								</CardHeader>
+								<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
+									{classRecord.current_period === 0 && (
+										<div className="flex items-center justify-center h-full text-muted-foreground">
+											Wait for the domestic negotiation phase to start.
+										</div>
+									)}
+									{classRecord.current_period === 1 && teamRecord && (
+										<TradeItemsPanel
+											classId={id}
+											teamId={teamRecord.id}
+											isLocked={isTradeLocked}
+										/>
+									)}
+									{classRecord.current_period === 2 && teamRecord && (
+										<NegotiationController
+											classId={id}
+											currentUserId={user.id}
+											myTeamId={teamRecord.id}
+											opponentTeamId={opponentTeamId}
+											myTeamCountry={teamRecord.country}
+											opponentTeamCountry={opponentTeamCountry}
+										/>
+									)}
+								</CardContent>
+							</Card>
+						}
+						rightPanel={
+							<ChatPanel
+								classId={id}
+								teamChannel={teamChannel}
+								currentUserId={user.id}
+								hideGlobal={
+									classRecord.current_period === 1 ||
+									classRecord.current_period === 0
+								}
+							/>
+						}
+					/>
 				)}
 			</div>
 		</RealtimeClassProvider>
