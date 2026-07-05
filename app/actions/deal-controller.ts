@@ -180,10 +180,14 @@ export async function callForRatification(classId: string) {
 		return { error: "A final vote is already open" };
 	}
 
-	const { data: boardRows } = await supabase
+	const { data: boardRows, error: boardRowsError } = await supabase
 		.from("deal_board_items")
 		.select("item_id, name, giving_team_id")
 		.eq("class_id", classId);
+	if (boardRowsError) {
+		console.error("Error loading deal board:", boardRowsError);
+		return { error: "Failed to load the deal board" };
+	}
 	if (!boardRows || boardRows.length === 0) {
 		return {
 			error: "Add at least one item to the board before calling a vote",
@@ -201,10 +205,14 @@ export async function callForRatification(classId: string) {
 		return { error: callError.message };
 	}
 
-	const { data: calls } = await supabase
+	const { data: calls, error: recountError } = await supabase
 		.from("deal_ratification_calls")
 		.select("team_id")
 		.eq("class_id", classId);
+	if (recountError) {
+		console.error("Error recounting ratification calls:", recountError);
+		return { error: "Failed to verify ratification calls" };
+	}
 	const teamsCalled = new Set((calls ?? []).map((call) => call.team_id));
 
 	if (teamsCalled.size < 2) {

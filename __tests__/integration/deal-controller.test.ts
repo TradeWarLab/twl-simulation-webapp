@@ -298,6 +298,55 @@ describe("callForRatification", () => {
 		});
 	});
 
+	it("surfaces board-load failures instead of a business-rule rejection", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = {
+			data: null,
+			error: { message: "boom" },
+		};
+		mockTables(responses);
+
+		const result = await callForRatification("class-1");
+		expect(result).toEqual({ error: "Failed to load the deal board" });
+	});
+
+	it("surfaces recount failures instead of silently reporting no vote opened", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = { data: BOARD_ROWS, error: null };
+		const builders = mockTables(responses);
+
+		// The upsert and the recount hit the same deal_ratification_calls
+		// builder. Sequence the resolved value by call: first await (the
+		// upsert) succeeds, second await (the recount) fails. Build and
+		// register the builder up front (rather than pulling it from
+		// `builders` after the fact) since `mockTables` only populates the
+		// map lazily, on first `.from(table)` access.
+		const ratificationBuilder = createChainableBuilder(
+			responses.deal_ratification_calls,
+		);
+		let callCount = 0;
+		ratificationBuilder.then = vi.fn(
+			(
+				resolve: (value: {
+					data: unknown;
+					error: null | { message: string };
+				}) => void,
+			) => {
+				callCount += 1;
+				const response =
+					callCount === 1
+						? { data: null, error: null }
+						: { data: null, error: { message: "boom" } };
+				resolve(response);
+				return Promise.resolve(response);
+			},
+		);
+		builders.set("deal_ratification_calls", ratificationBuilder);
+
+		const result = await callForRatification("class-1");
+		expect(result).toEqual({ error: "Failed to verify ratification calls" });
+	});
+
 	it("rejects while a package vote is already pending", async () => {
 		const responses = baselineResponses();
 		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
