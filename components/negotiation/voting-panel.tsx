@@ -66,10 +66,13 @@ export function VotingPanel({
 			{/* Header */}
 			<div className="flex items-center justify-between p-3 border-b bg-card rounded-t-md">
 				<div>
-					<h4 className="font-semibold text-sm">Trade Proposal</h4>
+					<h4 className="font-semibold text-sm">
+						{proposal.is_package ? "Final Trade Deal" : "Trade Proposal"}
+					</h4>
 					<p className="text-xs text-muted-foreground">
-						{proposal.proposing_team?.country} →{" "}
-						{proposal.receiving_team?.country}
+						{proposal.is_package
+							? "Ratification is all or nothing — one rejection resets the board"
+							: `${proposal.proposing_team?.country} → ${proposal.receiving_team?.country}`}
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
