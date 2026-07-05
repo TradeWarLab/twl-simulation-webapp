@@ -18,21 +18,29 @@ async function getStudentContext(classId: string) {
 	} = await supabase.auth.getUser();
 	if (!user) return { error: "Unauthorized" as const };
 
-	const { data: enrollment } = await supabase
+	const { data: enrollment, error: enrollmentError } = await supabase
 		.from("students_classes")
 		.select("team_id")
 		.eq("student_id", user.id)
 		.eq("class_id", classId)
 		.maybeSingle();
+	if (enrollmentError) {
+		console.error("Error checking enrollment:", enrollmentError);
+		return { error: "Failed to verify your enrollment" as const };
+	}
 	if (!enrollment?.team_id) {
 		return { error: "You are not enrolled in this class" as const };
 	}
 
-	const { data: classData } = await supabase
+	const { data: classData, error: classError } = await supabase
 		.from("classes")
 		.select("current_period")
 		.eq("id", classId)
 		.maybeSingle();
+	if (classError) {
+		console.error("Error checking simulation phase:", classError);
+		return { error: "Failed to verify the simulation phase" as const };
+	}
 	if (!classData || classData.current_period !== 2) {
 		return {
 			error:
@@ -44,14 +52,18 @@ async function getStudentContext(classId: string) {
 }
 
 async function findPendingPackage(supabase: Supabase, classId: string) {
-	const { data } = await supabase
+	const { data, error } = await supabase
 		.from("trade_proposals")
 		.select("id")
 		.eq("class_id", classId)
 		.eq("is_package", true)
 		.eq("status", "pending")
 		.maybeSingle();
-	return data ?? null;
+	if (error) {
+		console.error("Error checking pending package:", error);
+		return { pending: null, error: "unknown" as const };
+	}
+	return { pending: data ?? null, error: null };
 }
 
 async function clearRatificationCalls(supabase: Supabase, classId: string) {
@@ -66,7 +78,11 @@ export async function addBoardItem(classId: string, itemId: string) {
 	if ("error" in ctx) return { error: ctx.error };
 	const { supabase, user, teamId } = ctx;
 
-	if (await findPendingPackage(supabase, classId)) {
+	const pendingPackage = await findPendingPackage(supabase, classId);
+	if (pendingPackage.error) {
+		return { error: "Could not verify the board status" };
+	}
+	if (pendingPackage.pending) {
 		return { error: "The board is frozen while the final vote is open" };
 	}
 
@@ -127,7 +143,11 @@ export async function removeBoardItem(classId: string, boardItemId: string) {
 	if ("error" in ctx) return { error: ctx.error };
 	const { supabase } = ctx;
 
-	if (await findPendingPackage(supabase, classId)) {
+	const pendingPackage = await findPendingPackage(supabase, classId);
+	if (pendingPackage.error) {
+		return { error: "Could not verify the board status" };
+	}
+	if (pendingPackage.pending) {
 		return { error: "The board is frozen while the final vote is open" };
 	}
 

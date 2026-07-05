@@ -162,6 +162,31 @@ describe("addBoardItem", () => {
 		const result = await addBoardItem("class-1", "item-1");
 		expect(result).toEqual({ error: "You are not enrolled in this class" });
 	});
+
+	it("surfaces enrollment query failures instead of a business-rule rejection", async () => {
+		const responses = baselineResponses();
+		responses.students_classes = {
+			data: null,
+			error: { message: "connection reset" },
+		};
+		mockTables(responses);
+
+		const result = await addBoardItem("class-1", "item-1");
+		expect(result).toEqual({ error: "Failed to verify your enrollment" });
+	});
+
+	it("fails closed when the pending-package check errors, instead of unfreezing the board", async () => {
+		const responses = baselineResponses();
+		responses.trade_proposals = {
+			data: null,
+			error: { message: "connection reset" },
+		};
+		const builders = mockTables(responses);
+
+		const result = await addBoardItem("class-1", "item-1");
+		expect(result).toEqual({ error: "Could not verify the board status" });
+		expect(builders.get("deal_board_items")?.insert).toBeUndefined();
+	});
 });
 
 describe("removeBoardItem", () => {
