@@ -55,13 +55,27 @@ function valueTone(value: number) {
 	return "text-muted-foreground";
 }
 
+// Card colors are anchored to the giving country (blue = USA, red = China)
+// so students on opposite teams see the same color for the same card.
+const COUNTRY_TONES: Record<string, string> = {
+	USA: "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-200",
+	China:
+		"bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200",
+};
+
+function countryTone(country: string) {
+	return COUNTRY_TONES[country] ?? COUNTRY_TONES.USA;
+}
+
 function InventoryCard({
 	item,
+	givesCountry,
 	disabled,
 	onAdd,
 	onView,
 }: {
 	item: TradeItem;
+	givesCountry: string;
 	disabled: boolean;
 	onAdd: () => void;
 	onView: () => void;
@@ -73,10 +87,7 @@ function InventoryCard({
 		? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
 		: undefined;
 
-	const roleTone =
-		item.role === "concession"
-			? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-200"
-			: "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200";
+	const roleTone = countryTone(givesCountry);
 
 	return (
 		<div
@@ -288,6 +299,11 @@ export function SharedDealBoard({
 											<InventoryCard
 												key={item.id}
 												item={item}
+												givesCountry={
+													item.role === "ask"
+														? opponentTeamCountry
+														: myTeamCountry
+												}
 												disabled={frozen || isPending}
 												onAdd={() => handleAdd(item.id)}
 												onView={() => setDetailItem(item)}
@@ -321,15 +337,16 @@ export function SharedDealBoard({
 								<div className="flex flex-col gap-2">
 									{boardItems.map((row) => {
 										const value = valueForRow(row);
-										const myTeamGives = row.giving_team_id === myTeamId;
+										const givesCountry =
+											row.giving_team_id === myTeamId
+												? myTeamCountry
+												: opponentTeamCountry;
 										return (
 											<div
 												key={row.id}
 												className={[
 													"flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium",
-													myTeamGives
-														? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-200"
-														: "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200",
+													countryTone(givesCountry),
 												].join(" ")}
 											>
 												<span className="flex flex-1 min-w-0 flex-col text-left">
@@ -341,8 +358,7 @@ export function SharedDealBoard({
 													</span>
 												</span>
 												<span className="text-[10px] text-muted-foreground whitespace-nowrap">
-													{myTeamGives ? myTeamCountry : opponentTeamCountry}{" "}
-													gives
+													{givesCountry} gives
 												</span>
 												<span
 													className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${valueTone(value)}`}
@@ -376,6 +392,11 @@ export function SharedDealBoard({
 						<div className="pointer-events-none">
 							<InventoryCard
 								item={activeItem}
+								givesCountry={
+									activeItem.role === "ask"
+										? opponentTeamCountry
+										: myTeamCountry
+								}
 								disabled
 								onAdd={() => {}}
 								onView={() => {}}
