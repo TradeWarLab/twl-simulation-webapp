@@ -88,6 +88,31 @@ describe("addBoardItem", () => {
 		);
 	});
 
+	it("defaults null-role items (instructor customs) to the owning team as giver", async () => {
+		const responses = baselineResponses();
+		responses.trade_items = { data: { ...ITEM, role: null }, error: null };
+		const builders = mockTables(responses);
+
+		await addBoardItem("class-1", "item-1");
+
+		expect(builders.get("deal_board_items")!.insert).toHaveBeenCalledWith(
+			expect.objectContaining({ giving_team_id: "team-usa" }),
+		);
+	});
+
+	it("surfaces trade_items lookup failures instead of a business-rule rejection", async () => {
+		const responses = baselineResponses();
+		responses.trade_items = {
+			data: null,
+			error: { message: "connection reset" },
+		};
+		const builders = mockTables(responses);
+
+		const result = await addBoardItem("class-1", "item-1");
+		expect(result).toEqual({ error: "Failed to load the item" });
+		expect(builders.get("deal_board_items")?.insert).toBeUndefined();
+	});
+
 	it("treats a duplicate add (unique violation) as a silent no-op", async () => {
 		const responses = baselineResponses();
 		responses.deal_board_items = {
@@ -102,7 +127,7 @@ describe("addBoardItem", () => {
 
 	it("rejects when a package vote is pending (board frozen)", async () => {
 		const responses = baselineResponses();
-		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
+		responses.trade_proposals = { data: [{ id: "pkg-1" }], error: null };
 		const builders = mockTables(responses);
 
 		const result = await addBoardItem("class-1", "item-1");
@@ -200,7 +225,10 @@ describe("removeBoardItem", () => {
 	});
 
 	it("deletes the row and clears ratification calls", async () => {
-		const builders = mockTables(baselineResponses());
+		const responses = baselineResponses();
+		// The delete now chains .select("id") to report rows actually removed.
+		responses.deal_board_items = { data: [{ id: "board-1" }], error: null };
+		const builders = mockTables(responses);
 
 		const result = await removeBoardItem("class-1", "board-1");
 
@@ -210,13 +238,28 @@ describe("removeBoardItem", () => {
 			"id",
 			"board-1",
 		);
+		expect(builders.get("deal_board_items")!.select).toHaveBeenCalledWith("id");
 		expect(builders.get("deal_ratification_calls")!.delete).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalledWith("/student/simulation/class-1");
 	});
 
+	it("does not clear ratification calls when the delete removes zero rows", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = { data: [], error: null };
+		const builders = mockTables(responses);
+
+		const result = await removeBoardItem("class-1", "board-1");
+
+		expect(result).toEqual({ success: true });
+		expect(builders.get("deal_board_items")!.delete).toHaveBeenCalled();
+		// clearRatificationCalls is never invoked, so the table is never
+		// even queried — no builder gets created for it.
+		expect(builders.get("deal_ratification_calls")?.delete).toBeUndefined();
+	});
+
 	it("rejects while a package vote is pending", async () => {
 		const responses = baselineResponses();
-		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
+		responses.trade_proposals = { data: [{ id: "pkg-1" }], error: null };
 		const builders = mockTables(responses);
 
 		const result = await removeBoardItem("class-1", "board-1");
@@ -287,6 +330,46 @@ describe("callForRatification", () => {
 		});
 	});
 
+	it("treats a package-insert unique violation (lost the handshake race) as a successful vote-open", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = { data: BOARD_ROWS, error: null };
+		responses.deal_ratification_calls = {
+			data: [{ team_id: "team-china" }, { team_id: "team-usa" }],
+			error: null,
+		};
+		const builders = mockTables(responses);
+
+		// trade_proposals serves two calls here: the pending-package check
+		// (no pending package, so the handshake proceeds) and then the
+		// package insert itself, which loses the race to a concurrent
+		// insert and comes back with the new partial unique index's 23505.
+		const proposalsBuilder = createChainableBuilder();
+		let callCount = 0;
+		proposalsBuilder.then = vi.fn(
+			(
+				resolve: (value: {
+					data: unknown;
+					error: null | { message: string; code?: string };
+				}) => void,
+			) => {
+				callCount += 1;
+				const response =
+					callCount === 1
+						? { data: [], error: null }
+						: {
+								data: null,
+								error: { message: "duplicate key value", code: "23505" },
+							};
+				resolve(response);
+				return Promise.resolve(response);
+			},
+		);
+		builders.set("trade_proposals", proposalsBuilder);
+
+		const result = await callForRatification("class-1");
+		expect(result).toEqual({ success: true, voteOpened: true });
+	});
+
 	it("rejects an empty board", async () => {
 		const responses = baselineResponses();
 		responses.deal_board_items = { data: [], error: null };
@@ -349,7 +432,7 @@ describe("callForRatification", () => {
 
 	it("rejects while a package vote is already pending", async () => {
 		const responses = baselineResponses();
-		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
+		responses.trade_proposals = { data: [{ id: "pkg-1" }], error: null };
 		mockTables(responses);
 
 		const result = await callForRatification("class-1");
@@ -377,7 +460,7 @@ describe("withdrawRatificationCall", () => {
 
 	it("rejects once the final vote has opened", async () => {
 		const responses = baselineResponses();
-		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
+		responses.trade_proposals = { data: [{ id: "pkg-1" }], error: null };
 		mockTables(responses);
 
 		const result = await withdrawRatificationCall("class-1");

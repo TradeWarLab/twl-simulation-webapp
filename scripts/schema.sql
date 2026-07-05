@@ -404,6 +404,10 @@ create policy "Class members can update proposal status."
     )
   );
 
+create unique index if not exists one_pending_package_per_class
+  on public.trade_proposals (class_id)
+  where is_package and status = 'pending';
+
 
 -- ──────────────────────────────────────────────
 -- 12. Votes (per-student vote on trade proposals)
@@ -520,13 +524,13 @@ create policy "Ratification calls viewable by everyone."
 
 create policy "Class members can manage ratification calls."
   on public.deal_ratification_calls for all using (
-    exists (
-      select 1 from public.students_classes
+    team_id in (
+      select team_id from public.students_classes
       where student_id = auth.uid() and class_id = deal_ratification_calls.class_id
     )
   ) with check (
-    exists (
-      select 1 from public.students_classes
+    team_id in (
+      select team_id from public.students_classes
       where student_id = auth.uid() and class_id = deal_ratification_calls.class_id
     )
   );

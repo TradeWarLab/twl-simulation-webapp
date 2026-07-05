@@ -58,12 +58,13 @@ async function findPendingPackage(supabase: Supabase, classId: string) {
 		.eq("class_id", classId)
 		.eq("is_package", true)
 		.eq("status", "pending")
-		.maybeSingle();
+		.order("created_at", { ascending: false })
+		.limit(1);
 	if (error) {
 		console.error("Error checking pending package:", error);
 		return { pending: null, error: "unknown" as const };
 	}
-	return { pending: data ?? null, error: null };
+	return { pending: data?.[0] ?? null, error: null };
 }
 
 async function clearRatificationCalls(supabase: Supabase, classId: string) {
@@ -86,11 +87,15 @@ export async function addBoardItem(classId: string, itemId: string) {
 		return { error: "The board is frozen while the final vote is open" };
 	}
 
-	const { data: item } = await supabase
+	const { data: item, error: itemError } = await supabase
 		.from("trade_items")
 		.select("id, class_id, team_id, issue_id, name, role, is_resolved")
 		.eq("id", itemId)
 		.maybeSingle();
+	if (itemError) {
+		console.error("Error loading trade item:", itemError);
+		return { error: "Failed to load the item" };
+	}
 
 	if (!item || item.class_id !== classId) return { error: "Item not found" };
 	if (item.is_resolved) {
@@ -102,16 +107,22 @@ export async function addBoardItem(classId: string, itemId: string) {
 
 	// trade_items are per-team mirror rows: 'concession' = our team gives it,
 	// 'ask' = we are asking the opposing team to give it.
-	const { data: teams } = await supabase
+	const { data: teams, error: teamsError } = await supabase
 		.from("teams")
 		.select("id")
 		.eq("class_id", classId);
+	if (teamsError) {
+		console.error("Error loading teams:", teamsError);
+		return { error: "Failed to load teams" };
+	}
 	const otherTeamId = (teams ?? [])
 		.map((team) => team.id)
 		.find((id) => id !== teamId);
 	if (!otherTeamId) return { error: "Opposing team not found" };
 
-	const givingTeamId = item.role === "concession" ? teamId : otherTeamId;
+	// Null-role items (instructor-created customs) default to the owning
+	// team as giver; only an explicit 'ask' hands the give to the other team.
+	const givingTeamId = item.role === "ask" ? otherTeamId : teamId;
 
 	const { error } = await supabase.from("deal_board_items").insert({
 		class_id: classId,
@@ -151,17 +162,22 @@ export async function removeBoardItem(classId: string, boardItemId: string) {
 		return { error: "The board is frozen while the final vote is open" };
 	}
 
-	const { error } = await supabase
+	const { data: deleted, error } = await supabase
 		.from("deal_board_items")
 		.delete()
 		.eq("id", boardItemId)
-		.eq("class_id", classId);
+		.eq("class_id", classId)
+		.select("id");
 	if (error) {
 		console.error("Error removing board item:", error);
 		return { error: error.message };
 	}
 
-	await clearRatificationCalls(supabase, classId);
+	// Only void the handshake if a row actually disappeared — a stale
+	// double-click that deletes nothing shouldn't reset ratification calls.
+	if (deleted && deleted.length > 0) {
+		await clearRatificationCalls(supabase, classId);
+	}
 
 	revalidatePath(`/student/simulation/${classId}`);
 	return { success: true };
@@ -245,6 +261,11 @@ export async function callForRatification(classId: string) {
 			created_by: user.id,
 		});
 	if (proposalError) {
+		// unique(one_pending_package_per_class): the other team's call won
+		// the race and already opened the vote — treat as success.
+		if ((proposalError as { code?: string }).code === "23505") {
+			return { success: true, voteOpened: true };
+		}
 		console.error("Error creating package proposal:", proposalError);
 		return { error: proposalError.message };
 	}

@@ -191,4 +191,68 @@ describe("submitVote — package proposals", () => {
 			"class-1",
 		);
 	});
+
+	it("leaves the board intact when executeTrade fails during unanimous approval", async () => {
+		// 2 members total, both approve → submitVote takes the executeTrade
+		// path, but the trade_items resolution update itself errors out.
+		const builders = mockTables({
+			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
+			students_classes: {
+				data: [{ team_id: "team-usa" }, { team_id: "team-china" }],
+				error: null,
+			},
+			votes: {
+				data: [{ vote: "approve" }, { vote: "approve" }],
+				error: null,
+			},
+			deal_board_items: { data: null, error: null },
+			deal_ratification_calls: { data: null, error: null },
+			teams: {
+				data: [{ id: "team-usa" }, { id: "team-china" }],
+				error: null,
+			},
+			team_scores: { data: null, error: null },
+		});
+		builders
+			.get("students_classes")!
+			.single.mockResolvedValue({ data: { team_id: "team-usa" }, error: null });
+		builders.get("students_classes")!.then = vi.fn(
+			(resolve: (v: unknown) => void) => {
+				const value = { data: null, error: null, count: 2 };
+				resolve(value);
+				return Promise.resolve(value);
+			},
+		);
+
+		// trade_items serves both the item lookup (select) and the resolution
+		// (update); the first call succeeds, the second (the update) fails.
+		const tradeItemsBuilder = createChainableBuilder();
+		let callCount = 0;
+		tradeItemsBuilder.then = vi.fn((resolve: (v: unknown) => void) => {
+			callCount += 1;
+			const value =
+				callCount === 1
+					? {
+							data: [{ issue_id: "issue-1", name: "Steel Tariffs" }],
+							error: null,
+						}
+					: { data: null, error: { message: "constraint violation" } };
+			resolve(value);
+			return Promise.resolve(value);
+		});
+		builders.set("trade_items", tradeItemsBuilder);
+
+		const result = await submitVote("pkg-1", "approve");
+
+		expect(result).toEqual({ success: true });
+		// executeTrade failed, so the proposal is never marked executed...
+		expect(builders.get("trade_proposals")!.update).not.toHaveBeenCalledWith({
+			status: "executed",
+		});
+		// ...and the board is left intact for a retry rather than wiped.
+		expect(builders.get("deal_board_items")?.delete).not.toHaveBeenCalled();
+		expect(
+			builders.get("deal_ratification_calls")?.delete,
+		).not.toHaveBeenCalled();
+	});
 });

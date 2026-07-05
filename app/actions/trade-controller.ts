@@ -373,6 +373,7 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 		// All votes are in — check for any rejections
 		const hasRejection = votesList.some((v) => v.vote === "reject");
 
+		let executeFailed = false;
 		if (hasRejection) {
 			// Mark as rejected
 			await supabase
@@ -381,12 +382,20 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 				.eq("id", proposalId);
 		} else {
 			// All approved → execute the trade
-			await executeTrade(proposalId);
+			const executeResult = await executeTrade(proposalId);
+			if (executeResult && "error" in executeResult) {
+				executeFailed = true;
+				console.error(
+					"Error executing package trade, leaving board intact for retry:",
+					executeResult.error,
+				);
+			}
 		}
 
-		if (proposal.is_package) {
+		if (proposal.is_package && !executeFailed) {
 			// All-or-nothing ratification: rejection erases the shared board
 			// (blank-slate reset); execution clears now-resolved leftovers.
+			// If execution failed, leave the board intact so the vote can retry.
 			await supabase
 				.from("deal_board_items")
 				.delete()
@@ -428,25 +437,36 @@ export async function executeTrade(proposalId: string) {
 		.in("id", allItemIds);
 
 	if (items && items.length > 0) {
+		// A mixed package can have some items linked by issue_id and some
+		// (null-issue customs) only identifiable by name — resolve each
+		// group with its own update rather than dropping one of them.
 		const issueIds = items.map((i) => i.issue_id).filter(Boolean);
-		const names = items.map((i) => i.name);
-
-		// Mark all instances of these issues as resolved for BOTH teams in this class
-		let query = supabase
-			.from("trade_items")
-			.update({ is_resolved: true })
-			.eq("class_id", proposal.class_id);
+		const namesForNullIssue = items
+			.filter((i) => !i.issue_id)
+			.map((i) => i.name);
 
 		if (issueIds.length > 0) {
-			query = query.in("issue_id", issueIds);
-		} else {
-			query = query.in("name", names);
+			const { error } = await supabase
+				.from("trade_items")
+				.update({ is_resolved: true })
+				.eq("class_id", proposal.class_id)
+				.in("issue_id", issueIds);
+			if (error) {
+				console.error("Error resolving trade items by issue_id:", error);
+				return { error: "Failed to resolve trade issues" };
+			}
 		}
 
-		const { error } = await query;
-		if (error) {
-			console.error("Error resolving trade items:", error);
-			return { error: "Failed to resolve trade issues" };
+		if (namesForNullIssue.length > 0) {
+			const { error } = await supabase
+				.from("trade_items")
+				.update({ is_resolved: true })
+				.eq("class_id", proposal.class_id)
+				.in("name", namesForNullIssue);
+			if (error) {
+				console.error("Error resolving trade items by name:", error);
+				return { error: "Failed to resolve trade issues" };
+			}
 		}
 	}
 

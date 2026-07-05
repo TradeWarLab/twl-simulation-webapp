@@ -135,6 +135,22 @@ describe("SharedDealBoard", () => {
 		expect(within(row).getByText("+15")).toBeInTheDocument();
 	});
 
+	it("shows who added a board row, falling back to the owning team's name", () => {
+		renderBoard(snapshot({ dealBoardItems: [BOARD_ROW] }));
+		expect(screen.getByText(/added by team usa/i)).toBeInTheDocument();
+	});
+
+	it("falls back to the opposing team's name when the adder is on the other team", () => {
+		const otherRow: DealBoardItem = {
+			...BOARD_ROW,
+			id: "board-2",
+			added_by_team_id: "team-china",
+			added_by: "user-9",
+		};
+		renderBoard(snapshot({ dealBoardItems: [otherRow] }));
+		expect(screen.getByText(/added by team china/i)).toBeInTheDocument();
+	});
+
 	it("removes a board row via its remove button", () => {
 		renderBoard(snapshot({ dealBoardItems: [BOARD_ROW] }));
 		fireEvent.click(

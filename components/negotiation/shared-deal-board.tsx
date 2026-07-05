@@ -11,7 +11,7 @@ import {
 	useDroppable,
 } from "@dnd-kit/core";
 import { GripVertical, Info, Plus } from "lucide-react";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
 	addBoardItem,
 	callForRatification,
@@ -24,7 +24,9 @@ import { buildViewerValueMap } from "@/lib/realtime/derive";
 import {
 	useDealBoardItems,
 	useRatificationCalls,
+	useResolveUserName,
 	useTradeItems,
+	useUserNames,
 } from "@/lib/realtime/hooks";
 import type { DealBoardItem, TradeItem } from "@/lib/types/domain";
 import { TradeItemDetailModal } from "./trade-item-detail-modal";
@@ -103,6 +105,7 @@ function InventoryCard({
 			<button
 				type="button"
 				onClick={onView}
+				aria-label={`View details for ${item.name}`}
 				className="p-1 rounded-md hover:bg-foreground/10 text-muted-foreground hover:text-foreground transition-colors"
 				title="View Details"
 			>
@@ -134,10 +137,21 @@ export function SharedDealBoard({
 	const teamItems = useTradeItems(myTeamId);
 	const boardItems = useDealBoardItems();
 	const ratificationCalls = useRatificationCalls();
+	const userNames = useUserNames();
+	const resolveUserName = useResolveUserName();
 	const [isPending, startTransition] = useTransition();
 	const [actionError, setActionError] = useState<string | null>(null);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [detailItem, setDetailItem] = useState<TradeItem | null>(null);
+
+	// Resolve display names for board-row adders that arrived without a join.
+	useEffect(() => {
+		for (const row of boardItems) {
+			if (!userNames.has(row.added_by)) {
+				void resolveUserName(row.added_by);
+			}
+		}
+	}, [boardItems, userNames, resolveUserName]);
 
 	const { setNodeRef: setBoardRef, isOver } = useDroppable({
 		id: "deal-board",
@@ -152,6 +166,12 @@ export function SharedDealBoard({
 		(row.issue_id ? viewerValueMap.get(row.issue_id) : undefined) ??
 		viewerValueMap.get(row.name) ??
 		0;
+
+	const addedByLabel = (row: DealBoardItem) =>
+		userNames.get(row.added_by) ??
+		(row.added_by_team_id === myTeamId
+			? `Team ${myTeamCountry}`
+			: `Team ${opponentTeamCountry}`);
 
 	// The viewer's inventory: unresolved mirror rows whose issue isn't on the board.
 	const inventory = useMemo(() => {
@@ -312,8 +332,13 @@ export function SharedDealBoard({
 														: "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200",
 												].join(" ")}
 											>
-												<span className="flex-1 line-clamp-2 leading-snug text-left">
-													{row.name}
+												<span className="flex flex-1 min-w-0 flex-col text-left">
+													<span className="line-clamp-2 leading-snug">
+														{row.name}
+													</span>
+													<span className="text-[10px] text-muted-foreground/70">
+														Added by {addedByLabel(row)}
+													</span>
 												</span>
 												<span className="text-[10px] text-muted-foreground whitespace-nowrap">
 													{myTeamGives ? myTeamCountry : opponentTeamCountry}{" "}

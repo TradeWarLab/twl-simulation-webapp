@@ -9,7 +9,7 @@
 -- issue_id, name fallback), so the board dedupes by (class_id, name) and
 -- denormalizes issue_id/name/giving_team_id at insert time.
 
-create table public.deal_board_items (
+create table if not exists public.deal_board_items (
 	id uuid default gen_random_uuid() primary key,
 	class_id uuid references public.classes not null,
 	item_id uuid references public.trade_items not null,  -- the adder's team's row
@@ -47,7 +47,7 @@ create policy "Class members can remove board items."
 -- 15. Deal Ratification Calls (two-team handshake)
 -- ──────────────────────────────────────────────
 
-create table public.deal_ratification_calls (
+create table if not exists public.deal_ratification_calls (
 	id uuid default gen_random_uuid() primary key,
 	class_id uuid references public.classes not null,
 	team_id uuid references public.teams not null,
@@ -63,13 +63,13 @@ create policy "Ratification calls viewable by everyone."
 
 create policy "Class members can manage ratification calls."
 	on public.deal_ratification_calls for all using (
-		exists (
-			select 1 from public.students_classes
+		team_id in (
+			select team_id from public.students_classes
 			where student_id = auth.uid() and class_id = deal_ratification_calls.class_id
 		)
 	) with check (
-		exists (
-			select 1 from public.students_classes
+		team_id in (
+			select team_id from public.students_classes
 			where student_id = auth.uid() and class_id = deal_ratification_calls.class_id
 		)
 	);
@@ -81,7 +81,17 @@ create policy "Class members can manage ratification calls."
 alter table public.trade_proposals
 	add column if not exists is_package boolean default false not null;
 
+-- Prevent two concurrent pending packages per class — the ratification
+-- handshake assumes only one final-vote proposal can be open at a time.
+create unique index if not exists one_pending_package_per_class
+	on public.trade_proposals (class_id)
+	where is_package and status = 'pending';
+
 -- Realtime: skip if the supabase_realtime publication is FOR ALL TABLES
 -- (check with: select * from pg_publication where pubname = 'supabase_realtime')
-alter publication supabase_realtime add table public.deal_board_items;
-alter publication supabase_realtime add table public.deal_ratification_calls;
+do $$
+begin
+	alter publication supabase_realtime add table public.deal_board_items;
+	alter publication supabase_realtime add table public.deal_ratification_calls;
+exception when duplicate_object or undefined_object then null;
+end $$;
