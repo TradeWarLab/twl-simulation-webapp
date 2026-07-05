@@ -66,6 +66,7 @@ export type TradeProposal = {
 	offered_items: TradeProposalItem[];
 	requested_items: TradeProposalItem[];
 	status: TradeProposalStatus;
+	is_package?: boolean;
 	created_by: string;
 	created_at: string;
 	// Joined fields (optional, populated by queries)
@@ -127,5 +128,29 @@ export type TradeItem = {
 	value: number;
 	role: "ask" | "concession" | null;
 	is_resolved: boolean;
+	created_at: string;
+};
+
+// ─── Shared Deal Board Types ────────────────────────────
+
+export type DealBoardItem = {
+	id: string;
+	class_id: string;
+	/** The adding team's trade_items row. */
+	item_id: string;
+	issue_id: string | null;
+	name: string;
+	/** Team that ultimately gives this item if the deal is ratified. */
+	giving_team_id: string;
+	added_by_team_id: string;
+	added_by: string;
+	created_at: string;
+};
+
+export type DealRatificationCall = {
+	id: string;
+	class_id: string;
+	team_id: string;
+	called_by: string;
 	created_at: string;
 };
