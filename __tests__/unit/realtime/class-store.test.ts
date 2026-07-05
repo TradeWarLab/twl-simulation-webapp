@@ -45,6 +45,8 @@ function makeSnapshot(
 		proposals: [],
 		votes: [],
 		messages: [],
+		dealBoardItems: [],
+		ratificationCalls: [],
 		...overrides,
 	};
 }

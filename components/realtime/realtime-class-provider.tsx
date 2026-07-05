@@ -14,7 +14,13 @@ import {
 } from "@/lib/realtime/class-store";
 import { ClassStoreContext } from "@/lib/realtime/hooks";
 import { createClient } from "@/lib/supabase/client";
-import type { TradeItem, TradeProposal, Vote } from "@/lib/types/domain";
+import type {
+	DealBoardItem,
+	DealRatificationCall,
+	TradeItem,
+	TradeProposal,
+	Vote,
+} from "@/lib/types/domain";
 
 type ChangePayload<T> = {
 	eventType: RowEventType;
@@ -101,6 +107,48 @@ export function RealtimeClassProvider({
 						change.eventType === "DELETE"
 							? null
 							: (change.new as TradeProposal),
+						change.old?.id ?? null,
+						byCreatedAt,
+					);
+				},
+			)
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "deal_board_items",
+					filter: `class_id=eq.${classId}`,
+				},
+				(payload) => {
+					const change = payload as ChangePayload<DealBoardItem>;
+					applyRowEvent(
+						store.dealBoardItems,
+						change.eventType,
+						change.eventType === "DELETE"
+							? null
+							: (change.new as DealBoardItem),
+						change.old?.id ?? null,
+						byCreatedAt,
+					);
+				},
+			)
+			.on(
+				"postgres_changes",
+				{
+					event: "*",
+					schema: "public",
+					table: "deal_ratification_calls",
+					filter: `class_id=eq.${classId}`,
+				},
+				(payload) => {
+					const change = payload as ChangePayload<DealRatificationCall>;
+					applyRowEvent(
+						store.ratificationCalls,
+						change.eventType,
+						change.eventType === "DELETE"
+							? null
+							: (change.new as DealRatificationCall),
 						change.old?.id ?? null,
 						byCreatedAt,
 					);

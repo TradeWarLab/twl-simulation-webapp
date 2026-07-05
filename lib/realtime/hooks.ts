@@ -66,6 +66,14 @@ export function useUserNames() {
 	return useSlice(useClassStore().userNames);
 }
 
+export function useDealBoardItems() {
+	return useSlice(useClassStore().dealBoardItems);
+}
+
+export function useRatificationCalls() {
+	return useSlice(useClassStore().ratificationCalls);
+}
+
 /**
  * Resolves a user's display name, caching results in the store so every
  * consumer (chat, votes) shares one lookup per user.

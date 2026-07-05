@@ -1,5 +1,7 @@
 import type { Message } from "@/app/actions/chat";
 import type {
+	DealBoardItem,
+	DealRatificationCall,
 	TeamCountry,
 	TradeItem,
 	TradeProposal,
@@ -22,6 +24,8 @@ export type RealtimeSnapshot = {
 	proposals: TradeProposal[];
 	votes: Vote[];
 	messages: Message[];
+	dealBoardItems: DealBoardItem[];
+	ratificationCalls: DealRatificationCall[];
 };
 
 export type Slice<T> = {
@@ -102,6 +106,8 @@ export type ClassStore = {
 	proposals: Slice<TradeProposal[]>;
 	votes: Slice<Vote[]>;
 	messages: Slice<Message[]>;
+	dealBoardItems: Slice<DealBoardItem[]>;
+	ratificationCalls: Slice<DealRatificationCall[]>;
 	userNames: Slice<ReadonlyMap<string, string | null>>;
 	/** Static per-session data; a period-change router.refresh() re-renders pages that need fresher values. */
 	teams: { id: string; country: TeamCountry }[];
@@ -134,6 +140,12 @@ export function createClassStore(snapshot: RealtimeSnapshot): ClassStore {
 	const proposals = createSlice([...snapshot.proposals].sort(byCreatedAt));
 	const votes = createSlice([...snapshot.votes].sort(byCreatedAt));
 	const messages = createSlice([...snapshot.messages].sort(byCreatedAt));
+	const dealBoardItems = createSlice(
+		[...snapshot.dealBoardItems].sort(byCreatedAt),
+	);
+	const ratificationCalls = createSlice(
+		[...snapshot.ratificationCalls].sort(byCreatedAt),
+	);
 	const userNames = createSlice<ReadonlyMap<string, string | null>>(
 		seedUserNames(snapshot),
 	);
@@ -144,6 +156,8 @@ export function createClassStore(snapshot: RealtimeSnapshot): ClassStore {
 		proposals,
 		votes,
 		messages,
+		dealBoardItems,
+		ratificationCalls,
 		userNames,
 		teams: snapshot.teams,
 		teamMemberCounts: snapshot.teamMemberCounts,
@@ -153,6 +167,8 @@ export function createClassStore(snapshot: RealtimeSnapshot): ClassStore {
 			proposals.set([...next.proposals].sort(byCreatedAt));
 			votes.set([...next.votes].sort(byCreatedAt));
 			messages.set([...next.messages].sort(byCreatedAt));
+			dealBoardItems.set([...next.dealBoardItems].sort(byCreatedAt));
+			ratificationCalls.set([...next.ratificationCalls].sort(byCreatedAt));
 			userNames.set(seedUserNames(next, userNames.get()));
 		},
 		cacheUserName(userId, name) {
