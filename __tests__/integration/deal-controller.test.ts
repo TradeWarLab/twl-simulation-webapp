@@ -1,6 +1,11 @@
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { addBoardItem, removeBoardItem } from "@/app/actions/deal-controller";
+import {
+	addBoardItem,
+	callForRatification,
+	removeBoardItem,
+	withdrawRatificationCall,
+} from "@/app/actions/deal-controller";
 import { createChainableBuilder, mockClient } from "../helpers/supabase-mock";
 
 // Route table names to per-table builders; returns builders for assertions.
@@ -219,5 +224,114 @@ describe("removeBoardItem", () => {
 			error: "The board is frozen while the final vote is open",
 		});
 		expect(builders.get("deal_board_items")?.delete).toBeUndefined();
+	});
+});
+
+const BOARD_ROWS = [
+	{ item_id: "item-1", name: "Steel Tariffs", giving_team_id: "team-usa" },
+	{
+		item_id: "item-2",
+		name: "Rare Earth Access",
+		giving_team_id: "team-china",
+	},
+];
+
+describe("callForRatification", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("records the first team's call without opening a vote", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = { data: BOARD_ROWS, error: null };
+		// After upsert, only our own team has called.
+		responses.deal_ratification_calls = {
+			data: [{ team_id: "team-usa" }],
+			error: null,
+		};
+		const builders = mockTables(responses);
+
+		const result = await callForRatification("class-1");
+
+		expect(result).toEqual({ success: true, voteOpened: false });
+		expect(
+			builders.get("deal_ratification_calls")!.upsert,
+		).toHaveBeenCalledWith(
+			{ class_id: "class-1", team_id: "team-usa", called_by: "user-1" },
+			{ onConflict: "class_id,team_id" },
+		);
+		expect(builders.get("trade_proposals")!.insert).not.toHaveBeenCalled();
+	});
+
+	it("opens the vote when the second team completes the handshake", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = { data: BOARD_ROWS, error: null };
+		responses.deal_ratification_calls = {
+			data: [{ team_id: "team-china" }, { team_id: "team-usa" }],
+			error: null,
+		};
+		const builders = mockTables(responses);
+
+		const result = await callForRatification("class-1");
+
+		expect(result).toEqual({ success: true, voteOpened: true });
+		expect(builders.get("trade_proposals")!.insert).toHaveBeenCalledWith({
+			class_id: "class-1",
+			proposing_team_id: "team-usa",
+			receiving_team_id: "team-china",
+			offered_items: [{ item_id: "item-1", name: "Steel Tariffs" }],
+			requested_items: [{ item_id: "item-2", name: "Rare Earth Access" }],
+			status: "pending",
+			is_package: true,
+			created_by: "user-1",
+		});
+	});
+
+	it("rejects an empty board", async () => {
+		const responses = baselineResponses();
+		responses.deal_board_items = { data: [], error: null };
+		mockTables(responses);
+
+		const result = await callForRatification("class-1");
+		expect(result).toEqual({
+			error: "Add at least one item to the board before calling a vote",
+		});
+	});
+
+	it("rejects while a package vote is already pending", async () => {
+		const responses = baselineResponses();
+		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
+		mockTables(responses);
+
+		const result = await callForRatification("class-1");
+		expect(result).toEqual({ error: "A final vote is already open" });
+	});
+});
+
+describe("withdrawRatificationCall", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("deletes the caller team's call", async () => {
+		const builders = mockTables(baselineResponses());
+
+		const result = await withdrawRatificationCall("class-1");
+
+		expect(result).toEqual({ success: true });
+		expect(builders.get("deal_ratification_calls")!.delete).toHaveBeenCalled();
+		expect(builders.get("deal_ratification_calls")!.eq).toHaveBeenCalledWith(
+			"team_id",
+			"team-usa",
+		);
+	});
+
+	it("rejects once the final vote has opened", async () => {
+		const responses = baselineResponses();
+		responses.trade_proposals = { data: { id: "pkg-1" }, error: null };
+		mockTables(responses);
+
+		const result = await withdrawRatificationCall("class-1");
+		expect(result).toEqual({ error: "The final vote has already opened" });
 	});
 });

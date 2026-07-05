@@ -166,3 +166,108 @@ export async function removeBoardItem(classId: string, boardItemId: string) {
 	revalidatePath(`/student/simulation/${classId}`);
 	return { success: true };
 }
+
+export async function callForRatification(classId: string) {
+	const ctx = await getStudentContext(classId);
+	if ("error" in ctx) return { error: ctx.error };
+	const { supabase, user, teamId } = ctx;
+
+	const pendingPackage = await findPendingPackage(supabase, classId);
+	if (pendingPackage.error) {
+		return { error: "Could not verify the board status" };
+	}
+	if (pendingPackage.pending) {
+		return { error: "A final vote is already open" };
+	}
+
+	const { data: boardRows } = await supabase
+		.from("deal_board_items")
+		.select("item_id, name, giving_team_id")
+		.eq("class_id", classId);
+	if (!boardRows || boardRows.length === 0) {
+		return {
+			error: "Add at least one item to the board before calling a vote",
+		};
+	}
+
+	const { error: callError } = await supabase
+		.from("deal_ratification_calls")
+		.upsert(
+			{ class_id: classId, team_id: teamId, called_by: user.id },
+			{ onConflict: "class_id,team_id" },
+		);
+	if (callError) {
+		console.error("Error recording ratification call:", callError);
+		return { error: callError.message };
+	}
+
+	const { data: calls } = await supabase
+		.from("deal_ratification_calls")
+		.select("team_id")
+		.eq("class_id", classId);
+	const teamsCalled = new Set((calls ?? []).map((call) => call.team_id));
+
+	if (teamsCalled.size < 2) {
+		revalidatePath(`/student/simulation/${classId}`);
+		return { success: true, voteOpened: false };
+	}
+
+	// Handshake complete — snapshot the board into a package proposal.
+	// Convention: proposing team = the team whose call completed the handshake.
+	const otherTeamId = [...teamsCalled].find((id) => id !== teamId);
+	if (!otherTeamId) return { error: "Opposing team not found" };
+
+	const offered = boardRows
+		.filter((row) => row.giving_team_id === teamId)
+		.map((row) => ({ item_id: row.item_id, name: row.name }));
+	const requested = boardRows
+		.filter((row) => row.giving_team_id !== teamId)
+		.map((row) => ({ item_id: row.item_id, name: row.name }));
+
+	const { error: proposalError } = await supabase
+		.from("trade_proposals")
+		.insert({
+			class_id: classId,
+			proposing_team_id: teamId,
+			receiving_team_id: otherTeamId,
+			offered_items: offered,
+			requested_items: requested,
+			status: "pending",
+			is_package: true,
+			created_by: user.id,
+		});
+	if (proposalError) {
+		console.error("Error creating package proposal:", proposalError);
+		return { error: proposalError.message };
+	}
+
+	revalidatePath(`/student/simulation/${classId}`);
+	return { success: true, voteOpened: true };
+}
+
+export async function withdrawRatificationCall(classId: string) {
+	const ctx = await getStudentContext(classId);
+	if ("error" in ctx) return { error: ctx.error };
+	const { supabase, teamId } = ctx;
+
+	const pendingPackage = await findPendingPackage(supabase, classId);
+	if (pendingPackage.error) {
+		return { error: "Could not verify the board status" };
+	}
+	if (pendingPackage.pending) {
+		return { error: "The final vote has already opened" };
+	}
+
+	const { error } = await supabase
+		.from("deal_ratification_calls")
+		.delete()
+		.eq("class_id", classId)
+		.eq("team_id", teamId);
+	if (error) {
+		console.error("Error withdrawing ratification call:", error);
+		return { error: error.message };
+	}
+
+	revalidatePath(`/student/simulation/${classId}`);
+	return { success: true };
+}
