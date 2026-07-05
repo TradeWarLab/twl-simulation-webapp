@@ -383,6 +383,19 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 			// All approved → execute the trade
 			await executeTrade(proposalId);
 		}
+
+		if (proposal.is_package) {
+			// All-or-nothing ratification: rejection erases the shared board
+			// (blank-slate reset); execution clears now-resolved leftovers.
+			await supabase
+				.from("deal_board_items")
+				.delete()
+				.eq("class_id", proposal.class_id);
+			await supabase
+				.from("deal_ratification_calls")
+				.delete()
+				.eq("class_id", proposal.class_id);
+		}
 	}
 
 	revalidatePath(`/student/simulation/${proposal.class_id}`);
