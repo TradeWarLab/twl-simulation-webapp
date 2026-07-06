@@ -16,6 +16,7 @@ export function SignUpForm({
 	const [error, setError] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isInstructor, setIsInstructor] = useState(false);
+	const [consent, setConsent] = useState(false);
 	const [passwordMismatch, setPasswordMismatch] = useState(false);
 
 	async function clientAction(formData: FormData) {
@@ -23,6 +24,14 @@ export function SignUpForm({
 		setError(null);
 		setSuccess(null);
 		setPasswordMismatch(false);
+
+		if (!consent) {
+			setError(
+				"Please agree to the Privacy Policy and Terms of Use to continue.",
+			);
+			setIsLoading(false);
+			return;
+		}
 
 		const password = String(formData.get("password") || "");
 		const confirmPassword = String(formData.get("confirm_password") || "");
@@ -212,6 +221,46 @@ export function SignUpForm({
 								<Label htmlFor="role">Sign up as Instructor?</Label>
 							</div>
 
+							<div className="flex items-start gap-2">
+								<input
+									type="checkbox"
+									id="consent"
+									name="consent"
+									checked={consent}
+									onChange={(e) => setConsent(e.target.checked)}
+									required
+									className="mt-0.5 h-4 w-4 accent-black"
+								/>
+								<Label
+									htmlFor="consent"
+									className="text-sm font-normal leading-snug"
+									style={{
+										fontFamily: "'Helvetica Neue', Arial, sans-serif",
+									}}
+								>
+									I agree to the{" "}
+									<Link
+										href="/privacy"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="underline underline-offset-2"
+									>
+										Privacy Policy
+									</Link>{" "}
+									and{" "}
+									<Link
+										href="/terms"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="underline underline-offset-2"
+									>
+										Terms of Use
+									</Link>
+									, and I consent to the collection of my simulation activity
+									for educational and research purposes.
+								</Label>
+							</div>
+
 							{error && (
 								<p
 									className="text-sm text-red-600"
@@ -225,7 +274,7 @@ export function SignUpForm({
 							<Button
 								type="submit"
 								className="w-full rounded-none border-2 border-foreground bg-foreground px-6 py-5 text-xs font-bold uppercase tracking-[0.35em] text-background hover:bg-foreground/90"
-								disabled={isLoading}
+								disabled={isLoading || !consent}
 							>
 								{isLoading ? "Creating account..." : "Sign up"}
 							</Button>

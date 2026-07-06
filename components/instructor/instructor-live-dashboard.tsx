@@ -452,7 +452,6 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 
 				<SectionCard
 					title="Live Deal Board"
-					description="The shared bilateral deal as both teams build it — with each side's own point valuation of every item."
 					icon={<Handshake className="h-5 w-5 text-primary" />}
 				>
 					{board.rows.length === 0 ? (

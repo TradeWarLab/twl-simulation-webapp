@@ -42,11 +42,11 @@ async function StudentDashboardInner() {
 	const enrolledClasses = await getStudentClasses();
 
 	return (
-		<div className="container mx-auto p-8">
+		<div className="container mx-auto p-4 sm:p-8">
 			<ThemeInitializer userRole="student" />
-			<div className="flex justify-between items-center mb-8">
-				<h1 className="text-3xl font-bold">Student Dashboard</h1>
-				<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5">
+			<div className="flex justify-between items-center gap-3 mb-8">
+				<h1 className="text-2xl sm:text-3xl font-bold">Student Dashboard</h1>
+				<div className="flex items-center gap-2 border border-border rounded-full px-3 py-1.5 shrink-0">
 					<ThemeSwitcher />
 					<ProfileMenu email={user.email ?? ""} />
 				</div>

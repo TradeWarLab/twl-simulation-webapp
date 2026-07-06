@@ -46,7 +46,9 @@ describe("SimulationHeader Component", () => {
 
 		expect(screen.getByText("Global Economics")).toBeInTheDocument();
 		expect(screen.getByText("USA")).toBeInTheDocument();
-		expect(screen.getByText("Negotiation 1")).toBeInTheDocument();
+		// The phase label is rendered in both the desktop and mobile layouts
+		// (only one is visible at a time via responsive CSS).
+		expect(screen.getAllByText("Negotiation 1").length).toBeGreaterThan(0);
 	});
 
 	it("renders unassigned state when no team", () => {
