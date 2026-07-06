@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 import Image from "next/image";
+import { useState } from "react";
 
 export function HomeNav() {
 	const [hoverLogin, setHoverLogin] = useState(false);
@@ -38,25 +38,38 @@ export function HomeNav() {
 						minWidth: 0,
 					}}
 				>
-					<Image
-						src="/favicon.ico"
-						alt=""
-						width={30}
-						height={30}
-						unoptimized
-						className="h-[30px] w-[30px] shrink-0"
-					/>
-					<span
+					<a
+						href="https://tradewarlab.com"
+						target="_blank"
+						rel="noopener noreferrer"
 						style={{
-							fontFamily: "'Helvetica Neue', Arial, sans-serif",
-							fontSize: "17px",
-							fontWeight: "900",
-							letterSpacing: "-0.5px",
-							overflowWrap: "break-word",
+							display: "flex",
+							alignItems: "center",
+							gap: "12px",
+							textDecoration: "none",
+							color: "#0a0a0a",
+							minWidth: 0,
 						}}
 					>
-						TRADE WAR LAB
-					</span>
+						<Image
+							src="/trade-war-lab-logo.png"
+							alt=""
+							width={30}
+							height={30}
+							style={{ borderRadius: "6px", flexShrink: 0 }}
+						/>
+						<span
+							style={{
+								fontFamily: "'Helvetica Neue', Arial, sans-serif",
+								fontSize: "17px",
+								fontWeight: "900",
+								letterSpacing: "-0.5px",
+								overflowWrap: "break-word",
+							}}
+						>
+							TRADE WAR LAB
+						</span>
+					</a>
 				</div>
 				<div
 					className="home-nav-actions"

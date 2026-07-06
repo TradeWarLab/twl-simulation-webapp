@@ -6,7 +6,11 @@ type FooterGroup = { title: string; links: FooterLink[] };
 
 const LAB_LINKS: FooterLink[] = [
 	{ label: "Substack", href: "https://tradewarlab.com", external: true },
-	{ label: "LinkedIn", href: "https://www.linkedin.com/company/the-trade-war-lab", external: true, },
+	{
+		label: "LinkedIn",
+		href: "https://www.linkedin.com/company/the-trade-war-lab",
+		external: true,
+	},
 ];
 
 const LEGAL_LINKS: FooterLink[] = [
@@ -18,7 +22,6 @@ const GROUPS: FooterGroup[] = [
 	{ title: "Trade War Lab", links: LAB_LINKS },
 	{ title: "Legal", links: LEGAL_LINKS },
 ];
-
 
 const COPYRIGHT_YEAR = 2026;
 const UI_FONT = "'Helvetica Neue', Arial, sans-serif";
@@ -54,18 +57,23 @@ export function SiteFooter() {
 			<div className="mx-auto w-full max-w-6xl px-6 py-12 sm:py-16">
 				<div className="flex flex-col justify-between gap-12 md:flex-row">
 					<div className="flex flex-col justify-between gap-10">
-						<div className="flex items-center gap-2.5">
-
+						<a
+							href="https://tradewarlab.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="group flex items-center gap-2.5"
+						>
+							{/* The lab's site/Substack logo (lifted from its header).
+							    Decorative alt — the wordmark carries the link's name. */}
 							<Image
-								src="/favicon.ico"
+								src="/trade-war-lab-logo.png"
 								alt=""
-								width={26}
-								height={26}
-								unoptimized
-								className="h-[26px] w-[26px] shrink-0"
+								width={28}
+								height={28}
+								className="h-7 w-7 shrink-0 rounded-md"
 							/>
 							<span
-								className="text-foreground"
+								className="text-foreground transition-opacity group-hover:opacity-70"
 								style={{
 									fontSize: "17px",
 									fontWeight: 900,
@@ -74,7 +82,7 @@ export function SiteFooter() {
 							>
 								TRADE WAR LAB
 							</span>
-						</div>
+						</a>
 						<div className="text-xs text-muted-foreground">
 							© {COPYRIGHT_YEAR} Trade War Lab
 						</div>
