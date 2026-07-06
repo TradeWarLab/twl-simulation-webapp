@@ -442,11 +442,6 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 							usa={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
 							china={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
 						/>
-						<p className="text-xs text-muted-foreground">
-							Scores count only ratified (passed) items — each side&apos;s own
-							value of the asks and concessions in executed deals. The winner is
-							whoever holds the higher total.
-						</p>
 					</div>
 				</SectionCard>
 
@@ -543,10 +538,6 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 					value="Proposal Queue"
 					className="rounded-2xl border border-border/70 bg-card p-5"
 				>
-					<div className="mb-4 text-sm text-muted-foreground">
-						Pending and executed deals, with vote state and the ability to
-						spotlight one for discussion.
-					</div>
 					<ScrollArea className="h-[500px] pr-4">
 						<div className="grid gap-4 xl:grid-cols-2">
 							{proposals.length === 0 ? (
@@ -600,10 +591,6 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 					value="Trade Breakdown"
 					className="rounded-2xl border border-border/70 bg-card p-5"
 				>
-					<div className="mb-4 text-sm text-muted-foreground">
-						Full item-level breakdown for both teams, preserved but no longer
-						forced into the instructor’s first read.
-					</div>
 					<div className="pt-2">
 						<ManageItemsClient
 							classId={classRecord.id}

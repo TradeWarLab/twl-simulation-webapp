@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { HomeHero } from "@/components/shared/home-hero";
 import { HomeNav } from "@/components/shared/home-nav";
+import { SiteFooter } from "@/components/shared/site-footer";
 
 export default function Home() {
 	const [mounted, setMounted] = useState(false);
@@ -55,6 +56,8 @@ export default function Home() {
 				{/* Top section: centered */}
 				<HomeHero />
 			</main>
+
+			<SiteFooter />
 
 			<style jsx>{`
         @media (max-width: 900px) {

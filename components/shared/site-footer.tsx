@@ -1,0 +1,104 @@
+import Image from "next/image";
+import Link from "next/link";
+
+type FooterLink = { label: string; href: string; external?: boolean };
+type FooterGroup = { title: string; links: FooterLink[] };
+
+const LAB_LINKS: FooterLink[] = [
+	{ label: "Substack", href: "https://tradewarlab.com", external: true },
+	{ label: "LinkedIn", href: "https://www.linkedin.com/company/the-trade-war-lab", external: true, },
+];
+
+const LEGAL_LINKS: FooterLink[] = [
+	{ label: "Privacy", href: "/privacy" },
+	{ label: "Terms", href: "/terms" },
+];
+
+const GROUPS: FooterGroup[] = [
+	{ title: "Trade War Lab", links: LAB_LINKS },
+	{ title: "Legal", links: LEGAL_LINKS },
+];
+
+
+const COPYRIGHT_YEAR = 2026;
+const UI_FONT = "'Helvetica Neue', Arial, sans-serif";
+
+function FooterAnchor({ link }: { link: FooterLink }) {
+	const className =
+		"text-muted-foreground transition-colors hover:text-foreground";
+	if (link.external) {
+		return (
+			<a
+				href={link.href}
+				target="_blank"
+				rel="noopener noreferrer"
+				className={className}
+			>
+				{link.label}
+			</a>
+		);
+	}
+	return (
+		<Link href={link.href} className={className}>
+			{link.label}
+		</Link>
+	);
+}
+
+export function SiteFooter() {
+	return (
+		<footer
+			className="border-t bg-background text-foreground"
+			style={{ fontFamily: UI_FONT }}
+		>
+			<div className="mx-auto w-full max-w-6xl px-6 py-12 sm:py-16">
+				<div className="flex flex-col justify-between gap-12 md:flex-row">
+					<div className="flex flex-col justify-between gap-10">
+						<div className="flex items-center gap-2.5">
+
+							<Image
+								src="/favicon.ico"
+								alt=""
+								width={26}
+								height={26}
+								unoptimized
+								className="h-[26px] w-[26px] shrink-0"
+							/>
+							<span
+								className="text-foreground"
+								style={{
+									fontSize: "17px",
+									fontWeight: 900,
+									letterSpacing: "-0.5px",
+								}}
+							>
+								TRADE WAR LAB
+							</span>
+						</div>
+						<div className="text-xs text-muted-foreground">
+							© {COPYRIGHT_YEAR} Trade War Lab
+						</div>
+					</div>
+
+					{/* Link groups */}
+					<div className="grid grid-cols-2 gap-x-12 gap-y-10 sm:gap-x-20">
+						{GROUPS.map((group) => (
+							<div key={group.title}>
+								<div className="mb-4 text-sm font-bold text-foreground">
+									{group.title}
+								</div>
+								<ul className="space-y-2.5 text-sm">
+									{group.links.map((link) => (
+										<li key={link.label}>
+											<FooterAnchor link={link} />
+										</li>
+									))}
+								</ul>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</footer>
+	);
+}

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 
 export function HomeNav() {
 	const [hoverLogin, setHoverLogin] = useState(false);
@@ -37,6 +38,14 @@ export function HomeNav() {
 						minWidth: 0,
 					}}
 				>
+					<Image
+						src="/favicon.ico"
+						alt=""
+						width={30}
+						height={30}
+						unoptimized
+						className="h-[30px] w-[30px] shrink-0"
+					/>
 					<span
 						style={{
 							fontFamily: "'Helvetica Neue', Arial, sans-serif",
