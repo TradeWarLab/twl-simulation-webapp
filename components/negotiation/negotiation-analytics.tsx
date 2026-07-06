@@ -261,12 +261,22 @@ function TimelineView({ proposals }: { proposals: TradeProposal[] }) {
 	);
 }
 
+function signedText(value: number) {
+	return value > 0 ? `+${value}` : `${value}`;
+}
+
+function signedColor(value: number) {
+	if (value > 0) return "text-emerald-600";
+	if (value < 0) return "text-red-600";
+	return "text-muted-foreground";
+}
+
 function AgreementView({
 	proposals,
 	allResolvedItems,
 }: {
 	proposals: TradeProposal[];
-	allResolvedItems: TradeItem[];
+	allResolvedItems: (TradeItem & { team: { country: string } })[];
 }) {
 	if (proposals.length === 0) {
 		return (
@@ -276,32 +286,81 @@ function AgreementView({
 		);
 	}
 
+	// Each ratified issue has a mirror row per team; group them so every clause
+	// shows BOTH sides' point valuations. (Opponent values are only readable
+	// once the class reaches the End phase — see the reveal RLS policy.)
+	const clauses = Object.values(
+		allResolvedItems.reduce(
+			(acc, item) => {
+				const key = item.issue_id || item.name;
+				if (!acc[key]) acc[key] = { name: item.name, usa: 0, china: 0 };
+				if (item.team.country === "USA") acc[key].usa = Number(item.value);
+				else if (item.team.country === "China")
+					acc[key].china = Number(item.value);
+				return acc;
+			},
+			{} as Record<string, { name: string; usa: number; china: number }>,
+		),
+	);
+
+	const usaTotal = clauses.reduce((sum, c) => sum + c.usa, 0);
+	const chinaTotal = clauses.reduce((sum, c) => sum + c.china, 0);
+
 	return (
 		<div className="space-y-8">
 			<div>
 				<h3 className="text-sm font-black uppercase tracking-widest text-foreground mb-6">
 					Final Ratified Clauses
 				</h3>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					{allResolvedItems
-						.filter((i) => i.team_id === allResolvedItems[0].team_id)
-						.map((item) => {
-							// This section is slightly complex because values are relative.
-							// Show the item and its impact on the team viewer.
-							return (
-								<div
-									key={item.id}
-									className="bg-background border-2 rounded-xl p-4 flex items-center justify-between"
-								>
-									<span className="text-xs font-bold">{item.name}</span>
-									<span
-										className={`text-xs font-black ${item.value > 0 ? "text-emerald-600" : item.value < 0 ? "text-red-600" : ""}`}
-									>
-										{item.value > 0 ? `+${item.value}` : item.value}
+				<div className="grid grid-cols-1 gap-3">
+					{clauses.map((clause) => (
+						<div
+							key={clause.name}
+							className="bg-background border-2 rounded-xl p-4 flex items-center justify-between gap-4"
+						>
+							<span className="text-xs font-bold flex-1">{clause.name}</span>
+							<div className="flex items-center gap-4 shrink-0 text-xs font-black tabular-nums">
+								<span className="flex items-center gap-1.5">
+									<span className="text-[10px] uppercase tracking-wider text-blue-600">
+										USA
 									</span>
-								</div>
-							);
-						})}
+									<span className={signedColor(clause.usa)}>
+										{signedText(clause.usa)}
+									</span>
+								</span>
+								<span className="flex items-center gap-1.5">
+									<span className="text-[10px] uppercase tracking-wider text-red-600">
+										PRC
+									</span>
+									<span className={signedColor(clause.china)}>
+										{signedText(clause.china)}
+									</span>
+								</span>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+
+			{/* Relative totals — the winner is whoever's total is higher. */}
+			<div className="grid grid-cols-2 gap-4">
+				<div className="rounded-xl border-2 border-blue-500/20 bg-blue-500/5 p-4 text-center">
+					<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+						USA total
+					</div>
+					<div className={`mt-1 text-2xl font-black ${signedColor(usaTotal)}`}>
+						{signedText(usaTotal)}
+					</div>
+				</div>
+				<div className="rounded-xl border-2 border-red-500/20 bg-red-500/5 p-4 text-center">
+					<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+						PRC total
+					</div>
+					<div
+						className={`mt-1 text-2xl font-black ${signedColor(chinaTotal)}`}
+					>
+						{signedText(chinaTotal)}
+					</div>
 				</div>
 			</div>
 		</div>

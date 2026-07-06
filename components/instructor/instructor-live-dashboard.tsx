@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Download } from "lucide-react";
+import { Activity, Download, Handshake } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,12 +11,14 @@ import {
 	downloadTradeDataCsv,
 	downloadTradeItemValuesCsv,
 } from "@/lib/csv-export";
-import { enrichProposal } from "@/lib/realtime/derive";
+import { buildViewerValueMap, enrichProposal } from "@/lib/realtime/derive";
 import {
 	useClassRecord,
 	useClassStore,
+	useDealBoardItems,
 	useMessages,
 	useProposals,
+	useRatificationCalls,
 	useTradeItems,
 	useUserNames,
 	useVotes,
@@ -115,6 +117,94 @@ function StandingsCard({
 	);
 }
 
+function formatSigned(value: number) {
+	return value > 0 ? `+${value}` : `${value}`;
+}
+
+function signedTone(value: number) {
+	if (value > 0) return "text-emerald-600 dark:text-emerald-400";
+	if (value < 0) return "text-red-600 dark:text-red-400";
+	return "text-muted-foreground";
+}
+
+function BoardTotalCard({
+	label,
+	total,
+	accent,
+	called,
+}: {
+	label: string;
+	total: number;
+	accent: "usa" | "china";
+	called: boolean;
+}) {
+	return (
+		<div
+			className={cn(
+				"flex items-center justify-between rounded-xl border p-4",
+				accent === "usa"
+					? "border-blue-500/20 bg-blue-500/5"
+					: "border-red-500/20 bg-red-500/5",
+			)}
+		>
+			<div>
+				<div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+					{label}
+				</div>
+				{called && (
+					<div className="mt-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+						Called for final vote
+					</div>
+				)}
+			</div>
+			<div
+				className={cn("text-3xl font-semibold tabular-nums", signedTone(total))}
+			>
+				{formatSigned(total)}
+			</div>
+		</div>
+	);
+}
+
+function RelativeLead({
+	usa,
+	china,
+	prospective,
+}: {
+	usa: number;
+	china: number;
+	/** True when comparing the un-ratified board rather than final scores. */
+	prospective?: boolean;
+}) {
+	const diff = Math.abs(usa - china);
+	const leader = usa === china ? null : usa > china ? "USA" : "PRC";
+	const suffix = prospective ? " if this deal passes" : "";
+	return (
+		<div className="rounded-xl border bg-muted/30 p-4 text-center">
+			<div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+				Relative standing
+			</div>
+			<div className="mt-1 text-lg font-semibold">
+				{leader === null ? (
+					<span className="text-muted-foreground">
+						Tied at {formatSigned(usa)}
+						{suffix}
+					</span>
+				) : (
+					<>
+						<span
+							className={leader === "USA" ? "text-blue-600" : "text-red-600"}
+						>
+							{leader} leads by {diff}
+						</span>
+						<span className="text-muted-foreground">{suffix}</span>
+					</>
+				)}
+			</div>
+		</div>
+	);
+}
+
 export function InstructorLiveDashboard({ roster }: DashboardProps) {
 	const store = useClassStore();
 	const classRecord = useClassRecord();
@@ -123,6 +213,8 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 	const votes = useVotes();
 	const rawMessages = useMessages();
 	const userNames = useUserNames();
+	const dealBoardItems = useDealBoardItems();
+	const ratificationCalls = useRatificationCalls();
 	const [highlightedProposalId, setHighlightedProposalId] = useState<
 		string | null
 	>(null);
@@ -230,6 +322,49 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 		[teamMetrics],
 	);
 
+	// Live shared deal board with BOTH teams' valuations. Item values are
+	// per-team (viewer-relative), so the instructor — who has no team — needs
+	// each side's own mirror-row value to read the running totals. Mirrors the
+	// student board's "Your Net Score Impact", shown for USA and China at once.
+	const board = useMemo(() => {
+		const usa = teams.find((team) => team.country === "USA");
+		const china = teams.find((team) => team.country === "China");
+		const usaMap = usa
+			? buildViewerValueMap(tradeItems.filter((i) => i.team_id === usa.id))
+			: undefined;
+		const chinaMap = china
+			? buildViewerValueMap(tradeItems.filter((i) => i.team_id === china.id))
+			: undefined;
+		const lookup = (
+			map: Map<string, number> | undefined,
+			issueId: string | null,
+			name: string,
+		) => (issueId ? map?.get(issueId) : undefined) ?? map?.get(name) ?? 0;
+
+		const rows = dealBoardItems.map((row) => ({
+			id: row.id,
+			name: row.name,
+			givingCountry: teamById.get(row.giving_team_id)?.country ?? "USA",
+			usaValue: lookup(usaMap, row.issue_id, row.name),
+			chinaValue: lookup(chinaMap, row.issue_id, row.name),
+		}));
+		return {
+			rows,
+			usaTotal: rows.reduce((sum, r) => sum + r.usaValue, 0),
+			chinaTotal: rows.reduce((sum, r) => sum + r.chinaValue, 0),
+		};
+	}, [dealBoardItems, tradeItems, teams, teamById]);
+
+	const calledCountries = useMemo(
+		() =>
+			new Set(
+				ratificationCalls
+					.map((call) => teamById.get(call.team_id)?.country)
+					.filter((country): country is TeamCountry => Boolean(country)),
+			),
+		[ratificationCalls, teamById],
+	);
+
 	return (
 		<div className="space-y-6">
 			<div className="grid gap-4">
@@ -290,18 +425,109 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 						</div>
 					}
 				>
-					<div className="grid gap-4 xl:grid-cols-2">
-						<StandingsCard
-							label="Team USA"
-							score={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
-							accent="usa"
+					<div className="space-y-4">
+						<div className="grid gap-4 xl:grid-cols-2">
+							<StandingsCard
+								label="Team USA"
+								score={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
+								accent="usa"
+							/>
+							<StandingsCard
+								label="Team PRC"
+								score={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
+								accent="china"
+							/>
+						</div>
+						<RelativeLead
+							usa={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
+							china={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
 						/>
-						<StandingsCard
-							label="Team PRC"
-							score={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
-							accent="china"
-						/>
+						<p className="text-xs text-muted-foreground">
+							Scores count only ratified (passed) items — each side&apos;s own
+							value of the asks and concessions in executed deals. The winner is
+							whoever holds the higher total.
+						</p>
 					</div>
+				</SectionCard>
+
+				<SectionCard
+					title="Live Deal Board"
+					description="The shared bilateral deal as both teams build it — with each side's own point valuation of every item."
+					icon={<Handshake className="h-5 w-5 text-primary" />}
+				>
+					{board.rows.length === 0 ? (
+						<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+							No items on the deal board yet.
+						</div>
+					) : (
+						<div className="space-y-4">
+							<div className="grid gap-4 sm:grid-cols-2">
+								<BoardTotalCard
+									label="Team USA net"
+									total={board.usaTotal}
+									accent="usa"
+									called={calledCountries.has("USA")}
+								/>
+								<BoardTotalCard
+									label="Team PRC net"
+									total={board.chinaTotal}
+									accent="china"
+									called={calledCountries.has("China")}
+								/>
+							</div>
+							<RelativeLead
+								usa={board.usaTotal}
+								china={board.chinaTotal}
+								prospective
+							/>
+							<div className="overflow-x-auto rounded-xl border">
+								<table className="w-full text-sm">
+									<thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+										<tr>
+											<th className="px-3 py-2 text-left font-semibold">
+												Item
+											</th>
+											<th className="px-3 py-2 text-left font-semibold">
+												Gives
+											</th>
+											<th className="px-3 py-2 text-right font-semibold">
+												USA value
+											</th>
+											<th className="px-3 py-2 text-right font-semibold">
+												PRC value
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										{board.rows.map((row) => (
+											<tr key={row.id} className="border-t">
+												<td className="px-3 py-2">{row.name}</td>
+												<td className="px-3 py-2 text-muted-foreground">
+													{row.givingCountry === "China" ? "PRC" : "USA"}
+												</td>
+												<td
+													className={cn(
+														"px-3 py-2 text-right font-mono tabular-nums",
+														signedTone(row.usaValue),
+													)}
+												>
+													{formatSigned(row.usaValue)}
+												</td>
+												<td
+													className={cn(
+														"px-3 py-2 text-right font-mono tabular-nums",
+														signedTone(row.chinaValue),
+													)}
+												>
+													{formatSigned(row.chinaValue)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					)}
 				</SectionCard>
 			</div>
 

@@ -6,12 +6,24 @@ import {
 	type DragEndEvent,
 	DragOverlay,
 	type DragStartEvent,
+	KeyboardSensor,
+	PointerSensor,
+	TouchSensor,
 	type UniqueIdentifier,
 	useDraggable,
 	useDroppable,
+	useSensor,
+	useSensors,
 } from "@dnd-kit/core";
 import { GripVertical, Info, Plus } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+	useCallback,
+	useEffect,
+	useId,
+	useMemo,
+	useState,
+	useTransition,
+} from "react";
 import {
 	addBoardItem,
 	callForRatification,
@@ -154,6 +166,18 @@ export function SharedDealBoard({
 	const [actionError, setActionError] = useState<string | null>(null);
 	const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 	const [detailItem, setDetailItem] = useState<TradeItem | null>(null);
+	const dndContextId = useId();
+
+	// Explicit sensors with an activation distance so a click on a card's
+	// Add/Info button (or the board's remove/✕ buttons) isn't swallowed as a
+	// drag, and touch drags work on mobile.
+	const sensors = useSensors(
+		useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+		useSensor(TouchSensor, {
+			activationConstraint: { delay: 150, tolerance: 8 },
+		}),
+		useSensor(KeyboardSensor),
+	);
 
 	// Resolve display names for board-row adders that arrived without a join.
 	useEffect(() => {
@@ -173,10 +197,13 @@ export function SharedDealBoard({
 		[teamItems],
 	);
 
-	const valueForRow = (row: DealBoardItem) =>
-		(row.issue_id ? viewerValueMap.get(row.issue_id) : undefined) ??
-		viewerValueMap.get(row.name) ??
-		0;
+	const valueForRow = useCallback(
+		(row: DealBoardItem) =>
+			(row.issue_id ? viewerValueMap.get(row.issue_id) : undefined) ??
+			viewerValueMap.get(row.name) ??
+			0,
+		[viewerValueMap],
+	);
 
 	const addedByLabel = (row: DealBoardItem) =>
 		userNames.get(row.added_by) ??
@@ -201,9 +228,7 @@ export function SharedDealBoard({
 
 	const netScore = useMemo(
 		() => boardItems.reduce((sum, row) => sum + valueForRow(row), 0),
-		// valueForRow is stable per viewerValueMap
-		// biome-ignore lint/correctness/useExhaustiveDependencies: derived via viewerValueMap
-		[boardItems, viewerValueMap],
+		[boardItems, valueForRow],
 	);
 
 	const myTeamCalled = ratificationCalls.some(
@@ -212,6 +237,11 @@ export function SharedDealBoard({
 	const otherTeamCalled = ratificationCalls.some(
 		(call) => call.team_id !== myTeamId,
 	);
+
+	// The board is read-only for adds/drags once the package vote is open
+	// (frozen) OR once my team has locked in its call for a vote — you must
+	// withdraw before editing the deal again.
+	const inputsLocked = frozen || myTeamCalled;
 
 	const runAction = (action: () => Promise<{ error?: string } | undefined>) => {
 		setActionError(null);
@@ -226,7 +256,7 @@ export function SharedDealBoard({
 
 	function handleDragEnd(event: DragEndEvent) {
 		setActiveId(null);
-		if (frozen) return;
+		if (inputsLocked) return;
 		const { active, over } = event;
 		if (over?.id === "deal-board") handleAdd(String(active.id));
 	}
@@ -277,18 +307,20 @@ export function SharedDealBoard({
 			)}
 
 			<DndContext
+				sensors={sensors}
 				collisionDetection={closestCenter}
 				onDragStart={(event: DragStartEvent) => setActiveId(event.active.id)}
 				onDragEnd={handleDragEnd}
+				id={dndContextId}
 			>
 				<div className="grid grid-cols-1 md:grid-cols-[minmax(180px,1fr)_2fr] gap-3 flex-1 min-h-0">
 					{/* Inventory rail */}
-					<div className="space-y-2 min-h-0 flex flex-col">
+					<div className="space-y-2 min-h-0 flex flex-col min-w-0">
 						<div className="text-xs font-medium text-muted-foreground px-1">
 							Team {myTeamCountry} — concessions &amp; asks
 						</div>
-						<div className="rounded-lg border bg-background overflow-hidden flex-1">
-							<ScrollArea className="h-full max-h-[320px]">
+						<div className="rounded-lg border bg-background overflow-hidden flex-1 min-h-0">
+							<ScrollArea className="h-full">
 								<div className="grid grid-cols-1 gap-2 p-3">
 									{inventory.length === 0 ? (
 										<p className="text-xs text-muted-foreground italic p-2 text-center">
@@ -304,7 +336,7 @@ export function SharedDealBoard({
 														? opponentTeamCountry
 														: myTeamCountry
 												}
-												disabled={frozen || isPending}
+												disabled={inputsLocked || isPending}
 												onAdd={() => handleAdd(item.id)}
 												onView={() => setDetailItem(item)}
 											/>
@@ -316,72 +348,76 @@ export function SharedDealBoard({
 					</div>
 
 					{/* Shared board */}
-					<div className="space-y-2 min-h-0 flex flex-col">
+					<div className="space-y-2 min-h-0 flex flex-col min-w-0">
 						<div className="text-xs font-medium text-muted-foreground px-1">
 							Shared Deal Board
 						</div>
 						<div
 							ref={setBoardRef}
 							className={[
-								"flex-1 min-h-[200px] rounded-xl border-2 border-dashed p-3 transition-all",
+								"flex-1 min-h-[160px] rounded-xl border-2 border-dashed transition-all overflow-hidden",
 								isOver && !frozen
 									? "border-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/30"
 									: "border-indigo-200 dark:border-indigo-800",
 							].join(" ")}
 						>
 							{boardItems.length === 0 ? (
-								<div className="flex items-center justify-center h-full text-xs text-muted-foreground italic">
+								<div className="flex items-center justify-center h-full p-3 text-xs text-muted-foreground italic text-center">
 									Drag items here or press add — both teams see this board live
 								</div>
 							) : (
-								<div className="flex flex-col gap-2">
-									{boardItems.map((row) => {
-										const value = valueForRow(row);
-										const givesCountry =
-											row.giving_team_id === myTeamId
-												? myTeamCountry
-												: opponentTeamCountry;
-										return (
-											<div
-												key={row.id}
-												className={[
-													"flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium",
-													countryTone(givesCountry),
-												].join(" ")}
-											>
-												<span className="flex flex-1 min-w-0 flex-col text-left">
-													<span className="line-clamp-2 leading-snug">
-														{row.name}
-													</span>
-													<span className="text-[10px] text-muted-foreground/70">
-														Added by {addedByLabel(row)}
-													</span>
-												</span>
-												<span className="text-[10px] text-muted-foreground whitespace-nowrap">
-													{givesCountry} gives
-												</span>
-												<span
-													className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${valueTone(value)}`}
+								<ScrollArea className="h-full">
+									<div className="flex flex-col gap-2 p-3">
+										{boardItems.map((row) => {
+											const value = valueForRow(row);
+											const givesCountry =
+												row.giving_team_id === myTeamId
+													? myTeamCountry
+													: opponentTeamCountry;
+											return (
+												<div
+													key={row.id}
+													className={[
+														"flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium",
+														countryTone(givesCountry),
+													].join(" ")}
 												>
-													{formatValue(value)}
-												</span>
-												{!frozen && (
-													<button
-														type="button"
-														disabled={isPending}
-														onClick={() =>
-															runAction(() => removeBoardItem(classId, row.id))
-														}
-														aria-label={`Remove ${row.name}`}
-														className="w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors disabled:opacity-40"
+													<span className="flex flex-1 min-w-0 flex-col text-left">
+														<span className="line-clamp-2 leading-snug">
+															{row.name}
+														</span>
+														<span className="text-[10px] text-muted-foreground/70">
+															Added by {addedByLabel(row)}
+														</span>
+													</span>
+													<span className="text-[10px] text-muted-foreground whitespace-nowrap">
+														{givesCountry} gives
+													</span>
+													<span
+														className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${valueTone(value)}`}
 													>
-														✕
-													</button>
-												)}
-											</div>
-										);
-									})}
-								</div>
+														{formatValue(value)}
+													</span>
+													{!frozen && (
+														<button
+															type="button"
+															disabled={isPending}
+															onClick={() =>
+																runAction(() =>
+																	removeBoardItem(classId, row.id),
+																)
+															}
+															aria-label={`Remove ${row.name}`}
+															className="w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors disabled:opacity-40"
+														>
+															✕
+														</button>
+													)}
+												</div>
+											);
+										})}
+									</div>
+								</ScrollArea>
 							)}
 						</div>
 					</div>

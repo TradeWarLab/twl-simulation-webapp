@@ -316,6 +316,21 @@ create policy "Instructors can manage trade items."
     )
   );
 
+-- Reveal both sides' valuations once the simulation has ended (End phase).
+-- During play, values are confidential (own-team only, above); the post-game
+-- analysis reveals the full picture to any enrolled student.
+create policy "Trade items revealed after the simulation ends."
+  on public.trade_items for select using (
+    exists (
+      select 1
+      from public.classes c
+      join public.students_classes sc on sc.class_id = c.id
+      where c.id = trade_items.class_id
+        and sc.student_id = auth.uid()
+        and c.current_period >= 3
+    )
+  );
+
 
 -- ──────────────────────────────────────────────
 -- 9. Negotiation Actions (individual asks/concessions)
@@ -657,6 +672,101 @@ begin
   where class_id = v_class_id and lower(email) = lower(v_user_email);
 end;
 $$ language plpgsql security definer;
+
+
+-- ──────────────────────────────────────────────
+-- finalize_ratified_package: RPC for resolving a unanimously-approved deal
+-- Runs with elevated privileges so it can resolve BOTH teams' trade_items and
+-- score both sides (student RLS only exposes a student's own team). Guarded by
+-- a unanimous-approval re-check so it can't be abused via a direct RPC call.
+-- ──────────────────────────────────────────────
+
+create or replace function public.finalize_ratified_package(p_proposal_id uuid)
+returns void as $$
+declare
+  v_class_id uuid;
+  v_proposing uuid;
+  v_receiving uuid;
+  v_is_package boolean;
+  v_total int;
+  v_votes int;
+  v_rejections int;
+  v_item_ids uuid[];
+begin
+  select class_id, proposing_team_id, receiving_team_id, is_package
+    into v_class_id, v_proposing, v_receiving, v_is_package
+  from public.trade_proposals
+  where id = p_proposal_id and status = 'pending';
+
+  if v_class_id is null then
+    return;
+  end if;
+
+  if not exists (
+    select 1 from public.students_classes
+    where student_id = auth.uid() and class_id = v_class_id
+  ) then
+    raise exception 'Not authorized to finalize this deal';
+  end if;
+
+  select count(*) into v_total
+    from public.students_classes
+    where team_id in (v_proposing, v_receiving);
+  select count(*) into v_votes
+    from public.votes where proposal_id = p_proposal_id;
+  select count(*) into v_rejections
+    from public.votes where proposal_id = p_proposal_id and vote = 'reject';
+
+  if v_total = 0 or v_votes < v_total or v_rejections > 0 then
+    raise exception 'Deal is not unanimously approved';
+  end if;
+
+  select array_agg((elem->>'item_id')::uuid)
+    into v_item_ids
+  from public.trade_proposals p
+  cross join lateral jsonb_array_elements(
+    coalesce(p.offered_items, '[]'::jsonb) || coalesce(p.requested_items, '[]'::jsonb)
+  ) as elem
+  where p.id = p_proposal_id and (elem->>'item_id') is not null;
+
+  update public.trade_items ti
+     set is_resolved = true
+   where ti.class_id = v_class_id
+     and (
+       ti.issue_id in (
+         select issue_id from public.trade_items
+         where id = any(v_item_ids) and issue_id is not null
+       )
+       or ti.name in (
+         select name from public.trade_items
+         where id = any(v_item_ids) and issue_id is null
+       )
+     );
+
+  update public.trade_proposals set status = 'executed' where id = p_proposal_id;
+
+  insert into public.team_scores (class_id, team_id, score, updated_at)
+  select v_class_id, t.id,
+         coalesce(sum(ti.value) filter (where ti.is_resolved), 0),
+         now()
+    from public.teams t
+    left join public.trade_items ti
+      on ti.team_id = t.id and ti.class_id = v_class_id
+   where t.class_id = v_class_id
+   group by t.id
+  on conflict (class_id, team_id)
+    do update set score = excluded.score, updated_at = excluded.updated_at;
+
+  if v_is_package then
+    delete from public.deal_board_items where class_id = v_class_id;
+    delete from public.deal_ratification_calls where class_id = v_class_id;
+    update public.classes set current_period = 3
+      where id = v_class_id and current_period = 2;
+  end if;
+end;
+$$ language plpgsql security definer;
+
+grant execute on function public.finalize_ratified_package(uuid) to authenticated;
 
 
 -- ──────────────────────────────────────────────

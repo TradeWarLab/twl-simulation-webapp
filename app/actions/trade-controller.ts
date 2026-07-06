@@ -373,37 +373,44 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 		// All votes are in — check for any rejections
 		const hasRejection = votesList.some((v) => v.vote === "reject");
 
-		let executeFailed = false;
 		if (hasRejection) {
 			// Mark as rejected
 			await supabase
 				.from("trade_proposals")
 				.update({ status: "rejected" })
 				.eq("id", proposalId);
+
+			if (proposal.is_package) {
+				// All-or-nothing ratification: rejection erases the shared board
+				// (blank-slate reset). These deletes are allowed for any class
+				// member under RLS, so they can run in the voter's session.
+				await supabase
+					.from("deal_board_items")
+					.delete()
+					.eq("class_id", proposal.class_id);
+				await supabase
+					.from("deal_ratification_calls")
+					.delete()
+					.eq("class_id", proposal.class_id);
+			}
 		} else {
-			// All approved → execute the trade
-			const executeResult = await executeTrade(proposalId);
-			if (executeResult && "error" in executeResult) {
-				executeFailed = true;
+			// Unanimous approval → finalize via a SECURITY DEFINER RPC. It runs
+			// with elevated privileges so it can resolve BOTH teams' trade_items
+			// and score both sides — a student's own session only exposes their
+			// team's rows (RLS), which previously left the opponent unresolved
+			// and scored 0. The RPC also marks the proposal executed, clears the
+			// board, and advances the class to the End phase. On failure the whole
+			// transaction rolls back, leaving the board intact for a retry.
+			const { error: finalizeError } = await supabase.rpc(
+				"finalize_ratified_package",
+				{ p_proposal_id: proposalId },
+			);
+			if (finalizeError) {
 				console.error(
-					"Error executing package trade, leaving board intact for retry:",
-					executeResult.error,
+					"Error finalizing ratified deal, leaving board intact for retry:",
+					finalizeError,
 				);
 			}
-		}
-
-		if (proposal.is_package && !executeFailed) {
-			// All-or-nothing ratification: rejection erases the shared board
-			// (blank-slate reset); execution clears now-resolved leftovers.
-			// If execution failed, leave the board intact so the vote can retry.
-			await supabase
-				.from("deal_board_items")
-				.delete()
-				.eq("class_id", proposal.class_id);
-			await supabase
-				.from("deal_ratification_calls")
-				.delete()
-				.eq("class_id", proposal.class_id);
 		}
 	}
 
@@ -411,7 +418,12 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 	return { success: true };
 }
 
-// Called automatically when both teams unanimously approve.
+// DEPRECATED for the vote path — do not call from a student session. When run
+// as a student, RLS on trade_items only exposes that student's own team, so
+// this resolves/scores a single side (winner +N, loser 0). submitVote now
+// finalizes via the `finalize_ratified_package` SECURITY DEFINER RPC instead.
+// Kept only for potential instructor-side recompute (instructors can read all
+// trade_items). See scripts/migrations/2026-07-06-finalize-package-rls-fix.sql.
 export async function executeTrade(proposalId: string) {
 	const supabase = await createClient();
 

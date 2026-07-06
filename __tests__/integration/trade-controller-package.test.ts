@@ -129,9 +129,10 @@ describe("submitVote — package proposals", () => {
 		).not.toHaveBeenCalled();
 	});
 
-	it("runs executeTrade and cleans up the board when a package proposal is unanimously approved", async () => {
-		// 2 members total; both approve, so submitVote auto-resolves via the
-		// else-branch (executeTrade) rather than the rejection branch.
+	it("finalizes via the SECURITY DEFINER RPC when a package is unanimously approved", async () => {
+		// 2 members total; both approve, so submitVote finalizes the deal through
+		// finalize_ratified_package (which resolves both teams + scores + ends the
+		// round with elevated privileges) rather than the rejection branch.
 		const builders = mockTables({
 			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
 			students_classes: {
@@ -144,15 +145,6 @@ describe("submitVote — package proposals", () => {
 			},
 			deal_board_items: { data: null, error: null },
 			deal_ratification_calls: { data: null, error: null },
-			trade_items: {
-				data: [{ issue_id: "issue-1", name: "Steel Tariffs" }],
-				error: null,
-			},
-			teams: {
-				data: [{ id: "team-usa" }, { id: "team-china" }],
-				error: null,
-			},
-			team_scores: { data: null, error: null },
 		});
 		// students_classes is also used for the voter's enrollment lookup
 		// (.single()); make it resolve a membership object.
@@ -169,32 +161,26 @@ describe("submitVote — package proposals", () => {
 			},
 		);
 
+		mockClient.rpc.mockResolvedValue({ data: null, error: null });
+
 		const result = await submitVote("pkg-1", "approve");
 
 		expect(result).toEqual({ success: true });
-		// executeTrade ran (all-approve path), not the rejection path:
-		expect(builders.get("trade_proposals")!.update).toHaveBeenCalledWith({
-			status: "executed",
+		// Finalization runs through the RPC, not the rejection path.
+		expect(mockClient.rpc).toHaveBeenCalledWith("finalize_ratified_package", {
+			p_proposal_id: "pkg-1",
 		});
 		expect(builders.get("trade_proposals")!.update).not.toHaveBeenCalledWith({
 			status: "rejected",
 		});
-		// Package cleanup still runs after resolution, scoped to the class:
-		expect(builders.get("deal_board_items")!.delete).toHaveBeenCalled();
-		expect(builders.get("deal_board_items")!.eq).toHaveBeenCalledWith(
-			"class_id",
-			"class-1",
-		);
-		expect(builders.get("deal_ratification_calls")!.delete).toHaveBeenCalled();
-		expect(builders.get("deal_ratification_calls")!.eq).toHaveBeenCalledWith(
-			"class_id",
-			"class-1",
-		);
+		// Board cleanup now happens atomically inside the RPC (DB transaction),
+		// so submitVote no longer deletes board rows itself on approval.
+		expect(builders.get("deal_board_items")?.delete).not.toHaveBeenCalled();
 	});
 
-	it("leaves the board intact when executeTrade fails during unanimous approval", async () => {
-		// 2 members total, both approve → submitVote takes the executeTrade
-		// path, but the trade_items resolution update itself errors out.
+	it("leaves the board intact when the finalize RPC fails during unanimous approval", async () => {
+		// 2 members total, both approve → submitVote calls the finalize RPC, but
+		// it errors; the DB transaction rolls back, so nothing is wiped.
 		const builders = mockTables({
 			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
 			students_classes: {
@@ -207,11 +193,6 @@ describe("submitVote — package proposals", () => {
 			},
 			deal_board_items: { data: null, error: null },
 			deal_ratification_calls: { data: null, error: null },
-			teams: {
-				data: [{ id: "team-usa" }, { id: "team-china" }],
-				error: null,
-			},
-			team_scores: { data: null, error: null },
 		});
 		builders
 			.get("students_classes")!
@@ -224,32 +205,19 @@ describe("submitVote — package proposals", () => {
 			},
 		);
 
-		// trade_items serves both the item lookup (select) and the resolution
-		// (update); the first call succeeds, the second (the update) fails.
-		const tradeItemsBuilder = createChainableBuilder();
-		let callCount = 0;
-		tradeItemsBuilder.then = vi.fn((resolve: (v: unknown) => void) => {
-			callCount += 1;
-			const value =
-				callCount === 1
-					? {
-							data: [{ issue_id: "issue-1", name: "Steel Tariffs" }],
-							error: null,
-						}
-					: { data: null, error: { message: "constraint violation" } };
-			resolve(value);
-			return Promise.resolve(value);
+		mockClient.rpc.mockResolvedValue({
+			data: null,
+			error: { message: "constraint violation" },
 		});
-		builders.set("trade_items", tradeItemsBuilder);
 
 		const result = await submitVote("pkg-1", "approve");
 
+		// The vote is still recorded; the failed finalization rolls back in the DB.
 		expect(result).toEqual({ success: true });
-		// executeTrade failed, so the proposal is never marked executed...
-		expect(builders.get("trade_proposals")!.update).not.toHaveBeenCalledWith({
-			status: "executed",
+		expect(mockClient.rpc).toHaveBeenCalledWith("finalize_ratified_package", {
+			p_proposal_id: "pkg-1",
 		});
-		// ...and the board is left intact for a retry rather than wiped.
+		// submitVote never touches the board on approval — the RPC owns that.
 		expect(builders.get("deal_board_items")?.delete).not.toHaveBeenCalled();
 		expect(
 			builders.get("deal_ratification_calls")?.delete,
