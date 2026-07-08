@@ -11,7 +11,6 @@
 # testing
 /coverage
 
-/docs
 
 # next.js
 /.next/
@@ -32,8 +31,11 @@ yarn-error.log*
 *.log
 build_output.txt
 *.txt
+
 .playwright-mcp/
 .claude/
+.superpowers/
+/docs/superpowers
 
 
 # env files

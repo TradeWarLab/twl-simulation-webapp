@@ -157,8 +157,6 @@ What the next developer should know:
 - If confirmation or reset emails fail, check the Supabase Auth email settings and Resend integration first.
 - Using the same Resend account for both flows is fine, but they are configured separately.
 
-Github/Vercel set up with tradewarlab@gmail.com email address - Talk to Callie for access
-
 ## Fun things you can try if bored or need resume bullet points
 - Supabase is just a PostgresSQL wrapper, try migrating away from Supabase to AWS, could be a good resume bullet
   - NextAuth/Clerk for Auth?
