@@ -79,43 +79,50 @@ function countryTone(country: string) {
 	return COUNTRY_TONES[country] ?? COUNTRY_TONES.USA;
 }
 
-function InventoryCard({
-	item,
-	givesCountry,
-	disabled,
-	onAdd,
-	onView,
-}: {
+type CardProps = {
 	item: TradeItem;
 	givesCountry: string;
 	disabled: boolean;
 	onAdd: () => void;
 	onView: () => void;
+};
+
+// Presentational card. The drag listeners (`handleProps`) and `innerRef` are
+// only wired on the live source card; the DragOverlay renders this statically,
+// so we never register two draggables with the same id (which corrupts
+// dnd-kit's registry and silently breaks drops).
+function InventoryCardContent({
+	item,
+	givesCountry,
+	disabled,
+	onAdd,
+	onView,
+	handleProps,
+	innerRef,
+	dragging,
+	lifted,
+}: CardProps & {
+	handleProps?: Record<string, unknown>;
+	innerRef?: (node: HTMLElement | null) => void;
+	dragging?: boolean;
+	lifted?: boolean;
 }) {
-	const { attributes, listeners, setNodeRef, transform, isDragging } =
-		useDraggable({ id: item.id, disabled });
-
-	const style = transform
-		? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
-		: undefined;
-
 	const roleTone = countryTone(givesCountry);
 
 	return (
 		<div
-			ref={setNodeRef}
-			style={style}
+			ref={innerRef}
 			className={[
 				"flex items-center gap-2 rounded-xl border pl-1 pr-2 py-2 text-xs font-medium w-full",
-				"select-none transition-all bg-background",
+				"select-none transition-shadow bg-background",
 				roleTone,
-				isDragging ? "opacity-40 scale-[0.98] z-50" : "hover:shadow-md",
+				dragging ? "opacity-40" : "hover:shadow-md",
+				lifted ? "shadow-lg rotate-1" : "",
 			].join(" ")}
 		>
 			<div
-				{...listeners}
-				{...attributes}
-				className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing rounded-lg py-1 px-1"
+				{...handleProps}
+				className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing rounded-lg py-1 px-1 touch-none"
 			>
 				<GripVertical className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
 				<span className="line-clamp-2 text-left leading-snug">{item.name}</span>
@@ -144,6 +151,21 @@ function InventoryCard({
 				<Plus className="w-3.5 h-3.5" />
 			</button>
 		</div>
+	);
+}
+
+function InventoryCard(props: CardProps) {
+	const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+		id: props.item.id,
+		disabled: props.disabled,
+	});
+	return (
+		<InventoryCardContent
+			{...props}
+			innerRef={setNodeRef}
+			handleProps={{ ...listeners, ...attributes }}
+			dragging={isDragging}
+		/>
 	);
 }
 
@@ -423,21 +445,18 @@ export function SharedDealBoard({
 					</div>
 				</div>
 
-				<DragOverlay>
+				<DragOverlay dropAnimation={null}>
 					{activeItem ? (
-						<div className="pointer-events-none">
-							<InventoryCard
-								item={activeItem}
-								givesCountry={
-									activeItem.role === "ask"
-										? opponentTeamCountry
-										: myTeamCountry
-								}
-								disabled
-								onAdd={() => {}}
-								onView={() => {}}
-							/>
-						</div>
+						<InventoryCardContent
+							item={activeItem}
+							givesCountry={
+								activeItem.role === "ask" ? opponentTeamCountry : myTeamCountry
+							}
+							disabled
+							onAdd={() => {}}
+							onView={() => {}}
+							lifted
+						/>
 					) : null}
 				</DragOverlay>
 			</DndContext>

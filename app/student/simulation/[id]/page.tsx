@@ -11,6 +11,7 @@ import { NegotiationAnalytics } from "@/components/negotiation/negotiation-analy
 import { NegotiationController } from "@/components/negotiation/negotiation-controller";
 import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
 import { RealtimeClassProvider } from "@/components/realtime/realtime-class-provider";
+import { LoadingScreen } from "@/components/shared/loading-screen";
 import { FinalResults } from "@/components/simulation/final-results";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationLayout } from "@/components/simulation/simulation-layout";
@@ -26,11 +27,7 @@ export default function SimulationPage({
 	params: Promise<{ id: string }>;
 }) {
 	return (
-		<Suspense
-			fallback={
-				<div className="container mx-auto p-4">Loading simulation…</div>
-			}
-		>
+		<Suspense fallback={<LoadingScreen label="Loading simulation…" />}>
 			<SimulationPageInner params={params} />
 		</Suspense>
 	);
@@ -140,9 +137,7 @@ async function SimulationPageInner({
 					<main className="flex-1 grid gap-4 min-h-0 grid-cols-1 max-w-4xl mx-auto w-full">
 						<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto border-2">
 							<CardHeader className="py-3 shrink-0 text-center border-b">
-								<CardTitle className="text-xl">
-									Simulation Results
-								</CardTitle>
+								<CardTitle className="text-xl">Simulation Results</CardTitle>
 							</CardHeader>
 							<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
 								<div className="space-y-12 pb-12">
@@ -165,9 +160,7 @@ async function SimulationPageInner({
 						centerPanel={
 							<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto">
 								<CardHeader className="py-3 shrink-0">
-									<CardTitle className="text-md">
-										Action Center
-									</CardTitle>
+									<CardTitle className="text-md">Action Center</CardTitle>
 								</CardHeader>
 								<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
 									{classRecord.current_period === 0 && (

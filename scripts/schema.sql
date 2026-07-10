@@ -550,6 +550,12 @@ create policy "Class members can manage ratification calls."
     )
   );
 
+-- REPLICA IDENTITY FULL so realtime DELETE events carry the full old row —
+-- otherwise a class_id-filtered subscription drops deletes (removed board items
+-- / withdrawn ratification calls wouldn't propagate to other clients).
+alter table public.deal_board_items replica identity full;
+alter table public.deal_ratification_calls replica identity full;
+
 
 -- ══════════════════════════════════════════════
 -- FUNCTIONS & TRIGGERS

@@ -1,5 +1,7 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import type { TradeProposal } from "@/lib/types/domain";
 
@@ -8,65 +10,85 @@ type TradeConfirmationProps = {
 	onDismiss: () => void;
 };
 
+function ItemList({ items }: { items: { name: string }[] }) {
+	if (items.length === 0) {
+		return <p className="text-xs text-muted-foreground italic">Nothing</p>;
+	}
+	return (
+		<ul className="space-y-1">
+			{items.map((item) => (
+				<li
+					key={item.name}
+					className="rounded-md border bg-muted/40 px-2 py-1 text-xs"
+				>
+					{item.name}
+				</li>
+			))}
+		</ul>
+	);
+}
+
 export function TradeConfirmation({
 	proposal,
 	onDismiss,
 }: TradeConfirmationProps) {
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onDismiss();
+		};
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [onDismiss]);
+
 	if (proposal.status !== "executed") return null;
 
+	const proposing = proposal.proposing_team?.country ?? "USA";
+	const receiving = proposal.receiving_team?.country ?? "China";
+
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-300">
-			<div className="bg-card rounded-2xl shadow-2xl border max-w-md w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-300">
-				{/* Success Banner */}
-				<div className="bg-emerald-500 p-6 text-center relative overflow-hidden">
-					<h3 className="text-xl font-bold text-white">Resolution Reached!</h3>
-					<p className="text-sm text-white/80 mt-1">
-						Both teams agreed to the terms
-					</p>
+		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-150 motion-reduce:animate-none">
+			<button
+				type="button"
+				aria-label="Dismiss"
+				onClick={onDismiss}
+				className="absolute inset-0 cursor-default bg-foreground/40 backdrop-blur-sm"
+			/>
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-label="Deal ratified"
+				className="relative z-10 w-full max-w-md rounded-xl border bg-card text-left shadow-lg animate-in zoom-in-95 duration-150 motion-reduce:animate-none"
+			>
+				<div className="flex items-center gap-2 border-b px-5 py-3">
+					<CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+					<div>
+						<h3 className="text-sm font-semibold">Deal ratified</h3>
+						<p className="text-xs text-muted-foreground">
+							Both teams approved the final deal.
+						</p>
+					</div>
 				</div>
 
-				{/* Trade Summary */}
-				<div className="p-5 space-y-4">
-					<div className="grid grid-cols-2 gap-3">
+				<div className="px-5 py-4">
+					<div className="grid grid-cols-2 gap-4">
 						<div>
-							<p className="text-xs font-medium text-muted-foreground mb-1.5">
-								{proposal.proposing_team?.country} Concessions:
+							<p className="mb-1.5 text-xs text-muted-foreground">
+								{proposing} gives
 							</p>
-							{(proposal.offered_items ?? []).map((item, i) => (
-								<div
-									key={i}
-									className="text-xs px-2 py-1 mb-1 rounded bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800"
-								>
-									{item.name}
-								</div>
-							))}
+							<ItemList items={proposal.offered_items ?? []} />
 						</div>
 						<div>
-							<p className="text-xs font-medium text-muted-foreground mb-1.5">
-								{proposal.receiving_team?.country} Concessions:
+							<p className="mb-1.5 text-xs text-muted-foreground">
+								{receiving} gives
 							</p>
-							{(proposal.requested_items ?? []).map((item, i) => (
-								<div
-									key={i}
-									className="text-xs px-2 py-1 mb-1 rounded bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800"
-								>
-									{item.name}
-								</div>
-							))}
+							<ItemList items={proposal.requested_items ?? []} />
 						</div>
 					</div>
+				</div>
 
-					<div className="flex items-center justify-center gap-3 py-2">
-						<div className="w-16 h-px bg-border" />
-						<span className="text-xs text-muted-foreground">⇄</span>
-						<div className="w-16 h-px bg-border" />
-					</div>
-
-					<Button
-						onClick={onDismiss}
-						className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
-					>
-						Continue Negotiating
+				<div className="border-t px-5 py-3">
+					<Button onClick={onDismiss} className="w-full">
+						Done
 					</Button>
 				</div>
 			</div>

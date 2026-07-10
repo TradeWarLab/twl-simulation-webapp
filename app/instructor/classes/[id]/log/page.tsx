@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { getSimulationLogSnapshot } from "@/app/actions/log";
 import { LogClient } from "@/components/instructor/log-client";
+import { LoadingScreen } from "@/components/shared/loading-screen";
 import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { Button } from "@/components/ui/button";
@@ -15,13 +16,7 @@ export default function LogDashboardPage({
 	params: Promise<{ id: string }>;
 }) {
 	return (
-		<Suspense
-			fallback={
-				<div className="container mx-auto p-8 text-center text-muted-foreground">
-					Loading negotiation log...
-				</div>
-			}
-		>
+		<Suspense fallback={<LoadingScreen label="Loading negotiation log…" />}>
 			<LogDashboardInner params={params} />
 		</Suspense>
 	);

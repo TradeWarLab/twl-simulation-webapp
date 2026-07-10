@@ -1,8 +1,7 @@
 "use client";
 
-import { Info, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import { useEffect } from "react";
 import type { TradeItem } from "@/lib/types/domain";
 
 type TradeItemDetailModalProps = {
@@ -10,92 +9,83 @@ type TradeItemDetailModalProps = {
 	onClose: () => void;
 };
 
+function formatValue(value: number) {
+	return value > 0 ? `+${value}` : `${value}`;
+}
+
+function valueTone(value: number) {
+	if (value > 0) return "text-emerald-600 dark:text-emerald-400";
+	if (value < 0) return "text-red-600 dark:text-red-400";
+	return "text-muted-foreground";
+}
+
 export function TradeItemDetailModal({
 	item,
 	onClose,
 }: TradeItemDetailModalProps) {
+	// Close on Escape.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") onClose();
+		};
+		document.addEventListener("keydown", onKey);
+		return () => document.removeEventListener("keydown", onKey);
+	}, [onClose]);
+
+	const value = Number(item.value) || 0;
+
 	return (
-		<div className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-			<div className="bg-card rounded-2xl shadow-2xl border max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
-				{/* Header */}
-				<div className="bg-indigo-500 p-6 flex justify-between items-start">
-					<div className="space-y-1">
-						<div className="flex items-center gap-2">
-							<div className="p-1.5 bg-white/20 rounded-lg">
-								<Info className="w-5 h-5 text-white" />
-							</div>
-							<h3 className="text-xl font-bold text-white leading-tight">
-								Issue Detail
-							</h3>
-						</div>
-					</div>
+		<div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-150 motion-reduce:animate-none">
+			{/* Backdrop as a sibling button so the panel doesn't nest inside an
+			    interactive element; click or Enter/Space dismisses. */}
+			<button
+				type="button"
+				aria-label="Close details"
+				onClick={onClose}
+				className="absolute inset-0 cursor-default bg-foreground/40 backdrop-blur-sm"
+			/>
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-label="Issue details"
+				className="relative z-10 w-full max-w-md rounded-xl border bg-card text-left shadow-lg animate-in zoom-in-95 duration-150 motion-reduce:animate-none"
+			>
+				<div className="flex items-center justify-between border-b px-5 py-3">
+					<span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+						Issue
+					</span>
 					<button
 						type="button"
 						onClick={onClose}
-						className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
 						aria-label="Close"
+						className="-mr-1 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 					>
-						<X className="w-5 h-5" />
+						<X className="h-4 w-4" />
 					</button>
 				</div>
 
-				<div className="p-6 space-y-6">
-					{/* Name Section */}
-					<div className="space-y-2">
-						<label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-							Full Issue Description
-						</label>
-						<div className="text-lg font-semibold leading-relaxed text-foreground bg-muted/30 p-4 rounded-xl border border-border/50">
-							{item.name}
-						</div>
-					</div>
+				<div className="px-5 py-4">
+					<p className="text-sm leading-relaxed text-foreground">{item.name}</p>
 
-					{/* Meta Grid */}
-					<div className="grid grid-cols-2 gap-4">
-						<div className="bg-muted/30 p-4 rounded-xl border border-border/50 space-y-1">
-							<label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-								Current Value
-							</label>
-							<div className="flex items-center gap-2">
-								<span
-									className={`text-2xl font-bold font-mono tabular-nums ${
-										(item.value || 0) > 0
-											? "text-emerald-600"
-											: (item.value || 0) < 0
-												? "text-red-600"
-												: "text-muted-foreground"
-									}`}
-								>
-									{item.value && item.value > 0
-										? `+${item.value}`
-										: item.value || 0}
+					<dl className="mt-5 grid grid-cols-2 gap-4 border-t pt-4">
+						<div>
+							<dt className="text-xs text-muted-foreground">Your value</dt>
+							<dd
+								className={`mt-0.5 font-mono text-lg font-semibold tabular-nums ${valueTone(value)}`}
+							>
+								{formatValue(value)}
+								<span className="ml-1 text-xs font-normal text-muted-foreground">
+									pts
 								</span>
-								<span className="text-xs text-muted-foreground font-medium">
-									points
-								</span>
-							</div>
+							</dd>
 						</div>
-						<div className="bg-muted/30 p-4 rounded-xl border border-border/50 space-y-1">
-							<label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-								Role Type
-							</label>
-							<div>
-								<Badge
-									variant={item.role === "ask" ? "default" : "secondary"}
-									className="uppercase px-3 py-0.5 text-[10px] ring-2 ring-background shadow-sm"
-								>
-									{item.role || "Item"}
-								</Badge>
-							</div>
+						<div>
+							<dt className="text-xs text-muted-foreground">Role</dt>
+							<dd className="mt-0.5 text-sm font-medium capitalize text-foreground">
+								{item.role ?? "Item"}
+							</dd>
 						</div>
-					</div>
-
-					<Button
-						onClick={onClose}
-						className="w-full bg-indigo-500 hover:bg-indigo-600 text-white h-12 text-base font-semibold transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-500/20"
-					>
-						Close
-					</Button>
+					</dl>
 				</div>
 			</div>
 		</div>

@@ -1,27 +1,16 @@
 "use client";
 
-import { Activity, Download, Handshake } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Handshake } from "lucide-react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	downloadChatsCsv,
-	downloadTradeDataCsv,
-	downloadTradeItemValuesCsv,
-} from "@/lib/csv-export";
-import { buildViewerValueMap, enrichProposal } from "@/lib/realtime/derive";
+import { buildViewerValueMap } from "@/lib/realtime/derive";
 import {
 	useClassRecord,
 	useClassStore,
 	useDealBoardItems,
-	useMessages,
-	useProposals,
 	useRatificationCalls,
 	useTradeItems,
-	useUserNames,
-	useVotes,
 } from "@/lib/realtime/hooks";
 import type {
 	ClassRosterEntry,
@@ -29,7 +18,6 @@ import type {
 	TradeItem,
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
-import { TradeProposalCard } from "../negotiation/trade-proposal-card";
 import { ManageItemsClient } from "./manage-items-client";
 import { StudentRoster } from "./student-roster";
 
@@ -82,38 +70,6 @@ function SectionCard({
 			</CardHeader>
 			<CardContent className="p-5">{children}</CardContent>
 		</Card>
-	);
-}
-
-function StandingsCard({
-	label,
-	score,
-	accent,
-}: {
-	label: string;
-	score: number;
-	accent: "usa" | "china";
-}) {
-	return (
-		<div
-			className={cn(
-				"rounded-2xl border p-5",
-				accent === "usa"
-					? "border-blue-500/20 bg-blue-500/5"
-					: "border-red-500/20 bg-red-500/5",
-			)}
-		>
-			<div className="flex items-start justify-between gap-4">
-				<div>
-					<div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-						{label}
-					</div>
-					<div className="mt-2 text-5xl font-semibold tracking-tight">
-						{score}
-					</div>
-				</div>
-			</div>
-		</div>
 	);
 }
 
@@ -209,83 +165,13 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 	const store = useClassStore();
 	const classRecord = useClassRecord();
 	const tradeItems = useTradeItems();
-	const rawProposals = useProposals();
-	const votes = useVotes();
-	const rawMessages = useMessages();
-	const userNames = useUserNames();
 	const dealBoardItems = useDealBoardItems();
 	const ratificationCalls = useRatificationCalls();
-	const [highlightedProposalId, setHighlightedProposalId] = useState<
-		string | null
-	>(null);
 
 	const teams = store.teams;
-	const teamMemberCounts = store.teamMemberCounts;
 	const teamById = useMemo(
 		() => new Map(teams.map((team) => [team.id, team])),
 		[teams],
-	);
-	const userLookup = useMemo(() => {
-		const lookup = new Map<
-			string,
-			{ full_name: string | null; email: string | null }
-		>();
-		for (const entry of roster) {
-			if (!entry.user_id) continue;
-			lookup.set(entry.user_id, {
-				full_name: entry.full_name,
-				email: entry.email,
-			});
-		}
-		return lookup;
-	}, [roster]);
-
-	const itemById = useMemo(
-		() => new Map(tradeItems.map((item) => [item.id, item])),
-		[tradeItems],
-	);
-
-	const proposals = useMemo(
-		() =>
-			rawProposals.map((proposal) =>
-				enrichProposal(proposal, {
-					votes,
-					totalMembers:
-						(teamMemberCounts[proposal.proposing_team_id] ?? 0) +
-						(teamMemberCounts[proposal.receiving_team_id] ?? 0),
-					teamById,
-					userNames,
-				}),
-			),
-		[rawProposals, votes, teamMemberCounts, teamById, userNames],
-	);
-
-	const messages = useMemo(
-		() =>
-			rawMessages.map((message) => ({
-				...message,
-				sender:
-					userLookup.get(message.sender_id) ??
-					(message.users?.full_name != null
-						? { full_name: message.users.full_name, email: null }
-						: null),
-			})),
-		[rawMessages, userLookup],
-	);
-
-	const hydratedVotes = useMemo(
-		() =>
-			votes.map((vote) => ({
-				...vote,
-				user: {
-					full_name:
-						vote.user?.full_name ??
-						userLookup.get(vote.user_id)?.full_name ??
-						userNames.get(vote.user_id) ??
-						null,
-				},
-			})),
-		[votes, userLookup, userNames],
 	);
 
 	const teamMetrics = useMemo<TeamMetric[]>(() => {
@@ -368,83 +254,6 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 	return (
 		<div className="space-y-6">
 			<div className="grid gap-4">
-				<SectionCard
-					title="Simulation Situation"
-					icon={<Activity className="h-5 w-5 text-primary" />}
-					action={
-						<div className="flex flex-wrap justify-end gap-2">
-							<Button
-								type="button"
-								size="sm"
-								variant="outline"
-								className="gap-2"
-								onClick={() =>
-									downloadChatsCsv({
-										className: classRecord.name,
-										messages,
-									})
-								}
-							>
-								<Download className="h-3.5 w-3.5" />
-								Chats CSV
-							</Button>
-							<Button
-								type="button"
-								size="sm"
-								variant="outline"
-								className="gap-2"
-								onClick={() =>
-									downloadTradeDataCsv({
-										className: classRecord.name,
-										proposals,
-										votes,
-										itemById,
-										teamById,
-									})
-								}
-							>
-								<Download className="h-3.5 w-3.5" />
-								Trades CSV
-							</Button>
-							<Button
-								type="button"
-								size="sm"
-								variant="outline"
-								className="gap-2"
-								onClick={() =>
-									downloadTradeItemValuesCsv({
-										className: classRecord.name,
-										tradeItems,
-										teamById,
-									})
-								}
-							>
-								<Download className="h-3.5 w-3.5" />
-								Values CSV
-							</Button>
-						</div>
-					}
-				>
-					<div className="space-y-4">
-						<div className="grid gap-4 xl:grid-cols-2">
-							<StandingsCard
-								label="Team USA"
-								score={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
-								accent="usa"
-							/>
-							<StandingsCard
-								label="Team PRC"
-								score={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
-								accent="china"
-							/>
-						</div>
-						<RelativeLead
-							usa={teamMetricsByCountry.get("USA")?.resolvedScore ?? 0}
-							china={teamMetricsByCountry.get("China")?.resolvedScore ?? 0}
-						/>
-					</div>
-				</SectionCard>
-
 				<SectionCard
 					title="Live Deal Board"
 					icon={<Handshake className="h-5 w-5 text-primary" />}
@@ -531,61 +340,7 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 					<TabsTrigger value="Roster and Team Assignments">
 						Roster & Teams
 					</TabsTrigger>
-					<TabsTrigger value="Proposal Queue">Proposal Queue</TabsTrigger>
 				</TabsList>
-
-				<TabsContent
-					value="Proposal Queue"
-					className="rounded-2xl border border-border/70 bg-card p-5"
-				>
-					<ScrollArea className="h-[500px] pr-4">
-						<div className="grid gap-4 xl:grid-cols-2">
-							{proposals.length === 0 ? (
-								<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-									No proposals yet.
-								</div>
-							) : (
-								proposals
-									.slice()
-									.reverse()
-									.map((proposal) => {
-										const proposalVotes = hydratedVotes.filter(
-											(vote) => vote.proposal_id === proposal.id,
-										);
-										const totalMembers =
-											(teamMemberCounts[proposal.proposing_team_id] ?? 0) +
-											(teamMemberCounts[proposal.receiving_team_id] ?? 0);
-										const isHighlighted = highlightedProposalId === proposal.id;
-
-										const tradeVotes = proposalVotes.map((v) => ({
-											id: v.id,
-											proposal_id: v.proposal_id,
-											student_id: v.user_id,
-											vote: v.vote,
-											created_at: v.created_at,
-											student: v.user,
-										}));
-
-										return (
-											<TradeProposalCard
-												key={proposal.id}
-												proposal={{ ...proposal, votes: tradeVotes }}
-												mode="instructor"
-												isHighlighted={isHighlighted}
-												onHighlight={() =>
-													setHighlightedProposalId((current) =>
-														current === proposal.id ? null : proposal.id,
-													)
-												}
-												totalMembers={totalMembers}
-												itemById={itemById}
-											/>
-										);
-									})
-							)}
-						</div>
-					</ScrollArea>
-				</TabsContent>
 
 				<TabsContent
 					value="Trade Breakdown"

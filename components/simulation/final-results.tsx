@@ -47,39 +47,37 @@ export function FinalResults({ scores }: FinalResultsProps) {
 		const isNegative = points < 0;
 		return (
 			<div
-				className={`flex-1 rounded-xl border-2 p-10 text-center transition-all ${
+				className={`flex-1 rounded-xl border p-8 text-center ${
 					isWinner
-						? "border-foreground bg-foreground/5 shadow-sm"
+						? "border-foreground/30 bg-muted/40"
 						: isLoser
-							? "border-muted-foreground/20 opacity-60 bg-muted/20"
+							? "border-border opacity-70"
 							: "border-border"
 				}`}
 			>
-				<div className="space-y-6">
-					<div className="text-xl font-black uppercase tracking-widest text-muted-foreground">
+				<div className="space-y-4">
+					<div className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
 						{team}
 					</div>
 					<div className="space-y-1">
 						<div
-							className={`text-8xl font-black tracking-tighter tabular-nums ${isNegative ? "text-red-500" : "text-foreground"}`}
+							className={`text-6xl font-semibold tabular-nums ${isNegative ? "text-red-600 dark:text-red-400" : "text-foreground"}`}
 						>
 							{points}
 						</div>
 						<div
-							className={`text-xs font-bold uppercase tracking-widest ${isNegative ? "text-red-500" : points > 0 ? "text-emerald-600" : "text-muted-foreground"}`}
+							className={`text-xs ${isNegative ? "text-red-600 dark:text-red-400" : points > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
 						>
-							{isNegative ? "Net Loss" : points > 0 ? "Net Gain" : "Neutral"}
+							{isNegative ? "Net loss" : points > 0 ? "Net gain" : "Neutral"}
 						</div>
 					</div>
 					{isWinner && (
-						<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-foreground text-background text-[10px] font-black uppercase tracking-widest mx-auto">
-							<Trophy className="w-3 h-3" /> Winner
+						<div className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium text-foreground">
+							<Trophy className="h-3.5 w-3.5" /> Winner
 						</div>
 					)}
 					{isLoser && (
-						<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-							Simulation Defeat
-						</div>
+						<div className="text-xs text-muted-foreground">Runner-up</div>
 					)}
 				</div>
 			</div>
@@ -87,21 +85,21 @@ export function FinalResults({ scores }: FinalResultsProps) {
 	};
 
 	return (
-		<div className="flex flex-col gap-12 py-10 max-w-4xl mx-auto w-full">
+		<div className="mx-auto flex w-full max-w-4xl flex-col gap-10 py-10">
 			{/* Top Header */}
-			<div className="text-center space-y-3">
-				<h2 className="text-3xl font-black tracking-tight text-foreground uppercase italic">
-					Simulation Complete
+			<div className="space-y-1 text-center">
+				<h2 className="text-3xl font-semibold tracking-tight text-foreground">
+					Simulation complete
 				</h2>
-				{!isDraw && (
-					<div className="text-sm font-bold text-muted-foreground uppercase tracking-[0.3em]">
-						{diff} point advantage for {isUsaWinner ? "USA" : "China"}
-					</div>
-				)}
+				<p className="text-sm text-muted-foreground">
+					{isDraw
+						? "The negotiation ended in a draw."
+						: `${diff}-point advantage for ${isUsaWinner ? "USA" : "China"}.`}
+				</p>
 			</div>
 
 			{/* Symmetric Score Grid */}
-			<div className="flex flex-col md:flex-row gap-8 px-6">
+			<div className="flex flex-col gap-6 px-6 md:flex-row">
 				<ScoreCard
 					team="USA"
 					points={usaPoints}
@@ -117,29 +115,19 @@ export function FinalResults({ scores }: FinalResultsProps) {
 			</div>
 
 			{/* Outcome interpretation */}
-			<div className="px-8 max-w-2xl mx-auto text-center space-y-4">
-				<div className="h-1 w-12 bg-border mx-auto mb-6" />
-				<p className="text-base leading-relaxed text-muted-foreground font-medium">
-					{getInterpretation()}
-				</p>
-			</div>
+			<p className="mx-auto max-w-2xl px-8 text-center text-sm leading-relaxed text-muted-foreground">
+				{getInterpretation()}
+			</p>
 
 			{/* Action Footer */}
-			<div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 px-6 border-t border-border/50">
-				<Button
-					asChild
-					variant="secondary"
-					className="w-full sm:w-auto h-12 px-10 rounded-xl font-black uppercase tracking-widest text-xs"
-				>
+			<div className="flex flex-col items-center justify-center gap-3 border-t border-border/60 px-6 pt-8 sm:flex-row">
+				<Button asChild variant="outline" className="w-full sm:w-auto">
 					<Link href="/student/dashboard" className="flex items-center gap-2">
-						<ArrowLeft className="w-4 h-4" /> Exit Simulation
+						<ArrowLeft className="h-4 w-4" /> Exit simulation
 					</Link>
 				</Button>
-				<Button
-					asChild
-					className="w-full sm:w-auto h-12 px-10 rounded-xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:bg-foreground/90 shadow-sm"
-				>
-					<a href="#log-analysis">View Negotiation Log & Analysis</a>
+				<Button asChild className="w-full sm:w-auto">
+					<a href="#log-analysis">View negotiation log &amp; analysis</a>
 				</Button>
 			</div>
 		</div>

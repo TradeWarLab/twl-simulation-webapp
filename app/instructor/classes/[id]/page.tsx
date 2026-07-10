@@ -12,6 +12,7 @@ import { InstructorLiveDashboard } from "@/components/instructor/instructor-live
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
 import { SessionStepper } from "@/components/instructor/session-stepper";
 import { RealtimeClassProvider } from "@/components/realtime/realtime-class-provider";
+import { LoadingScreen } from "@/components/shared/loading-screen";
 import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SIMULATION_PERIODS } from "@/lib/constants";
@@ -23,15 +24,7 @@ export default function ClassDetailPage({
 	params: Promise<{ id: string }>;
 }) {
 	return (
-		<Suspense
-			fallback={
-				<div className="container mx-auto p-8">
-					<p className="text-center text-muted-foreground">
-						Loading class details…
-					</p>
-				</div>
-			}
-		>
+		<Suspense fallback={<LoadingScreen label="Loading class details…" />}>
 			{/* inner component is async and holds all the awaits */}
 			<ClassDetailPageInner params={params} />
 		</Suspense>

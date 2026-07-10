@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentClasses } from "@/app/actions/classes";
+import { LoadingScreen } from "@/components/shared/loading-screen";
 import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeInitializer } from "@/components/shared/theme-initializer";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
@@ -13,15 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 // avoids the "Uncached data was accessed outside of <Suspense>" error.
 export default function StudentDashboard() {
 	return (
-		<Suspense
-			fallback={
-				<div className="container mx-auto p-8">
-					<p className="text-center text-muted-foreground">
-						Loading your dashboard…
-					</p>
-				</div>
-			}
-		>
+		<Suspense fallback={<LoadingScreen label="Loading your dashboard…" />}>
 			<StudentDashboardInner />
 		</Suspense>
 	);
