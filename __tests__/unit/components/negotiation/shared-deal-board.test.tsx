@@ -241,3 +241,55 @@ describe("SharedDealBoard", () => {
 		expect(onDismiss).toHaveBeenCalled();
 	});
 });
+
+describe("SharedDealBoard optimistic adds", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("shows an added item on the board immediately, before the server confirms", async () => {
+		let resolveAdd: (value: { success: boolean }) => void = () => {};
+		vi.mocked(addBoardItem).mockReturnValueOnce(
+			new Promise((resolve) => {
+				resolveAdd = resolve;
+			}),
+		);
+		renderBoard();
+
+		fireEvent.click(screen.getByRole("button", { name: /add steel tariffs/i }));
+
+		// The card lands on the board right away, marked as syncing…
+		expect(await screen.findByText(/adding/i)).toBeInTheDocument();
+		expect(
+			screen.queryByText(/drag items here or press add/i),
+		).not.toBeInTheDocument();
+		// …and simultaneously leaves the inventory.
+		expect(
+			screen.queryByRole("button", { name: /add steel tariffs/i }),
+		).not.toBeInTheDocument();
+
+		resolveAdd({ success: true });
+	});
+
+	it("rolls the item back to the inventory and surfaces the error when the add fails", async () => {
+		vi.mocked(addBoardItem).mockResolvedValueOnce({
+			error: "The board is frozen while the final vote is open",
+		});
+		renderBoard();
+
+		fireEvent.click(screen.getByRole("button", { name: /add steel tariffs/i }));
+
+		expect(
+			await screen.findByText(
+				"The board is frozen while the final vote is open",
+			),
+		).toBeInTheDocument();
+		// Rollback: the board is empty again and the card is back in inventory.
+		expect(
+			screen.getByText(/drag items here or press add/i),
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: /add steel tariffs/i }),
+		).toBeInTheDocument();
+	});
+});

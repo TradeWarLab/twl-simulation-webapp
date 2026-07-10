@@ -53,12 +53,15 @@ export function SimulationLayout({
 	leftPanel,
 	centerPanel,
 	rightPanel,
+	defaultLeftCollapsed = false,
 }: {
 	leftPanel: ReactNode;
 	centerPanel: ReactNode;
 	rightPanel: ReactNode;
+	/** Initial collapsed state of the left (Briefing & Resources) panel. */
+	defaultLeftCollapsed?: boolean;
 }) {
-	const [leftCollapsed, setLeftCollapsed] = useState(false);
+	const [leftCollapsed, setLeftCollapsed] = useState(defaultLeftCollapsed);
 	const [rightCollapsed, setRightCollapsed] = useState(false);
 
 	const leftCol = leftCollapsed ? "36px" : "330px";

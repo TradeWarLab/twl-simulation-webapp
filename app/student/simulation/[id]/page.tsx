@@ -151,6 +151,9 @@ async function SimulationPageInner({
 					</main>
 				) : (
 					<SimulationLayout
+						// Collapse the Briefing & Resources panel by default during the
+						// bilateral negotiation phase so the deal board has more room.
+						defaultLeftCollapsed={classRecord.current_period === 2}
 						leftPanel={
 							<BriefingPanel
 								briefings={briefings}
