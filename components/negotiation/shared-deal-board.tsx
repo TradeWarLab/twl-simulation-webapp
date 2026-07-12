@@ -1,5 +1,6 @@
 "use client";
 
+import { defaultPreset, Feedback } from "@dnd-kit/dom";
 import { DragDropProvider, useDraggable, useDroppable } from "@dnd-kit/react";
 import { GripVertical, Info, Plus } from "lucide-react";
 import {
@@ -42,6 +43,15 @@ type SharedDealBoardProps = {
 	resetBannerVisible: boolean;
 	onDismissResetBanner: () => void;
 };
+
+// Disable dnd-kit's drop animation. By default a dropped card animates back to
+// its inventory slot before the optimistic board row replaces it, which reads
+// as a failed drop. The optimistic `pendingAdds` state does the visual move, so
+// the returning animation is pure noise — swap the Feedback plugin in the
+// default preset for one that skips it.
+const dndPlugins = defaultPreset.plugins.map((plugin) =>
+	plugin === Feedback ? Feedback.configure({ dropAnimation: null }) : plugin,
+);
 
 function formatValue(value: number) {
 	return value > 0 ? `+${value}` : `${value}`;
@@ -334,11 +344,18 @@ export function SharedDealBoard({
 			)}
 
 			<DragDropProvider
+				plugins={dndPlugins}
 				onDragEnd={(event) => {
 					if (event.canceled || inputsLocked) return;
 					const { source, target } = event.operation;
 					if (source && target?.id === "deal-board") {
-						handleAdd(String(source.id));
+						// dnd-kit runs onDragEnd inside its own startTransition, which
+						// would demote the optimistic setPendingAdds to a non-urgent
+						// update React coalesces away before it ever paints (so the drop
+						// looks like it did nothing). Deferring to a microtask escapes
+						// that transition scope and keeps the optimistic add urgent.
+						const id = String(source.id);
+						queueMicrotask(() => handleAdd(id));
 					}
 				}}
 			>
