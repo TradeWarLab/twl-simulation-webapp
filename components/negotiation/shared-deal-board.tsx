@@ -140,6 +140,61 @@ function InventoryCard({
 	);
 }
 
+// One row on the shared board. Used for both confirmed rows and optimistic
+// "pending" rows; the caller supplies the subtitle (attribution vs. "Adding…")
+// and, for confirmed rows, an `onRemove` handler.
+function BoardCard({
+	name,
+	givesCountry,
+	value,
+	subtitle,
+	pending = false,
+	onRemove,
+	removeDisabled = false,
+}: {
+	name: string;
+	givesCountry: string;
+	value: number;
+	subtitle: ReactNode;
+	pending?: boolean;
+	onRemove?: () => void;
+	removeDisabled?: boolean;
+}) {
+	return (
+		<div
+			className={[
+				"flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium",
+				pending ? "opacity-70" : "",
+				countryTone(givesCountry),
+			].join(" ")}
+		>
+			<span className="flex flex-1 min-w-0 flex-col text-left">
+				<span className="line-clamp-2 leading-snug">{name}</span>
+				{subtitle}
+			</span>
+			<span className="text-[10px] text-muted-foreground whitespace-nowrap">
+				{givesCountry} gives
+			</span>
+			<span
+				className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${valueTone(value)}`}
+			>
+				{formatValue(value)}
+			</span>
+			{onRemove && (
+				<button
+					type="button"
+					disabled={removeDisabled}
+					onClick={onRemove}
+					aria-label={`Remove ${name}`}
+					className="w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors disabled:opacity-40"
+				>
+					✕
+				</button>
+			)}
+		</div>
+	);
+}
+
 // Must render INSIDE the DragDropProvider: dnd hooks read their manager from
 // context above the call site, so calling useDroppable in SharedDealBoard
 // itself (where the provider is a JSX child, not an ancestor) registers the
@@ -407,51 +462,31 @@ export function SharedDealBoard({
 								<ScrollArea className="h-full">
 									<div className="flex flex-col gap-2 p-3">
 										{boardItems.map((row) => {
-											const value = valueForRow(row);
 											const givesCountry =
 												row.giving_team_id === myTeamId
 													? myTeamCountry
 													: opponentTeamCountry;
 											return (
-												<div
+												<BoardCard
 													key={row.id}
-													className={[
-														"flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium",
-														countryTone(givesCountry),
-													].join(" ")}
-												>
-													<span className="flex flex-1 min-w-0 flex-col text-left">
-														<span className="line-clamp-2 leading-snug">
-															{row.name}
-														</span>
+													name={row.name}
+													givesCountry={givesCountry}
+													value={valueForRow(row)}
+													subtitle={
 														<span className="text-[10px] text-muted-foreground/70">
 															Added by {addedByLabel(row)}
 														</span>
-													</span>
-													<span className="text-[10px] text-muted-foreground whitespace-nowrap">
-														{givesCountry} gives
-													</span>
-													<span
-														className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${valueTone(value)}`}
-													>
-														{formatValue(value)}
-													</span>
-													{!frozen && (
-														<button
-															type="button"
-															disabled={isPending}
-															onClick={() =>
-																runAction(() =>
-																	removeBoardItem(classId, row.id),
-																)
-															}
-															aria-label={`Remove ${row.name}`}
-															className="w-5 h-5 rounded-full flex items-center justify-center bg-foreground/10 hover:bg-foreground/20 text-xs transition-colors disabled:opacity-40"
-														>
-															✕
-														</button>
-													)}
-												</div>
+													}
+													onRemove={
+														frozen
+															? undefined
+															: () =>
+																	runAction(() =>
+																		removeBoardItem(classId, row.id),
+																	)
+													}
+													removeDisabled={isPending}
+												/>
 											);
 										})}
 										{pendingAdds.map((item) => {
@@ -460,30 +495,18 @@ export function SharedDealBoard({
 													? opponentTeamCountry
 													: myTeamCountry;
 											return (
-												<div
+												<BoardCard
 													key={`pending-${item.id}`}
-													className={[
-														"flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-medium opacity-70",
-														countryTone(givesCountry),
-													].join(" ")}
-												>
-													<span className="flex flex-1 min-w-0 flex-col text-left">
-														<span className="line-clamp-2 leading-snug">
-															{item.name}
-														</span>
+													name={item.name}
+													givesCountry={givesCountry}
+													value={item.value}
+													pending
+													subtitle={
 														<span className="text-[10px] text-muted-foreground/70 animate-pulse">
 															Adding…
 														</span>
-													</span>
-													<span className="text-[10px] text-muted-foreground whitespace-nowrap">
-														{givesCountry} gives
-													</span>
-													<span
-														className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-background/50 ${valueTone(item.value)}`}
-													>
-														{formatValue(item.value)}
-													</span>
-												</div>
+													}
+												/>
 											);
 										})}
 									</div>
