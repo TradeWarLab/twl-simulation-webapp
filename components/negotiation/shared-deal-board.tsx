@@ -213,8 +213,8 @@ function BoardDropZone({
 			className={[
 				"flex-1 min-h-[160px] rounded-xl border-2 border-dashed transition-all overflow-hidden",
 				isDropTarget && !frozen
-					? "border-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/30"
-					: "border-indigo-200 dark:border-indigo-800",
+					? "border-primary bg-primary/10"
+					: "border-border",
 			].join(" ")}
 		>
 			{children}
@@ -392,7 +392,7 @@ export function SharedDealBoard({
 			)}
 
 			{otherTeamCalled && !frozen && (
-				<div className="rounded-lg border border-indigo-300 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-950/40 px-3 py-2 text-xs text-indigo-800 dark:text-indigo-200">
+				<div className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
 					Team {opponentTeamCountry} has called for a final vote.
 					{!myTeamCalled && " Call the vote to open ratification."}
 				</div>
@@ -556,7 +556,7 @@ export function SharedDealBoard({
 							type="button"
 							disabled={frozen || isPending || boardItems.length === 0}
 							onClick={() => runAction(() => callForRatification(classId))}
-							className="h-10 px-6 font-semibold shadow-sm bg-indigo-500 hover:bg-indigo-600 text-white"
+							className="h-10 px-6 font-semibold shadow-sm"
 						>
 							Call for Final Vote
 						</Button>

@@ -105,7 +105,7 @@ export function SessionControlPanel({
 					<form action={advanceAction} className="ml-auto">
 						<Button
 							disabled={currentPeriod >= periods.length - 1}
-							className="h-10 px-6 font-bold shadow-sm transition-all bg-indigo-600 hover:bg-indigo-700 text-white"
+							className="h-10 px-6 font-bold shadow-sm transition-all"
 						>
 							{currentPeriod >= periods.length - 2
 								? "End Simulation"

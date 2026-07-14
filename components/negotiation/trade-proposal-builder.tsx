@@ -48,7 +48,7 @@ export function TradeProposalBuilder({
 			{!showBuilder && (
 				<Button
 					onClick={() => setShowBuilder(true)}
-					className="w-full bg-indigo-500 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md"
+					className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
 				>
 					+ New Trade Proposal
 				</Button>
@@ -98,7 +98,7 @@ export function TradeProposalBuilder({
 								<button
 									key={proposal.id}
 									onClick={() => onProposalSelect(proposal)}
-									className="w-full text-left p-3 rounded-lg border bg-card hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-sm"
+									className="w-full text-left p-3 rounded-lg border bg-card hover:border-primary transition-all shadow-sm"
 								>
 									<div className="flex justify-between items-start mb-1.5">
 										<span className="text-xs font-semibold">
@@ -127,7 +127,7 @@ export function TradeProposalBuilder({
 										<div className="mt-1.5 flex items-center gap-1.5">
 											<div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
 												<div
-													className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+													className="h-full bg-primary rounded-full transition-all duration-500"
 													style={{
 														width: `${proposal.vote_summary.total_members > 0 ? (proposal.vote_summary.votes_cast / proposal.vote_summary.total_members) * 100 : 0}%`,
 													}}

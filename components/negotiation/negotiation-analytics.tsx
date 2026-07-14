@@ -385,13 +385,13 @@ function RevealView({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-start gap-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 mb-6">
-				<Eye className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+			<div className="flex items-start gap-4 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-6">
+				<Eye className="w-5 h-5 text-primary shrink-0 mt-0.5" />
 				<div>
-					<div className="text-xs font-bold text-indigo-900 uppercase tracking-widest mb-1">
+					<div className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
 						Confidential Information Revealed
 					</div>
-					<p className="text-[11px] text-indigo-700 font-medium leading-relaxed">
+					<p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
 						During the simulation, you could only see your own valuations. The
 						table below reveals the full scale of interests from both sides.
 					</p>

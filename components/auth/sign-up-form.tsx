@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { signUp } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -61,236 +68,167 @@ export function SignUpForm({
 
 	if (success) {
 		return (
-			<div
-				className={cn("flex flex-col gap-6", className)}
-				style={{
-					fontFamily: "'Palatino Linotype', Palatino, 'Times New Roman', serif",
-					color: "#0a0a0a",
-				}}
-				{...props}
-			>
-				<div className="border-2 border-black bg-white">
-					<div className="border-b-2 border-black px-8 py-6 text-center">
-						<div
-							className="text-[10px] font-bold uppercase tracking-[0.4em] text-neutral-600"
-							style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
-						>
-							Verify Your Email
-						</div>
-						<h1 className="mt-4 text-[clamp(28px,4vw,44px)] leading-tight">
-							Check your inbox
-						</h1>
-						<p
-							className="mt-3 text-sm text-muted-foreground"
-							style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
-						>
-							{success}
-						</p>
-					</div>
-					<div className="px-8 py-6">
-						<div
-							className="text-center text-sm"
-							style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
-						>
+			<div className={cn("flex flex-col gap-6", className)} {...props}>
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-2xl">Check your inbox</CardTitle>
+						<CardDescription>Verify your email to continue</CardDescription>
+					</CardHeader>
+					<CardContent className="flex flex-col gap-4">
+						<p className="text-sm text-muted-foreground">{success}</p>
+						<div className="text-center text-sm">
 							<Link href="/auth/login" className="underline underline-offset-4">
 								Back to Login
 							</Link>
 						</div>
-					</div>
-				</div>
+					</CardContent>
+				</Card>
 			</div>
 		);
 	}
 
 	return (
-		<div
-			className={cn("flex flex-col gap-6", className)}
-			style={{
-				fontFamily: "'Palatino Linotype', Palatino, 'Times New Roman', serif",
-			}}
-			{...props}
-		>
-			<div className="border-2 border-foreground bg-card">
-				<div className="border-b-2 border-foreground px-8 py-6 text-center">
-					<div
-						className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground"
-						style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
-					>
-						Create Account
-					</div>
-					<h1 className="mt-4 text-[clamp(28px,4vw,44px)] leading-tight">
-						Sign Up
-					</h1>
-					<p
-						className="mt-3 text-sm text-muted-foreground"
-						style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
-					>
+		<div className={cn("flex flex-col gap-6", className)} {...props}>
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-2xl">Sign up</CardTitle>
+					<CardDescription>
 						Create an account to join the platform.
-					</p>
-				</div>
-				<div className="px-8 py-6">
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
 					<form action={clientAction} className="flex flex-col gap-6">
-						<div className="flex flex-col gap-5">
-							<div className="grid gap-2">
-								<Label htmlFor="email">Email</Label>
-								<Input
-									id="email"
-									name="email"
-									type="email"
-									inputMode="email"
-									autoComplete="email"
-									placeholder="m@example.com"
-									required
-									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="full_name">Full Name</Label>
-								<Input
-									id="full_name"
-									name="full_name"
-									type="text"
-									autoComplete="name"
-									placeholder="John Doe"
-									required
-									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="password">Password</Label>
-								<Input
-									id="password"
-									name="password"
-									type="password"
-									autoComplete="new-password"
-									required
-									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
-								/>
-							</div>
-							<div className="grid gap-2">
-								<Label htmlFor="confirm_password">Confirm Password</Label>
-								<Input
-									id="confirm_password"
-									name="confirm_password"
-									type="password"
-									autoComplete="new-password"
-									required
-									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
-								/>
-								{passwordMismatch && (
-									<p
-										className="text-sm text-red-600"
-										role="alert"
-										aria-live="polite"
-									>
-										Passwords do not match. Please re-enter them.
-									</p>
-								)}
-							</div>
-
-							{/* <div className="grid gap-2">
-								<Label htmlFor="class_code">Class Code (Optional)</Label>
-								<Input
-									id="class_code"
-									name="class_code"
-									type="text"
-									placeholder="e.g. TWL-A42B39"
-									className="rounded-none border-2 border-foreground focus-visible:ring-2 focus-visible:ring-foreground/70 focus-visible:ring-offset-2"
-								/>
+						<div className="grid gap-2">
+							<Label htmlFor="email">Email</Label>
+							<Input
+								id="email"
+								name="email"
+								type="email"
+								inputMode="email"
+								autoComplete="email"
+								placeholder="m@example.com"
+								required
+							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="full_name">Full Name</Label>
+							<Input
+								id="full_name"
+								name="full_name"
+								type="text"
+								autoComplete="name"
+								placeholder="John Doe"
+								required
+							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="password">Password</Label>
+							<Input
+								id="password"
+								name="password"
+								type="password"
+								autoComplete="new-password"
+								required
+							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="confirm_password">Confirm Password</Label>
+							<Input
+								id="confirm_password"
+								name="confirm_password"
+								type="password"
+								autoComplete="new-password"
+								required
+							/>
+							{passwordMismatch && (
 								<p
-									className="text-xs text-muted-foreground"
-									style={{
-										fontFamily: "'Helvetica Neue', Arial, sans-serif",
-									}}
-								>
-									Join a class immediately with a code provided by your
-									instructor.
-								</p>
-							</div> */}
-
-							<div className="flex items-center space-x-2">
-								<input
-									type="checkbox"
-									id="role"
-									name="role"
-									value="instructor"
-									checked={isInstructor}
-									onChange={(e) => setIsInstructor(e.target.checked)}
-									className="h-4 w-4 accent-black"
-								/>
-								<Label htmlFor="role">Sign up as Instructor?</Label>
-							</div>
-
-							<div className="flex items-start gap-2">
-								<input
-									type="checkbox"
-									id="consent"
-									name="consent"
-									checked={consent}
-									onChange={(e) => setConsent(e.target.checked)}
-									required
-									className="mt-0.5 h-4 w-4 accent-black"
-								/>
-								<Label
-									htmlFor="consent"
-									className="text-sm font-normal leading-snug"
-									style={{
-										fontFamily: "'Helvetica Neue', Arial, sans-serif",
-									}}
-								>
-									I agree to the{" "}
-									<Link
-										href="/privacy"
-										target="_blank"
-										rel="noopener noreferrer"
-										className="underline underline-offset-2"
-									>
-										Privacy Policy
-									</Link>{" "}
-									and{" "}
-									<Link
-										href="/terms"
-										target="_blank"
-										rel="noopener noreferrer"
-										className="underline underline-offset-2"
-									>
-										Terms of Use
-									</Link>
-									, and I consent to the collection of my simulation activity
-									for educational and research purposes.
-								</Label>
-							</div>
-
-							{error && (
-								<p
-									className="text-sm text-red-600"
+									className="text-sm text-destructive"
 									role="alert"
 									aria-live="polite"
 								>
-									{error}
+									Passwords do not match. Please re-enter them.
 								</p>
 							)}
-
-							<Button
-								type="submit"
-								className="w-full rounded-none border-2 border-foreground bg-foreground px-6 py-5 text-xs font-bold uppercase tracking-[0.35em] text-background hover:bg-foreground/90"
-								disabled={isLoading || !consent}
-							>
-								{isLoading ? "Creating account..." : "Sign up"}
-							</Button>
 						</div>
-						<div
-							className="mt-4 text-center text-sm"
-							style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif" }}
+
+						<div className="flex items-center gap-2">
+							<input
+								type="checkbox"
+								id="role"
+								name="role"
+								value="instructor"
+								checked={isInstructor}
+								onChange={(e) => setIsInstructor(e.target.checked)}
+								className="h-4 w-4 accent-[hsl(var(--primary))]"
+							/>
+							<Label htmlFor="role" className="font-normal">
+								Sign up as Instructor?
+							</Label>
+						</div>
+
+						<div className="flex items-start gap-2">
+							<input
+								type="checkbox"
+								id="consent"
+								name="consent"
+								checked={consent}
+								onChange={(e) => setConsent(e.target.checked)}
+								required
+								className="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+							/>
+							<Label
+								htmlFor="consent"
+								className="text-sm font-normal leading-snug"
+							>
+								I agree to the{" "}
+								<Link
+									href="/privacy"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="underline underline-offset-2"
+								>
+									Privacy Policy
+								</Link>{" "}
+								and{" "}
+								<Link
+									href="/terms"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="underline underline-offset-2"
+								>
+									Terms of Use
+								</Link>
+								, and I consent to the collection of my simulation activity for
+								educational and research purposes.
+							</Label>
+						</div>
+
+						{error && (
+							<p
+								className="text-sm text-destructive"
+								role="alert"
+								aria-live="polite"
+							>
+								{error}
+							</p>
+						)}
+
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={isLoading || !consent}
 						>
+							{isLoading ? "Creating account..." : "Sign up"}
+						</Button>
+						<div className="text-center text-sm">
 							Already have an account?{" "}
 							<Link href="/auth/login" className="underline underline-offset-4">
 								Login
 							</Link>
 						</div>
 					</form>
-				</div>
-			</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

@@ -1,6 +1,6 @@
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Libre_Franklin, Public_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -14,8 +14,16 @@ export const metadata: Metadata = {
 	description: "Simulate the U.S.–PRC trade negotiations",
 };
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+// Public Sans — the U.S. federal typeface (USWDS); the body / UI voice.
+const publicSans = Public_Sans({
+	variable: "--font-sans",
+	display: "swap",
+	subsets: ["latin"],
+});
+
+// Libre Franklin — grotesk display face for headings and index numerals.
+const libreFranklin = Libre_Franklin({
+	variable: "--font-display",
 	display: "swap",
 	subsets: ["latin"],
 });
@@ -27,7 +35,9 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={`${geistSans.className} antialiased`}>
+			<body
+				className={`${publicSans.variable} ${libreFranklin.variable} font-sans antialiased`}
+			>
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="light"

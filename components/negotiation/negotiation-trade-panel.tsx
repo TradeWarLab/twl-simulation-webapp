@@ -442,7 +442,7 @@ export function NegotiationTradePanel({
 						isPending ||
 						(offeredItemIds.size === 0 && requestedItemIds.size === 0)
 					}
-					className="w-full max-w-xs bg-amber-500 hover:bg-amber-60 text-white font-semibold shadow-lg shadow-orange-500/25 transition-all hover:shadow-xl hover:shadow-orange-500/30 hover:-translate-y-0.5"
+					className="w-full max-w-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
 					size="lg"
 				>
 					{isPending ? (

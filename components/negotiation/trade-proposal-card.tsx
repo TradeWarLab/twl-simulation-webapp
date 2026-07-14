@@ -83,7 +83,7 @@ export function TradeProposalCard({
 
 	return (
 		<div
-			className={`rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow ${isHighlighted ? "border-indigo-500 bg-indigo-500/10" : ""}`}
+			className={`rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow ${isHighlighted ? "border-primary bg-primary/10" : ""}`}
 		>
 			{/* Header */}
 			<div className="flex items-center justify-between mb-3">

@@ -24,7 +24,6 @@ const GROUPS: FooterGroup[] = [
 ];
 
 const COPYRIGHT_YEAR = 2026;
-const UI_FONT = "'Helvetica Neue', Arial, sans-serif";
 
 function FooterAnchor({ link }: { link: FooterLink }) {
 	const className =
@@ -50,10 +49,7 @@ function FooterAnchor({ link }: { link: FooterLink }) {
 
 export function SiteFooter() {
 	return (
-		<footer
-			className="border-t bg-background text-foreground"
-			style={{ fontFamily: UI_FONT }}
-		>
+		<footer className="border-t bg-background text-foreground">
 			<div className="mx-auto w-full max-w-6xl px-6 py-12 sm:py-16">
 				<div className="flex flex-col justify-between gap-12 md:flex-row">
 					<div className="flex flex-col justify-between gap-10">

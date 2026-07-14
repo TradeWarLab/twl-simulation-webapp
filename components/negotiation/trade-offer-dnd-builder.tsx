@@ -709,7 +709,7 @@ export function TradeOfferDndBuilder({
 								isPending ||
 								(offerItems.length === 0 && requestItems.length === 0)
 							}
-							className={`h-10 px-6 font-semibold shadow-sm transition-all ${currentScore >= 0 ? "bg-indigo-500 hover:bg-indigo-600 text-white" : "bg-amber-500 hover:bg-amber-600 text-white"}`}
+							className={`h-10 px-6 font-semibold shadow-sm transition-all ${currentScore >= 0 ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "bg-amber-500 hover:bg-amber-600 text-white"}`}
 						>
 							{isPending ? "Submitting…" : "Submit Trade Offer"}
 						</Button>
