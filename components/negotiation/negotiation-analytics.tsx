@@ -1,12 +1,8 @@
 "use client";
 
 import {
-	CheckCircle2,
 	Eye,
 	FileText,
-	History,
-	Timer,
-	XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import type { TradeItem, TradeProposal } from "@/lib/types/domain";
@@ -18,82 +14,13 @@ type AnalyticsData = {
 
 export function NegotiationAnalytics({ data }: { data: AnalyticsData }) {
 	const [activeTab, setActiveTab] = useState<
-		"timeline" | "agreement" | "reveal" | "insights"
-	>("timeline");
+		"agreement" | "reveal"
+	>("agreement");
 
 	const executedProposals = data.proposals.filter(
 		(p) => p.status === "executed",
 	);
 	const allResolvedItems = data.items.filter((i) => i.is_resolved);
-
-	// Key Insights Logic
-	// const getInsights = () => {
-	// 	const insights = [];
-
-	// 	// Largest Gain/Concession (based on executed trades)
-	// 	const executedItems = executedProposals.flatMap((p) => [
-	// 		...p.offered_items,
-	// 		...p.requested_items,
-	// 	]);
-
-	// 	// Map item values from both teams
-	// 	const itemsWithBothValues = data.items.reduce(
-	// 		(acc, item) => {
-	// 			const key = item.issue_id || item.name;
-	// 			if (!acc[key]) acc[key] = { name: item.name, values: {} };
-	// 			acc[key].values[item.team.country] = item.value;
-	// 			return acc;
-	// 		},
-	// 		{} as Record<string, { name: string; values: Record<string, number> }>,
-	// 	);
-
-	// 	// 1. Win-Win Opportunity
-	// 	const winWin = Object.values(itemsWithBothValues).find(
-	// 		(item) => item.values["USA"] > 10 && item.values["China"] > 10,
-	// 	);
-	// 	if (winWin) {
-	// 		insights.push({
-	// 			title: "High Symbiosis Found",
-	// 			text: `Both teams assigned high value to "${winWin.name}". This provided a major opportunity for a mutually beneficial resolution.`,
-	// 			type: "success",
-	// 		});
-	// 	}
-
-	// 	// 2. Strategic Mismatch
-	// 	const mismatch = Object.values(itemsWithBothValues).find(
-	// 		(item) =>
-	// 			(item.values["USA"] >= 25 && item.values["China"] <= 5) ||
-	// 			(item.values["China"] >= 25 && item.values["USA"] <= 5),
-	// 	);
-	// 	if (mismatch) {
-	// 		const winner = mismatch.values["USA"] > mismatch.values["China"] ? "USA" : "China";
-	// 		insights.push({
-	// 			title: "Strategic Asymmetry",
-	// 			text: `The issue "${mismatch.name}" was valued significantly higher by ${winner}. This made it prime for a high-leverage trade.`,
-	// 			type: "info",
-	// 		});
-	// 	}
-
-	// 	// 3. Efficiency Check
-	// 	const totalExecuted = executedProposals.length;
-	// 	if (totalExecuted > 3) {
-	// 		insights.push({
-	// 			title: "Active Diplomacy",
-	// 			text: `Total of ${totalExecuted} trade agreements were reached, indicating a high level of diplomatic activity and proposal iteration.`,
-	// 			type: "info",
-	// 		});
-	// 	} else if (totalExecuted === 0) {
-	// 		insights.push({
-	// 			title: "Stalled Dialogue",
-	// 			text: "No proposals were unanimously approved. This often indicates a lack of trust or a failure to identify each other's low-cost concessions.",
-	// 			type: "warning",
-	// 		});
-	// 	}
-
-	// 	return insights;
-	// };
-
-	// const insights = getInsights();
 
 	return (
 		<div
@@ -102,12 +29,6 @@ export function NegotiationAnalytics({ data }: { data: AnalyticsData }) {
 		>
 			{/* Header / Tabs */}
 			<div className="flex border-b overflow-x-auto no-scrollbar bg-nav/50">
-				<TabButton
-					active={activeTab === "timeline"}
-					onClick={() => setActiveTab("timeline")}
-					icon={<History className="w-4 h-4" />}
-					label="Timeline"
-				/>
 				<TabButton
 					active={activeTab === "agreement"}
 					onClick={() => setActiveTab("agreement")}
@@ -120,18 +41,9 @@ export function NegotiationAnalytics({ data }: { data: AnalyticsData }) {
 					icon={<Eye className="w-4 h-4" />}
 					label="Revealed Values"
 				/>
-				{/* <TabButton
-					active={activeTab === "insights"}
-					onClick={() => setActiveTab("insights")}
-					icon={<Lightbulb className="w-4 h-4" />}
-					label="Insights"
-				/> */}
 			</div>
 
 			<div className="p-6 min-h-[400px]">
-				{activeTab === "timeline" && (
-					<TimelineView proposals={data.proposals} />
-				)}
 				{activeTab === "agreement" && (
 					<AgreementView
 						proposals={executedProposals}
@@ -139,7 +51,6 @@ export function NegotiationAnalytics({ data }: { data: AnalyticsData }) {
 					/>
 				)}
 				{activeTab === "reveal" && <RevealView items={data.items} />}
-				{/* {activeTab === "insights" && <InsightsView insights={insights} />} */}
 			</div>
 		</div>
 	);
@@ -171,103 +82,14 @@ function TabButton({
 	);
 }
 
-function TimelineView({ proposals }: { proposals: TradeProposal[] }) {
-	if (proposals.length === 0) {
-		return (
-			<div className="flex flex-col items-center justify-center py-20 text-muted-foreground italic">
-				No proposals were made during this session.
-			</div>
-		);
-	}
-
-	return (
-		<div className="space-y-8 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-			{proposals.map((p, idx) => (
-				<div
-					key={p.id}
-					className="relative pl-10 animate-in fade-in slide-in-from-left-2"
-					style={{ animationDelay: `${idx * 50}ms` }}
-				>
-					<div
-						className={`absolute left-0 top-1 w-9 h-9 rounded-full border-4 border-background flex items-center justify-center z-10 ${
-							p.status === "executed"
-								? "bg-emerald-500 text-white"
-								: p.status === "rejected"
-									? "bg-red-500 text-white"
-									: "bg-muted text-muted-foreground"
-						}`}
-					>
-						{p.status === "executed" ? (
-							<CheckCircle2 className="w-5 h-5" />
-						) : p.status === "rejected" ? (
-							<XCircle className="w-5 h-5" />
-						) : (
-							<Timer className="w-5 h-5" />
-						)}
-					</div>
-					<div className="bg-muted/30 rounded-xl border p-5">
-						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-							<div className="font-black uppercase tracking-tight text-sm">
-								{p.proposing_team?.country} Proposal to{" "}
-								{p.receiving_team?.country}
-							</div>
-							<div
-								className={`text-[10px] font-bold uppercase py-1 px-2 rounded-full border ${
-									p.status === "executed"
-										? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600"
-										: "border-muted-foreground/20 bg-muted text-muted-foreground"
-								}`}
-							>
-								{p.status}
-							</div>
-						</div>
-
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-							<div>
-								<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-									Offered Items
-								</div>
-								<div className="space-y-1.5">
-									{p.offered_items.map((item) => (
-										<div
-											key={item.item_id}
-											className="text-xs bg-background border px-2 py-1 rounded-lg truncate"
-										>
-											{item.name}
-										</div>
-									))}
-								</div>
-							</div>
-							<div>
-								<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-									Requested Items
-								</div>
-								<div className="space-y-1.5">
-									{p.requested_items.map((item) => (
-										<div
-											key={item.item_id}
-											className="text-xs bg-background border px-2 py-1 rounded-lg truncate"
-										>
-											{item.name}
-										</div>
-									))}
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			))}
-		</div>
-	);
-}
 
 function signedText(value: number) {
 	return value > 0 ? `+${value}` : `${value}`;
 }
 
 function signedColor(value: number) {
-	if (value > 0) return "text-emerald-600";
-	if (value < 0) return "text-red-600";
+	if (value > 0) return "text-emerald-700 dark:text-emerald-400";
+	if (value < 0) return "text-red-700 dark:text-red-400";
 	return "text-muted-foreground";
 }
 
@@ -286,9 +108,6 @@ function AgreementView({
 		);
 	}
 
-	// Each ratified issue has a mirror row per team; group them so every clause
-	// shows BOTH sides' point valuations. (Opponent values are only readable
-	// once the class reaches the End phase — see the reveal RLS policy.)
 	const clauses = Object.values(
 		allResolvedItems.reduce(
 			(acc, item) => {
@@ -324,7 +143,7 @@ function AgreementView({
 									<span className="text-[10px] uppercase tracking-wider text-blue-600">
 										USA
 									</span>
-									<span className={signedColor(clause.usa)}>
+									<span className="text-foreground">
 										{signedText(clause.usa)}
 									</span>
 								</span>
@@ -332,7 +151,7 @@ function AgreementView({
 									<span className="text-[10px] uppercase tracking-wider text-red-600">
 										PRC
 									</span>
-									<span className={signedColor(clause.china)}>
+									<span className="text-foreground">
 										{signedText(clause.china)}
 									</span>
 								</span>
@@ -348,7 +167,7 @@ function AgreementView({
 					<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
 						USA total
 					</div>
-					<div className={`mt-1 text-2xl font-black ${signedColor(usaTotal)}`}>
+					<div className="mt-1 text-2xl font-black text-foreground">
 						{signedText(usaTotal)}
 					</div>
 				</div>
@@ -356,9 +175,7 @@ function AgreementView({
 					<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
 						PRC total
 					</div>
-					<div
-						className={`mt-1 text-2xl font-black ${signedColor(chinaTotal)}`}
-					>
+					<div className="mt-1 text-2xl font-black text-foreground">
 						{signedText(chinaTotal)}
 					</div>
 				</div>
@@ -385,59 +202,37 @@ function RevealView({
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-start gap-4 p-4 rounded-xl bg-primary/10 border border-primary/20 mb-6">
-				<Eye className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-				<div>
-					<div className="text-xs font-bold text-primary uppercase tracking-widest mb-1">
-						Confidential Information Revealed
-					</div>
-					<p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
-						During the simulation, you could only see your own valuations. The
-						table below reveals the full scale of interests from both sides.
-					</p>
-				</div>
-			</div>
-
 			<div className="overflow-x-auto rounded-xl border">
 				<table className="w-full border-collapse text-left">
 					<thead>
 						<tr className="bg-muted text-[10px] font-black uppercase tracking-widest border-b">
 							<th className="px-4 py-3">Issue / Negotiation Item</th>
-							<th className="px-4 py-3 text-center text-blue-600">USA Value</th>
-							<th className="px-4 py-3 text-center text-red-600">
-								China Value
+							<th className="px-4 py-3 text-center text-foreground">
+								USA Value
 							</th>
-							{/* <th className="px-4 py-3 text-center">Conflict Type</th> */}
+							<th className="px-4 py-3 text-center text-foreground">
+								PRC Value
+							</th>
 						</tr>
 					</thead>
 					<tbody className="divide-y text-xs">
 						{Object.values(issues).map((issue, idx) => {
 							const usaVal = issue.values.USA ?? 0;
 							const chinaVal = issue.values.China ?? 0;
-							// const _totalVal = Math.abs(usaVal) + Math.abs(chinaVal);
 
 							return (
 								<tr key={idx} className="hover:bg-muted/30 transition-colors">
 									<td className="px-4 py-3 font-bold">{issue.name}</td>
 									<td
-										className={`px-4 py-3 text-center tabular-nums font-black ${usaVal > 0 ? "text-blue-600" : usaVal < 0 ? "text-red-500" : "text-muted-foreground"}`}
+										className={`px-4 py-3 text-center tabular-nums font-black ${signedColor(usaVal)}`}
 									>
-										{usaVal > 0 ? `+${usaVal}` : usaVal}
+										{signedText(usaVal)}
 									</td>
 									<td
-										className={`px-4 py-3 text-center tabular-nums font-black ${chinaVal > 0 ? "text-red-600" : chinaVal < 0 ? "text-red-500" : "text-muted-foreground"}`}
+										className={`px-4 py-3 text-center tabular-nums font-black ${signedColor(chinaVal)}`}
 									>
-										{chinaVal > 0 ? `+${chinaVal}` : chinaVal}
+										{signedText(chinaVal)}
 									</td>
-									{/* <td className="px-4 py-3 text-center">
-										{usaVal > 0 && chinaVal > 0 ? (
-											<span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[9px] font-black uppercase">Win-Win</span>
-										) : usaVal < 0 && chinaVal < 0 ? (
-											<span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[9px] font-black uppercase">Zero-Sum</span>
-										) : (
-											<span className="text-muted-foreground text-[9px]">Mixed Interests</span>
-										)}
-									</td> */}
 								</tr>
 							);
 						})}
