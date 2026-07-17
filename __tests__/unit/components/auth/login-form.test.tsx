@@ -14,7 +14,9 @@ describe("LoginForm Component", () => {
 
 	it("renders correctly", () => {
 		render(<LoginForm />);
-		expect(screen.getByRole("heading", { name: /Login/i })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: /log in/i }),
+		).toBeInTheDocument();
 		expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
 		expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Login" })).toBeInTheDocument();
