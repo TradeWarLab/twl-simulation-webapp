@@ -59,8 +59,6 @@ export function SiteFooter() {
 							rel="noopener noreferrer"
 							className="group flex items-center gap-2.5"
 						>
-							{/* The lab's site/Substack logo (lifted from its header).
-							    Decorative alt — the wordmark carries the link's name. */}
 							<Image
 								src="/trade-war-lab-logo.png"
 								alt=""

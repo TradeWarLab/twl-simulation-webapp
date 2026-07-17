@@ -35,7 +35,9 @@ function CollapseToggle({
 	align?: "left" | "right";
 }) {
 	return (
-		<div className={`hidden lg:flex shrink-0 mb-1 ${align === "left" ? "justify-start" : "justify-end"}`}>
+		<div
+			className={`hidden lg:flex shrink-0 mb-1 ${align === "left" ? "justify-start" : "justify-end"}`}
+		>
 			<button
 				type="button"
 				onClick={onCollapse}
@@ -89,9 +91,7 @@ export function SimulationLayout({
 							onCollapse={() => setLeftCollapsed(true)}
 							align="right"
 						/>
-						<div className="flex-1 overflow-y-auto pb-4">
-							{leftPanel}
-						</div>
+						<div className="flex-1 overflow-y-auto pb-4">{leftPanel}</div>
 					</div>
 				)}
 
@@ -111,9 +111,7 @@ export function SimulationLayout({
 							onCollapse={() => setRightCollapsed(true)}
 							align="left"
 						/>
-						<div className="flex-1 min-h-0">
-							{rightPanel}
-						</div>
+						<div className="flex-1 min-h-0">{rightPanel}</div>
 					</div>
 				)}
 			</div>
@@ -124,9 +122,7 @@ export function SimulationLayout({
 					<div className="pb-4">{leftPanel}</div>
 				</div>
 				{centerPanel}
-				<div className="flex flex-col min-h-0 h-[600px] pb-4">
-					{rightPanel}
-				</div>
+				<div className="flex flex-col min-h-0 h-[600px] pb-4">{rightPanel}</div>
 			</div>
 		</main>
 	);

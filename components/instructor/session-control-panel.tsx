@@ -61,11 +61,6 @@ export function SessionControlPanel({
 									Briefings
 								</Link>
 							</Button>
-							{/* <Button variant="outline" className="justify-start" asChild>
-								<Link href={`/instructor/classes/${classId}/teams`}>
-									Teams
-								</Link>
-							</Button> */}
 							<Button variant="outline" className="justify-start" asChild>
 								<Link href={`/instructor/classes/${classId}/items`}>
 									Trade Items

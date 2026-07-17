@@ -16,7 +16,8 @@ export default function NotFound() {
 					</h1>
 					<div className="my-9 h-px w-14 bg-foreground/25" />
 					<p className="max-w-sm text-pretty text-base leading-relaxed text-muted-foreground">
-						The page you&apos;re looking for doesn&apos;t exist or has been moved.
+						The page you&apos;re looking for doesn&apos;t exist or has been
+						moved.
 					</p>
 					<div className="mt-10">
 						<Button asChild size="lg">

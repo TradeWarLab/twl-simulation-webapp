@@ -2,7 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { NegotiationAnalytics } from "@/components/negotiation/negotiation-analytics";
 import type { TradeItem } from "@/lib/types/domain";
-import { makeProposal, makeTradeItem } from "../../../helpers/realtime-fixtures";
+import {
+	makeProposal,
+	makeTradeItem,
+} from "../../../helpers/realtime-fixtures";
 
 // The component expects each item to carry a joined `team.country`, so wrap the
 // base fixture to attach it.

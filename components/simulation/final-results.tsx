@@ -1,8 +1,5 @@
 "use client";
 
-import { ArrowLeft, Trophy } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import type { TeamScore } from "@/lib/types/domain";
 
 type FinalResultsProps = {
@@ -73,7 +70,7 @@ export function FinalResults({ scores }: FinalResultsProps) {
 					</div>
 					{isWinner && (
 						<div className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium text-foreground">
-							<Trophy className="h-3.5 w-3.5" /> Winner
+							Winner
 						</div>
 					)}
 					{isLoser && (
@@ -118,18 +115,7 @@ export function FinalResults({ scores }: FinalResultsProps) {
 			<p className="mx-auto max-w-2xl px-8 text-center text-sm leading-relaxed text-muted-foreground">
 				{getInterpretation()}
 			</p>
-
-			{/* Action Footer */}
-			<div className="flex flex-col items-center justify-center gap-3 border-t border-border/60 px-6 pt-8 sm:flex-row">
-				<Button asChild variant="outline" className="w-full sm:w-auto">
-					<Link href="/student/dashboard" className="flex items-center gap-2">
-						<ArrowLeft className="h-4 w-4" /> Exit simulation
-					</Link>
-				</Button>
-				<Button asChild className="w-full sm:w-auto">
-					<a href="#log-analysis">View negotiation log &amp; analysis</a>
-				</Button>
-			</div>
+			<hr></hr>
 		</div>
 	);
 }

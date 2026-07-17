@@ -22,7 +22,12 @@ export function HomeHeroBureau() {
 					<Button asChild size="lg" className="w-full sm:w-auto">
 						<Link href="/auth/sign-up">Begin Simulation →</Link>
 					</Button>
-					<Button asChild variant="ghost" size="lg" className="w-full sm:w-auto">
+					<Button
+						asChild
+						variant="ghost"
+						size="lg"
+						className="w-full sm:w-auto"
+					>
 						<Link href="/auth/login">Log in</Link>
 					</Button>
 				</div>

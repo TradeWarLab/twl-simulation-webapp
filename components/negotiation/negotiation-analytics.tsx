@@ -1,9 +1,6 @@
 "use client";
 
-import {
-	Eye,
-	FileText,
-} from "lucide-react";
+import { Eye, FileText } from "lucide-react";
 import { useState } from "react";
 import type { TradeItem, TradeProposal } from "@/lib/types/domain";
 
@@ -13,9 +10,9 @@ type AnalyticsData = {
 };
 
 export function NegotiationAnalytics({ data }: { data: AnalyticsData }) {
-	const [activeTab, setActiveTab] = useState<
-		"agreement" | "reveal"
-	>("agreement");
+	const [activeTab, setActiveTab] = useState<"agreement" | "reveal">(
+		"agreement",
+	);
 
 	const executedProposals = data.proposals.filter(
 		(p) => p.status === "executed",
@@ -81,7 +78,6 @@ function TabButton({
 		</button>
 	);
 }
-
 
 function signedText(value: number) {
 	return value > 0 ? `+${value}` : `${value}`;

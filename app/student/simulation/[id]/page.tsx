@@ -136,9 +136,6 @@ async function SimulationPageInner({
 				) : classRecord.current_period === 3 ? (
 					<main className="flex-1 grid gap-4 min-h-0 grid-cols-1 max-w-4xl mx-auto w-full">
 						<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto border-2">
-							<CardHeader className="py-3 shrink-0 text-center border-b">
-								<CardTitle className="text-xl">Simulation Results</CardTitle>
-							</CardHeader>
 							<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
 								<div className="space-y-12 pb-12">
 									<FinalResults scores={scores} />
