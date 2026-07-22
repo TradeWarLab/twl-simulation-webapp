@@ -7,6 +7,7 @@ import {
 	updateClassPeriod,
 } from "@/app/actions/classes";
 import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
+import { getScoreboard } from "@/app/actions/trade-controller";
 import { ClassDetailHeader } from "@/components/instructor/class-detail-header";
 import { InstructorLiveDashboard } from "@/components/instructor/instructor-live-dashboard";
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
@@ -60,6 +61,10 @@ async function ClassDetailPageInner({
 	const roster = await getClassRoster(id);
 	const snapshot = await getRealtimeSnapshot(id);
 	if (!snapshot) notFound();
+	// Populated only once a deal ratifies. The class provider forces a route
+	// refresh on period change (realtime-class-provider.tsx:65-72), so this
+	// re-runs when ratification ends the simulation in a student's session.
+	const scores = await getScoreboard(id);
 	const periods = SIMULATION_PERIODS;
 
 	// Server action wrapper for updating period
@@ -112,7 +117,7 @@ async function ClassDetailPageInner({
 					snapshot={snapshot}
 					refetchSnapshot={getRealtimeSnapshot}
 				>
-					<InstructorLiveDashboard roster={roster} />
+					<InstructorLiveDashboard roster={roster} scores={scores} />
 				</RealtimeClassProvider>
 			</div>
 		</div>

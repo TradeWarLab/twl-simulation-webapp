@@ -14,15 +14,19 @@ import {
 import type {
 	ClassRosterEntry,
 	TeamCountry,
+	TeamScore,
 	TradeItem,
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 import { ManageItemsClient } from "./manage-items-client";
 import { SectionCard } from "./section-card";
+import { SimulationResultsCard } from "./simulation-results-card";
 import { StudentRoster } from "./student-roster";
 
 type DashboardProps = {
 	roster: ClassRosterEntry[];
+	/** Empty when no deal ratified — SimulationResultsCard reads that as no-deal. */
+	scores: TeamScore[];
 };
 
 type TeamMetric = {
@@ -125,7 +129,7 @@ function RelativeLead({
 	);
 }
 
-export function InstructorLiveDashboard({ roster }: DashboardProps) {
+export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
 	const store = useClassStore();
 	const classRecord = useClassRecord();
 	const tradeItems = useTradeItems();
@@ -215,14 +219,24 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 		[ratificationCalls, teamById],
 	);
 
+	// Ratification advances the class to the End period on its own
+	// (schema.sql:768-770) and deletes the board in the same transaction, so
+	// the deal board card would otherwise fall back to its empty state at the
+	// exact moment the simulation finished. One condition covers both endings:
+	// a ratified deal and an instructor ending a deadlocked class.
+	const isComplete = classRecord.current_period === 3;
+
 	return (
 		<div className="space-y-6">
 			<div className="grid gap-4">
-				<SectionCard
-					title="Live Deal Board"
-					icon={<Handshake className="h-5 w-5 text-primary" />}
-				>
-					{board.rows.length === 0 ? (
+				{isComplete ? (
+					<SimulationResultsCard scores={scores} />
+				) : (
+					<SectionCard
+						title="Live Deal Board"
+						icon={<Handshake className="h-5 w-5 text-primary" />}
+					>
+						{board.rows.length === 0 ? (
 						<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
 							No items on the deal board yet.
 						</div>
@@ -296,6 +310,7 @@ export function InstructorLiveDashboard({ roster }: DashboardProps) {
 						</div>
 					)}
 				</SectionCard>
+				)}
 			</div>
 
 			<Tabs defaultValue="Trade Breakdown" className="space-y-4">
