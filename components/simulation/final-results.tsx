@@ -1,5 +1,6 @@
 "use client";
 
+import { deriveOutcome } from "@/lib/simulation/outcome";
 import type { TeamScore } from "@/lib/types/domain";
 
 type FinalResultsProps = {
@@ -7,28 +8,34 @@ type FinalResultsProps = {
 };
 
 export function FinalResults({ scores }: FinalResultsProps) {
-	const usaScore = scores.find((s) => s.team?.country === "USA");
-	const chinaScore = scores.find((s) => s.team?.country === "China");
+	const outcome = deriveOutcome(scores);
 
-	const usaPoints = Number(usaScore?.score ?? 0);
-	const chinaPoints = Number(chinaScore?.score ?? 0);
+	// No score rows means no package ever ratified. Rendering that as 0-0
+	// would report a stalemate the class never negotiated its way into.
+	if (outcome.kind === "no-deal") {
+		return (
+			<div className="mx-auto flex w-full max-w-4xl flex-col gap-6 py-10">
+				<div className="space-y-1 text-center">
+					<h2 className="text-3xl font-semibold tracking-tight text-foreground">
+						No deal reached
+					</h2>
+					<p className="text-sm text-muted-foreground">
+						Negotiations ended without a ratified agreement.
+					</p>
+				</div>
+				<p className="mx-auto max-w-2xl px-8 text-center text-sm leading-relaxed text-muted-foreground">
+					No issues were resolved, so neither delegation scored. Both sides
+					absorb the trade-war cost described in their briefings.
+				</p>
+				<hr />
+			</div>
+		);
+	}
 
-	const isUsaWinner = usaPoints > chinaPoints;
-	const isChinaWinner = chinaPoints > usaPoints;
-	const isDraw = usaPoints === chinaPoints;
-
-	const diff = Math.abs(usaPoints - chinaPoints);
-
-	const getInterpretation = () => {
-		const winner = isUsaWinner ? "USA" : "China";
-		if (isDraw)
-			return "The negotiation reached a stalemate. Neither side was able to secure a numeric advantage, resulting in a maintenance of the current geopolitical status quo.";
-		if (diff <= 10)
-			return `A marginal advantage for ${winner}. The simulation was highly balanced, with both delegations successfully protecting their core national interests.`;
-		if (diff <= 25)
-			return `A clear strategic lead for ${winner}. Their delegation secured significant concessions while maintaining stable domestic valuations across key issues.`;
-		return `A decisive outcome in favor of ${winner}. The scoring differential indicates a major shift in the bilateral relationship, with one side securing high-leverage objectives.`;
-	};
+	const { usaPoints, chinaPoints, diff, interpretation } = outcome;
+	const isUsaWinner = outcome.winner === "USA";
+	const isChinaWinner = outcome.winner === "China";
+	const isDraw = outcome.kind === "draw";
 
 	const ScoreCard = ({
 		team,
@@ -113,9 +120,9 @@ export function FinalResults({ scores }: FinalResultsProps) {
 
 			{/* Outcome interpretation */}
 			<p className="mx-auto max-w-2xl px-8 text-center text-sm leading-relaxed text-muted-foreground">
-				{getInterpretation()}
+				{interpretation}
 			</p>
-			<hr></hr>
+			<hr />
 		</div>
 	);
 }
