@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { submitVote } from "@/app/actions/trade-controller";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-	useResolveUserName,
-	useUserNames,
-	useVotes,
-} from "@/lib/realtime/hooks";
+import { useVotes } from "@/lib/realtime/hooks";
 import type { TradeProposal, VoteChoice } from "@/lib/types/domain";
 
 type VotingPanelProps = {
@@ -19,15 +15,24 @@ type VotingPanelProps = {
 	onClose: () => void;
 };
 
+/**
+ * Above this many delegates the pips stop being countable and read as
+ * hatching, so turnout falls back to a single bar. Counts both delegations —
+ * see totalMembers below.
+ */
+const PIP_LIMIT = 12;
+
 export function VotingPanel({
 	proposal,
 	currentUserId,
 	// myTeamId,
 	onClose,
 }: VotingPanelProps) {
+	// Ballots are read for the viewer's own vote and for turnout only. Voter
+	// identity is deliberately never rendered — students reject a deal they
+	// disagree with far more readily when the blame for it failing isn't
+	// attributable to them.
 	const votes = useVotes(proposal.id);
-	const userNames = useUserNames();
-	const resolveUserName = useResolveUserName();
 	const [isPending, startTransition] = useTransition();
 	const [optimisticVote, setOptimisticVote] = useState<VoteChoice | null>(null);
 
@@ -35,15 +40,6 @@ export function VotingPanel({
 		votes.find((vote) => vote.user_id === currentUserId)?.vote ??
 		optimisticVote;
 	const hasVoted = myVote !== null;
-
-	// Resolve display names for live votes that arrived without the join
-	useEffect(() => {
-		for (const vote of votes) {
-			if (!vote.user?.full_name && !userNames.has(vote.user_id)) {
-				void resolveUserName(vote.user_id);
-			}
-		}
-	}, [votes, userNames, resolveUserName]);
 
 	const handleVote = (vote: VoteChoice) => {
 		startTransition(async () => {
@@ -56,6 +52,8 @@ export function VotingPanel({
 	const isResolved = proposal.status !== "pending";
 	const approvals = votes.filter((v) => v.vote === "approve").length;
 	const rejections = votes.filter((v) => v.vote === "reject").length;
+	const totalMembers = proposal.vote_summary?.total_members ?? 0;
+	const votesCast = votes.length;
 
 	const netImpact = (proposal.offered_items ?? [])
 		.concat(proposal.requested_items ?? [])
@@ -165,74 +163,85 @@ export function VotingPanel({
 
 					{/* Vote Tally */}
 					<div className="rounded-lg border bg-muted p-3">
-						<p className="text-xs font-medium mb-2">Vote Tally</p>
-						<div className="flex gap-4 mb-2">
-							<div className="flex-1 text-center">
-								<div className="text-2xl font-bold text-emerald-600">
-									{approvals}
+						<p className="text-xs font-medium mb-2">
+							{isResolved ? "Final Tally" : "Voting in progress"}
+						</p>
+						{/*
+						 * Counts stay hidden until the vote resolves. Ratification is
+						 * unanimous, so a running tally deanonymises by arithmetic: at
+						 * "3 of 4 voted, 3 approve" the whole room watches the counter
+						 * flip the moment the last delegate rejects. Turnout is safe to
+						 * show; the split is not.
+						 */}
+						{isResolved && (
+							<div className="flex gap-4 mb-2">
+								<div className="flex-1 text-center">
+									<div className="text-2xl font-bold text-emerald-600">
+										{approvals}
+									</div>
+									<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+										Approve
+									</div>
 								</div>
-								<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-									Approve
+								<div className="w-px bg-border" />
+								<div className="flex-1 text-center">
+									<div className="text-2xl font-bold text-red-500">
+										{rejections}
+									</div>
+									<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+										Reject
+									</div>
 								</div>
-							</div>
-							<div className="w-px bg-border" />
-							<div className="flex-1 text-center">
-								<div className="text-2xl font-bold text-red-500">
-									{rejections}
-								</div>
-								<div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-									Reject
-								</div>
-							</div>
-						</div>
-						{proposal.vote_summary && (
-							<div className="h-2 bg-muted rounded-full overflow-hidden">
-								<div
-									className="h-full bg-emerald-500 rounded-full transition-all duration-700"
-									style={{
-										width: `${proposal.vote_summary.total_members > 0 ? (votes.length / proposal.vote_summary.total_members) * 100 : 0}%`,
-									}}
-								/>
 							</div>
 						)}
-						<p className="text-[10px] text-muted-foreground text-center mt-1">
-							{votes.length} / {proposal.vote_summary?.total_members ?? "?"}{" "}
-							members voted
-						</p>
-					</div>
-
-					{/* Individual Votes */}
-					{votes.length > 0 && (
-						<div>
-							<p className="text-xs font-medium text-muted-foreground mb-2">
-								Individual Votes
-							</p>
-							<div className="space-y-1">
-								{votes.map((v) => (
-									<div
-										key={v.id}
-										className="flex items-center justify-between text-xs px-3 py-1.5 rounded-md bg-card border"
-									>
-										<span>
-											{v.user?.full_name ??
-												userNames.get(v.user_id) ??
-												"Unknown"}
-										</span>
-										<Badge
-											variant="secondary"
-											className={`text-[10px] ${
-												v.vote === "approve"
-													? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-													: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+						{/*
+						 * Turnout, never the split. One pip per delegate for normal
+						 * classes: the quantity is a count of people, not a percentage,
+						 * and you can see how many are outstanding without reading the
+						 * caption. Large classes fall back to a single bar, where pips
+						 * would read as hatching.
+						 *
+						 * Both use bg-border for the empty portion, which contrasts
+						 * against the bg-muted card in either theme. The original track
+						 * was bg-muted on bg-muted, so the unfilled remainder was
+						 * invisible and a part-full bar read as a floating dash.
+						 *
+						 * Decorative: the caption below is the accessible equivalent.
+						 */}
+						{totalMembers > 0 &&
+							(totalMembers <= PIP_LIMIT ? (
+								<div className="flex gap-1" aria-hidden="true">
+									{Array.from({ length: totalMembers }, (_, i) => (
+										<div
+											key={i}
+											className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+												i < votesCast ? "bg-primary" : "bg-border"
 											}`}
-										>
-											{v.vote}
-										</Badge>
-									</div>
-								))}
-							</div>
-						</div>
-					)}
+										/>
+									))}
+								</div>
+							) : (
+								<div
+									className="h-2 bg-border rounded-full overflow-hidden"
+									aria-hidden="true"
+								>
+									<div
+										className="h-full bg-primary rounded-full transition-all duration-700"
+										style={{
+											width: `${(votesCast / totalMembers) * 100}%`,
+										}}
+									/>
+								</div>
+							))}
+						<p className="text-[10px] text-muted-foreground text-center mt-1">
+							{votesCast} of {totalMembers || "?"} delegates have voted
+						</p>
+						{!isResolved && (
+							<p className="text-[10px] text-muted-foreground text-center mt-1">
+								Ballots are private — how each delegate voted is never shown.
+							</p>
+						)}
+					</div>
 				</div>
 			</ScrollArea>
 
