@@ -73,7 +73,12 @@ async function ClassDetailPageInner({
 		if (classData.current_period < periods.length - 1) {
 			await updateClassPeriod(id, classData.current_period + 1);
 		}
-		if (classData.current_period === periods.length - 2) {
+		// `>=`, not `===`: ratification can advance the class to the End period
+		// on its own (schema.sql:768-770), so archiving must not depend on having
+		// just advanced from the bilateral period. Without this, every class that
+		// successfully reached a deal stays `active` forever, with the button
+		// that would archive it disabled.
+		if (classData.current_period >= periods.length - 2) {
 			await endSimulation(id);
 		}
 	}
@@ -107,6 +112,7 @@ async function ClassDetailPageInner({
 					classId={id}
 					classCode={classData.class_code}
 					currentPeriod={classData.current_period}
+					status={classData.status}
 					periods={periods}
 					advanceAction={advancePeriod}
 					goBackAction={goBackPeriod}

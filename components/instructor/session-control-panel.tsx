@@ -7,6 +7,7 @@ export function SessionControlPanel({
 	classId,
 	classCode,
 	currentPeriod,
+	status,
 	periods,
 	advanceAction,
 	goBackAction,
@@ -14,10 +15,28 @@ export function SessionControlPanel({
 	classId: string;
 	classCode: string | null;
 	currentPeriod: number;
+	/** 'active' | 'archived' — schema.sql:54. */
+	status: string;
 	periods: string[];
 	advanceAction: () => Promise<void>;
 	goBackAction: () => Promise<void>;
 }) {
+	const isArchived = status === "archived";
+	const isFinalPeriod = currentPeriod >= periods.length - 1;
+
+	// All four states submit the same advanceAction. At the final period its
+	// advance guard is already false, so it archives without advancing —
+	// "archive only" is emergent, not a separate code path. The final period is
+	// reachable without the instructor touching this button at all, because
+	// ratification advances the class there itself (schema.sql:768-770).
+	const advanceLabel = isArchived
+		? "Simulation Archived"
+		: isFinalPeriod
+			? "Archive Simulation"
+			: currentPeriod >= periods.length - 2
+				? "End Simulation"
+				: "Advance to Next Period →";
+
 	return (
 		<Card>
 			<CardHeader>
@@ -99,12 +118,10 @@ export function SessionControlPanel({
 					</form>
 					<form action={advanceAction} className="ml-auto">
 						<Button
-							disabled={currentPeriod >= periods.length - 1}
+							disabled={isArchived}
 							className="h-10 px-6 font-bold shadow-sm transition-all"
 						>
-							{currentPeriod >= periods.length - 2
-								? "End Simulation"
-								: "Advance to Next Period →"}
+							{advanceLabel}
 						</Button>
 					</form>
 				</div>

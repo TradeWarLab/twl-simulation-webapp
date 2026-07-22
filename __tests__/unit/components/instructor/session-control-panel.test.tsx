@@ -16,6 +16,7 @@ describe("SessionControlPanel", () => {
 				classId="class-1"
 				classCode="TWL-123456"
 				currentPeriod={1}
+				status="active"
 				periods={periods}
 				advanceAction={vi.fn()}
 				goBackAction={vi.fn()}
@@ -48,6 +49,7 @@ describe("SessionControlPanel", () => {
 				classId="class-1"
 				classCode={null}
 				currentPeriod={0}
+				status="active"
 				periods={periods}
 				advanceAction={vi.fn()}
 				goBackAction={vi.fn()}
@@ -60,12 +62,29 @@ describe("SessionControlPanel", () => {
 		expect(screen.getByText("Unavailable")).toBeInTheDocument();
 	});
 
-	it("switches the advance button label near the final period and disables it at the end", () => {
+	it("labels the advance button by period", () => {
 		const { rerender } = render(
 			<SessionControlPanel
 				classId="class-1"
 				classCode="TWL-123456"
+				currentPeriod={1}
+				status="active"
+				periods={periods}
+				advanceAction={vi.fn()}
+				goBackAction={vi.fn()}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("button", { name: /advance to next period/i }),
+		).toBeInTheDocument();
+
+		rerender(
+			<SessionControlPanel
+				classId="class-1"
+				classCode="TWL-123456"
 				currentPeriod={periods.length - 2}
+				status="active"
 				periods={periods}
 				advanceAction={vi.fn()}
 				goBackAction={vi.fn()}
@@ -75,12 +94,36 @@ describe("SessionControlPanel", () => {
 		expect(
 			screen.getByRole("button", { name: /end simulation/i }),
 		).toBeInTheDocument();
+	});
 
-		rerender(
+	it("offers archiving at the final period, which ratification can reach on its own", () => {
+		// finalize_ratified_package advances the class to the final period
+		// (schema.sql:768-770). Before this, the button was disabled there, so a
+		// class that actually reached a deal could never be archived.
+		render(
 			<SessionControlPanel
 				classId="class-1"
 				classCode="TWL-123456"
 				currentPeriod={periods.length - 1}
+				status="active"
+				periods={periods}
+				advanceAction={vi.fn()}
+				goBackAction={vi.fn()}
+			/>,
+		);
+
+		const button = screen.getByRole("button", { name: /archive simulation/i });
+		expect(button).toBeInTheDocument();
+		expect(button).toBeEnabled();
+	});
+
+	it("disables the button only once the class is archived", () => {
+		render(
+			<SessionControlPanel
+				classId="class-1"
+				classCode="TWL-123456"
+				currentPeriod={periods.length - 1}
+				status="archived"
 				periods={periods}
 				advanceAction={vi.fn()}
 				goBackAction={vi.fn()}
@@ -88,7 +131,7 @@ describe("SessionControlPanel", () => {
 		);
 
 		expect(
-			screen.getByRole("button", { name: /end simulation/i }),
+			screen.getByRole("button", { name: /simulation archived/i }),
 		).toBeDisabled();
 	});
 });
