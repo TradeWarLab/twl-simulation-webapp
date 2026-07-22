@@ -2,7 +2,6 @@
 
 import { Handshake } from "lucide-react";
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildViewerValueMap } from "@/lib/realtime/derive";
 import {
@@ -19,6 +18,7 @@ import type {
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 import { ManageItemsClient } from "./manage-items-client";
+import { SectionCard } from "./section-card";
 import { StudentRoster } from "./student-roster";
 
 type DashboardProps = {
@@ -36,42 +36,6 @@ type TeamMetric = {
 	unresolvedCount: number;
 	tradeItems: TradeItem[];
 };
-
-function SectionCard({
-	title,
-	description,
-	icon,
-	children,
-	action,
-}: {
-	title: string;
-	description?: string;
-	icon: React.ReactNode;
-	children: React.ReactNode;
-	action?: React.ReactNode;
-}) {
-	return (
-		<Card className="border-border/70">
-			<CardHeader className="border-b bg-muted/20 pb-4">
-				<div className="flex items-start justify-between gap-4">
-					<div>
-						<CardTitle className="flex items-center gap-2 text-lg">
-							{icon}
-							{title}
-						</CardTitle>
-						{description && (
-							<p className="mt-1 text-sm text-muted-foreground">
-								{description}
-							</p>
-						)}
-					</div>
-					{action}
-				</div>
-			</CardHeader>
-			<CardContent className="p-5">{children}</CardContent>
-		</Card>
-	);
-}
 
 function formatSigned(value: number) {
 	return value > 0 ? `+${value}` : `${value}`;
