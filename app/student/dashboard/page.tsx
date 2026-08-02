@@ -30,8 +30,6 @@ async function StudentDashboardInner() {
 		redirect("/auth/login");
 	}
 
-	// ToDo: Implement actual join logic / verification
-	// For now, this might return empty unless we manually seed data
 	const enrolledClasses = await getStudentClasses();
 
 	return (
