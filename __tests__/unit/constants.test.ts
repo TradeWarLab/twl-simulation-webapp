@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_BRIEFINGS,
 	INTEREST_GROUPS,
+	interestGroupLabel,
 	SIMULATION_PERIODS,
 	TEAM_COUNTRIES,
 } from "@/lib/constants";
@@ -17,11 +18,20 @@ describe("Constants", () => {
 		expect(TEAM_COUNTRIES).toEqual(["USA", "China"]);
 	});
 
-	it("defines 3 interest groups", () => {
+	it("defines 3 interest groups pairing a stored value with a display label", () => {
 		expect(INTEREST_GROUPS).toHaveLength(3);
-		expect(INTEREST_GROUPS).toContain("Pro-Globalization");
-		expect(INTEREST_GROUPS).toContain("Pro-Decoupling");
-		expect(INTEREST_GROUPS).toContain("Strategic Rivalry");
+		expect(INTEREST_GROUPS).toEqual([
+			{ value: "Pro-Globalization", label: "Globalist" },
+			{ value: "Pro-Decoupling", label: "Protectionist" },
+			{ value: "Strategic Rivalry", label: "National Security" },
+		]);
+	});
+
+	it("maps a stored value to its label, passing unknown values through", () => {
+		expect(interestGroupLabel("Pro-Decoupling")).toBe("Protectionist");
+		expect(interestGroupLabel("Some Legacy Value")).toBe("Some Legacy Value");
+		expect(interestGroupLabel(null)).toBe("");
+		expect(interestGroupLabel(undefined)).toBe("");
 	});
 
 	it("provides 6 default briefings (3 per country)", () => {

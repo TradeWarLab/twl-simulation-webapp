@@ -226,12 +226,12 @@ export function StudentRoster({
 					</select>
 					<select
 						name="interest_block"
-						defaultValue={INTEREST_GROUPS[0]}
+						defaultValue={INTEREST_GROUPS[0].value}
 						className="h-10 rounded-md border bg-background px-3 text-sm"
 					>
 						{INTEREST_GROUPS.map((group) => (
-							<option key={group} value={group}>
-								{group}
+							<option key={group.value} value={group.value}>
+								{group.label}
 							</option>
 						))}
 					</select>
@@ -265,8 +265,8 @@ export function StudentRoster({
 						>
 							<option value="all">All groups</option>
 							{INTEREST_GROUPS.map((group) => (
-								<option key={group} value={group}>
-									{group}
+								<option key={group.value} value={group.value}>
+									{group.label}
 								</option>
 							))}
 						</select>
@@ -355,8 +355,8 @@ export function StudentRoster({
 														Unassigned
 													</option>
 													{INTEREST_GROUPS.map((group) => (
-														<option key={group} value={group}>
-															{group}
+														<option key={group.value} value={group.value}>
+															{group.label}
 														</option>
 													))}
 												</select>
