@@ -291,6 +291,9 @@ create policy "Trade items viewable by own team or instructor."
     (exists (select 1 from public.classes where id = trade_items.class_id and instructor_id = auth.uid()))
   );
 
+-- Editing is open only during Domestic Negotiation (period 1). The run guide
+-- states rankings freeze when Round 1 ends; a wider window let students
+-- re-score during bilateral talks via a direct API call.
 create policy "Teams can update their own trade items."
   on public.trade_items for update using (
     exists (
@@ -299,7 +302,7 @@ create policy "Teams can update their own trade items."
     )
     and exists (
       select 1 from public.classes
-      where id = trade_items.class_id and current_period < 3
+      where id = trade_items.class_id and current_period = 1
     )
   );
 
