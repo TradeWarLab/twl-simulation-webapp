@@ -235,7 +235,7 @@ describe("SharedDealBoard", () => {
 			onDismissResetBanner: onDismiss,
 		});
 		expect(
-			screen.getByText(/deal was rejected — the board has been reset/i),
+			screen.getByText(/deal was rejected: the board has been reset/i),
 		).toBeInTheDocument();
 		fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
 		expect(onDismiss).toHaveBeenCalled();

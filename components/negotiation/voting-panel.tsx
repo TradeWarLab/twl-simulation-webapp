@@ -17,7 +17,7 @@ type VotingPanelProps = {
 
 /**
  * Above this many delegates the pips stop being countable and read as
- * hatching, so turnout falls back to a single bar. Counts both delegations —
+ * hatching, so turnout falls back to a single bar. Counts both delegations:
  * see totalMembers below.
  */
 const PIP_LIMIT = 12;
@@ -29,7 +29,7 @@ export function VotingPanel({
 	onClose,
 }: VotingPanelProps) {
 	// Ballots are read for the viewer's own vote and for turnout only. Voter
-	// identity is deliberately never rendered — students reject a deal they
+	// identity is deliberately never rendered: students reject a deal they
 	// disagree with far more readily when the blame for it failing isn't
 	// attributable to them.
 	const votes = useVotes(proposal.id);
@@ -69,7 +69,7 @@ export function VotingPanel({
 					</h4>
 					<p className="text-xs text-muted-foreground">
 						{proposal.is_package
-							? "Ratification is all or nothing — one rejection resets the board"
+							? "Ratification is all or nothing: one rejection resets the board"
 							: `${proposal.proposing_team?.country} → ${proposal.receiving_team?.country}`}
 					</p>
 				</div>
@@ -238,7 +238,7 @@ export function VotingPanel({
 						</p>
 						{!isResolved && (
 							<p className="text-[10px] text-muted-foreground text-center mt-1">
-								Ballots are private — how each delegate voted is never shown.
+								Ballots are private: how each delegate voted is never shown.
 							</p>
 						)}
 					</div>

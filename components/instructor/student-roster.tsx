@@ -377,7 +377,7 @@ export function StudentRoster({
 											<div className="text-xs text-muted-foreground">
 												{entry.joined_at
 													? new Date(entry.joined_at).toLocaleDateString()
-													: "—"}
+													: "-"}
 											</div>
 											<div className="text-right">
 												<Button

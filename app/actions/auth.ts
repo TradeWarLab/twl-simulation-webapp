@@ -144,7 +144,7 @@ async function repairEnrollment(
 		teamId = team?.id ?? null;
 	}
 
-	// Upsert the enrollment — updates team/interest if already enrolled by trigger
+	// Upsert the enrollment: updates team/interest if already enrolled by trigger
 	await supabase.from("students_classes").upsert(
 		{
 			student_id: userId,

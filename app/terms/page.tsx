@@ -5,7 +5,7 @@ import {
 } from "@/components/legal/legal-shell";
 
 export const metadata: Metadata = {
-	title: "Terms of Use — TWL Simulation",
+	title: "Terms of Use: TWL Simulation",
 	description: "Terms of use for the Trade War Lab simulation platform.",
 };
 

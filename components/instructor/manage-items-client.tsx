@@ -22,7 +22,7 @@ function valueTone(value: number) {
 function formatValue(value: number) {
 	if (value > 0) return `+${value}`;
 	if (value < 0) return `${value}`;
-	return "—";
+	return "-";
 }
 
 export function ManageItemsClient({
@@ -94,7 +94,7 @@ export function ManageItemsClient({
 
 				{!teamId ? (
 					<div className="p-4 text-center text-sm text-muted-foreground">
-						Team not created yet — assign a student to this team first.
+						Team not created yet: assign a student to this team first.
 					</div>
 				) : (
 					<>
@@ -140,7 +140,7 @@ export function ManageItemsClient({
 							</form>
 						)}
 
-						{/* Column header — widths match the rows so everything aligns. */}
+						{/* Column header: widths match the rows so everything aligns. */}
 						<div className="flex items-center gap-3 border-b bg-muted/40 px-4 py-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
 							<span className="flex-1">Item</span>
 							{readOnly && <span className="w-20 shrink-0">Status</span>}

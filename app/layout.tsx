@@ -14,14 +14,14 @@ export const metadata: Metadata = {
 	description: "Simulate the U.S.–PRC trade negotiations",
 };
 
-// Public Sans — the U.S. federal typeface (USWDS); the body / UI voice.
+// Public Sans: the U.S. federal typeface (USWDS); the body / UI voice.
 const publicSans = Public_Sans({
 	variable: "--font-sans",
 	display: "swap",
 	subsets: ["latin"],
 });
 
-// Libre Franklin — grotesk display face for headings and index numerals.
+// Libre Franklin: grotesk display face for headings and index numerals.
 const libreFranklin = Libre_Franklin({
 	variable: "--font-display",
 	display: "swap",

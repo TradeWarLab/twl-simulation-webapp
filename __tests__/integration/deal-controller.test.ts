@@ -253,7 +253,7 @@ describe("removeBoardItem", () => {
 		expect(result).toEqual({ success: true });
 		expect(builders.get("deal_board_items")!.delete).toHaveBeenCalled();
 		// clearRatificationCalls is never invoked, so the table is never
-		// even queried — no builder gets created for it.
+		// even queried: no builder gets created for it.
 		expect(builders.get("deal_ratification_calls")?.delete).toBeUndefined();
 	});
 

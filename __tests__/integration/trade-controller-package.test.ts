@@ -22,7 +22,7 @@ function mockTables(
 	const builders = new Map<string, ReturnType<typeof createChainableBuilder>>();
 	// Eagerly create builders for every configured table so callers can
 	// patch them (e.g. `.single.mockResolvedValue`) *before* submitVote
-	// exercises the query chain — the mock client resolves `.from(table)`
+	// exercises the query chain: the mock client resolves `.from(table)`
 	// lazily otherwise, which would leave `builders.get(table)` undefined
 	// at patch time.
 	for (const table of Object.keys(responses)) {
@@ -39,7 +39,7 @@ function mockTables(
 	return builders;
 }
 
-describe("submitVote — package proposals", () => {
+describe("submitVote: package proposals", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
@@ -120,8 +120,8 @@ describe("submitVote — package proposals", () => {
 
 		await submitVote("pkg-1", "reject");
 
-		// (Builders are created eagerly for mock-plumbing reasons — see
-		// `mockTables` above — so assert non-invocation rather than
+		// (Builders are created eagerly for mock-plumbing reasons: see
+		// `mockTables` above: so assert non-invocation rather than
 		// non-existence of the builder itself.)
 		expect(builders.get("deal_board_items")?.delete).not.toHaveBeenCalled();
 		expect(
@@ -217,7 +217,7 @@ describe("submitVote — package proposals", () => {
 		expect(mockClient.rpc).toHaveBeenCalledWith("finalize_ratified_package", {
 			p_proposal_id: "pkg-1",
 		});
-		// submitVote never touches the board on approval — the RPC owns that.
+		// submitVote never touches the board on approval: the RPC owns that.
 		expect(builders.get("deal_board_items")?.delete).not.toHaveBeenCalled();
 		expect(
 			builders.get("deal_ratification_calls")?.delete,

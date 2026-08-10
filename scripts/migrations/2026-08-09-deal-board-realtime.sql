@@ -2,7 +2,7 @@
 -- Add the shared deal board tables to the realtime publication.
 --
 -- Both already carry `replica identity full` (schema.sql) so DELETE events
--- include the old row, but neither was ever published — so
+-- include the old row, but neither was ever published: so
 -- RealtimeClassProvider's subscriptions to them never delivered anything and
 -- the board did not sync between students.
 --

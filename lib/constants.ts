@@ -12,7 +12,7 @@ export const TEAM_COUNTRIES = ["USA", "China"] as const;
 /**
  * Interest-group roles. `value` is what is persisted to
  * students_classes.interest_block, class_invites.interest_block, and
- * briefings.interest_group — getStudentBriefings matches on it by string
+ * briefings.interest_group: getStudentBriefings matches on it by string
  * equality, so changing it would orphan existing enrolments from their role
  * briefing. `label` is the instructor-facing vocabulary from the run guide.
  */

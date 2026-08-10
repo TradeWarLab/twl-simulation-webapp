@@ -15,7 +15,7 @@ export function SessionControlPanel({
 	classId: string;
 	classCode: string | null;
 	currentPeriod: number;
-	/** 'active' | 'archived' — schema.sql:54. */
+	/** 'active' | 'archived': schema.sql:54. */
 	status: string;
 	periods: string[];
 	advanceAction: () => Promise<void>;
@@ -25,7 +25,7 @@ export function SessionControlPanel({
 	const isFinalPeriod = currentPeriod >= periods.length - 1;
 
 	// All four states submit the same advanceAction. At the final period its
-	// advance guard is already false, so it archives without advancing —
+	// advance guard is already false, so it archives without advancing:
 	// "archive only" is emergent, not a separate code path. The final period is
 	// reachable without the instructor touching this button at all, because
 	// ratification advances the class there itself (schema.sql:768-770).

@@ -42,7 +42,7 @@ function baseSnapshot(): RealtimeSnapshot {
 	};
 }
 
-describe("class store — deal board slices", () => {
+describe("class store: deal board slices", () => {
 	it("hydrates board items and ratification calls from the snapshot", () => {
 		const store = createClassStore(baseSnapshot());
 		expect(store.dealBoardItems.get()).toEqual([BOARD_ROW]);

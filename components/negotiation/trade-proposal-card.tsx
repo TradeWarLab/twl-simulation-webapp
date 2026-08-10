@@ -189,7 +189,7 @@ export function TradeProposalCard({
 					</span>
 				</div>
 
-				{/* Vote Buttons — only show for opposing team and pending proposals */}
+				{/* Vote Buttons: only show for opposing team and pending proposals */}
 				{mode === "student" &&
 					proposal.status === "pending" &&
 					!isMyProposal && (

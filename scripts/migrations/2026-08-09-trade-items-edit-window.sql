@@ -6,7 +6,7 @@
 -- `current_period < 3` also permitted edits during Bilateral Negotiation, so a
 -- student could re-score their asks mid-negotiation via a direct API call.
 --
--- Instructors are unaffected — they write through "Instructors can manage
+-- Instructors are unaffected: they write through "Instructors can manage
 -- trade items." finalize_ratified_package is security definer and bypasses RLS.
 --
 -- Idempotent: safe to re-run.

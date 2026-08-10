@@ -25,7 +25,7 @@ import { StudentRoster } from "./student-roster";
 
 type DashboardProps = {
 	roster: ClassRosterEntry[];
-	/** Empty when no deal ratified — SimulationResultsCard reads that as no-deal. */
+	/** Empty when no deal ratified: SimulationResultsCard reads that as no-deal. */
 	scores: TeamScore[];
 	/**
 	 * Server-rendered `classes.current_period`, from the same request that
@@ -195,7 +195,7 @@ export function InstructorLiveDashboard({
 	);
 
 	// Live shared deal board with BOTH teams' valuations. Item values are
-	// per-team (viewer-relative), so the instructor — who has no team — needs
+	// per-team (viewer-relative), so the instructor - who has no team - needs
 	// each side's own mirror-row value to read the running totals. Mirrors the
 	// student board's "Your Net Score Impact", shown for USA and China at once.
 	const board = useMemo(() => {

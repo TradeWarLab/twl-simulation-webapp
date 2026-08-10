@@ -43,7 +43,7 @@ export function SimulationHeader({
 					</div>
 				</div>
 
-				{/* Phase — centered on desktop; moves to its own row on mobile */}
+				{/* Phase: centered on desktop; moves to its own row on mobile */}
 				<div className="hidden md:block text-center shrink-0">
 					<div className="text-xs uppercase tracking-wide text-muted-foreground">
 						Current Phase

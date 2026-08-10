@@ -65,7 +65,7 @@ export function InstructorGuide() {
 			</Section>
 
 			<Section
-				title={`Assigning roles — before Round 1`}
+				title={`Assigning roles: before Round 1`}
 				subtitle={`${SIMULATION_PERIODS[0]} phase`}
 			>
 				<p>
@@ -109,7 +109,7 @@ export function InstructorGuide() {
 			</Section>
 
 			<Section
-				title="Round 1 — internal team negotiation"
+				title="Round 1: internal team negotiation"
 				subtitle={`${SIMULATION_PERIODS[1]} phase · 50 minutes`}
 			>
 				<p>
@@ -141,7 +141,7 @@ export function InstructorGuide() {
 			</Section>
 
 			<Section
-				title="Round 2 — bilateral negotiation"
+				title="Round 2: bilateral negotiation"
 				subtitle={`${SIMULATION_PERIODS[2]} phase · 50 minutes`}
 			>
 				<p>
@@ -170,7 +170,7 @@ export function InstructorGuide() {
 				subtitle={`${SIMULATION_PERIODS[3]} phase`}
 			>
 				<p>
-					Once a deal is ratified — or you end a deadlocked class — the
+					Once a deal is ratified - or you end a deadlocked class - the
 					simulation moves to {SIMULATION_PERIODS[3]}. Both delegations&apos;
 					valuations are revealed to students, and the final scores are posted.
 				</p>

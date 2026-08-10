@@ -83,7 +83,7 @@ describe("NegotiationController", () => {
 	it("shows the reset banner after a package is rejected", () => {
 		renderController([{ ...PACKAGE, status: "rejected" }]);
 		expect(
-			screen.getByText(/deal was rejected — the board has been reset/i),
+			screen.getByText(/deal was rejected: the board has been reset/i),
 		).toBeInTheDocument();
 	});
 });

@@ -28,7 +28,7 @@ export async function updateStudentTeam(
 		if (teamData?.id) {
 			newTeamId = teamData.id;
 		} else {
-			// Team doesn't exist yet — create it on the fly
+			// Team doesn't exist yet: create it on the fly
 			const { data: createdTeam, error: createError } = await supabase
 				.from("teams")
 				.insert({ class_id: classId, country: newTeamCountry })
