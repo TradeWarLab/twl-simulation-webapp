@@ -796,3 +796,5 @@ alter publication supabase_realtime add table public.classes;
 alter publication supabase_realtime add table public.trade_items;
 alter publication supabase_realtime add table public.negotiation_actions;
 alter publication supabase_realtime add table public.negotiation_bundles;
+alter publication supabase_realtime add table public.deal_board_items;
+alter publication supabase_realtime add table public.deal_ratification_calls;
