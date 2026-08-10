@@ -33,8 +33,26 @@ export function UpdatePasswordForm({
 		try {
 			const { error } = await supabase.auth.updateUser({ password });
 			if (error) throw error;
-			// Update this route to redirect to an authenticated route. The user already has an active session.
-			router.push("/protected");
+
+			// Route by role, the same way login() does. The old target was
+			// "/protected", a Supabase starter-template route that does not exist
+			// here — completing a reset landed the user on the 404 page.
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			const { data: profile } = user
+				? await supabase
+						.from("users")
+						.select("role")
+						.eq("id", user.id)
+						.maybeSingle()
+				: { data: null };
+
+			router.push(
+				profile?.role === "instructor"
+					? "/instructor/dashboard"
+					: "/student/dashboard",
+			);
 		} catch (error: unknown) {
 			setError(error instanceof Error ? error.message : "An error occurred");
 		} finally {
