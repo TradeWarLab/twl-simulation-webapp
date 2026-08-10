@@ -31,12 +31,10 @@ describe("FinalResults", () => {
 		expect(screen.queryByText(/stalemate/i)).not.toBeInTheDocument();
 	});
 
-	it("shows no score numbers in the no-deal state", () => {
-		// Rendering 0 and 0 here is exactly the bug: it is indistinguishable
-		// from a negotiated tie.
-		const { container } = render(<FinalResults scores={[]} />);
-		expect(container.textContent).not.toMatch(/\bWinner\b/);
-		expect(screen.queryByText("0")).not.toBeInTheDocument();
+	it("shows the trade-war cost for both delegations on a no deal", () => {
+		render(<FinalResults scores={[]} />);
+		expect(screen.getAllByText("-10")).toHaveLength(2);
+		expect(screen.queryByText("Winner")).not.toBeInTheDocument();
 	});
 
 	it("still calls a genuine 0-0 result a stalemate", () => {

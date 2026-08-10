@@ -43,9 +43,9 @@ describe("SimulationResultsCard", () => {
 		expect(screen.getByText(/tied at 20/i)).toBeInTheDocument();
 	});
 
-	it("renders the no-deal state without any scores", () => {
+	it("renders the no-deal state with the trade-war cost applied", () => {
 		render(<SimulationResultsCard scores={[]} />);
 		expect(screen.getByText(/no deal reached/i)).toBeInTheDocument();
-		expect(screen.queryByText("0")).not.toBeInTheDocument();
+		expect(screen.getAllByText("-10")).toHaveLength(2);
 	});
 });
