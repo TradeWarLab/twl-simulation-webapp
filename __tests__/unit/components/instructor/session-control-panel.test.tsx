@@ -39,6 +39,10 @@ describe("SessionControlPanel", () => {
 			"href",
 			"/instructor/classes/class-1/log",
 		);
+		expect(screen.getByRole("link", { name: "Instructions" })).toHaveAttribute(
+			"href",
+			"/instructor/instructions",
+		);
 		expect(screen.getByText("Class Code")).toBeInTheDocument();
 		expect(screen.getByText("TWL-123456")).toBeInTheDocument();
 	});

@@ -291,6 +291,9 @@ create policy "Trade items viewable by own team or instructor."
     (exists (select 1 from public.classes where id = trade_items.class_id and instructor_id = auth.uid()))
   );
 
+-- Editing is open only during Domestic Negotiation (period 1). The run guide
+-- states rankings freeze when Round 1 ends; a wider window let students
+-- re-score during bilateral talks via a direct API call.
 create policy "Teams can update their own trade items."
   on public.trade_items for update using (
     exists (
@@ -299,7 +302,7 @@ create policy "Teams can update their own trade items."
     )
     and exists (
       select 1 from public.classes
-      where id = trade_items.class_id and current_period < 3
+      where id = trade_items.class_id and current_period = 1
     )
   );
 
@@ -335,6 +338,11 @@ create policy "Trade items revealed after the simulation ends."
 -- ──────────────────────────────────────────────
 -- 9. Negotiation Actions (individual asks/concessions)
 -- ──────────────────────────────────────────────
+
+-- NOTE: negotiation_actions and negotiation_bundles are no longer written or
+-- read by the application. The shared deal board (deal_board_items +
+-- deal_ratification_calls + is_package proposals) replaced this v1 flow. The
+-- tables are retained because live databases hold historical rows.
 
 create table public.negotiation_actions (
   id uuid default gen_random_uuid() primary key,
@@ -796,3 +804,5 @@ alter publication supabase_realtime add table public.classes;
 alter publication supabase_realtime add table public.trade_items;
 alter publication supabase_realtime add table public.negotiation_actions;
 alter publication supabase_realtime add table public.negotiation_bundles;
+alter publication supabase_realtime add table public.deal_board_items;
+alter publication supabase_realtime add table public.deal_ratification_calls;

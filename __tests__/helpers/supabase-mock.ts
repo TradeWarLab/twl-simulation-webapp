@@ -73,6 +73,7 @@ export type MockSupabaseClient = {
 		signUp: ReturnType<typeof vi.fn>;
 		signOut: ReturnType<typeof vi.fn>;
 		getClaims: ReturnType<typeof vi.fn>;
+		updateUser: ReturnType<typeof vi.fn>;
 	};
 	channel: ReturnType<typeof vi.fn>;
 	removeChannel: ReturnType<typeof vi.fn>;
@@ -106,6 +107,7 @@ export function createMockSupabaseClient(): MockSupabaseClient {
 			getClaims: vi.fn().mockResolvedValue({
 				data: { claims: { sub: "user-1" } },
 			}),
+			updateUser: vi.fn().mockResolvedValue({ error: null }),
 		},
 		channel: vi.fn().mockReturnValue({
 			on: vi.fn().mockReturnThis(),

@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
+import { interestGroupLabel } from "@/lib/constants";
 
 export function SimulationHeader({
 	className,
@@ -34,7 +35,9 @@ export function SimulationHeader({
 						{interestGroup && (
 							<>
 								<span className="text-muted-foreground">/</span>
-								<span className="text-muted-foreground">{interestGroup}</span>
+								<span className="text-muted-foreground">
+									{interestGroupLabel(interestGroup)}
+								</span>
 							</>
 						)}
 					</div>

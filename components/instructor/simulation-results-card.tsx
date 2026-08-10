@@ -25,13 +25,23 @@ export function SimulationResultsCard({ scores }: { scores: TeamScore[] }) {
 				title="No deal reached"
 				icon={<Trophy className="h-5 w-5 text-muted-foreground" />}
 			>
-				<div className="space-y-2 rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-					<p className="font-medium text-foreground">
-						Negotiations ended without a ratified agreement.
-					</p>
-					<p>
-						No issues were resolved, so neither delegation scored. Both sides
-						absorb the trade-war cost described in their briefings.
+				<div className="space-y-4">
+					<div className="grid gap-4 sm:grid-cols-2">
+						<ScoreTile
+							label="Team USA"
+							points={outcome.usaPoints}
+							accent="usa"
+							isWinner={false}
+						/>
+						<ScoreTile
+							label="Team PRC"
+							points={outcome.chinaPoints}
+							accent="china"
+							isWinner={false}
+						/>
+					</div>
+					<p className="text-sm leading-relaxed text-muted-foreground">
+						{outcome.interpretation}
 					</p>
 				</div>
 			</SectionCard>

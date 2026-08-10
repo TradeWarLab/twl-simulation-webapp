@@ -174,8 +174,8 @@ export function ManageTeamsClient({
 										Unassigned
 									</option>
 									{INTEREST_GROUPS.map((group) => (
-										<option key={group} value={group}>
-											{group}
+										<option key={group.value} value={group.value}>
+											{group.label}
 										</option>
 									))}
 								</select>

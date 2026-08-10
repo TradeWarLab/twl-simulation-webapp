@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTradeItems } from "@/lib/realtime/hooks";
+import { TRADE_WAR_COST } from "@/lib/simulation/outcome";
 
 export function TradeItemsPanel({
 	classId,
@@ -123,12 +124,12 @@ export function TradeItemsPanel({
 					<div className="border-t border-slate-300 px-4 pb-4 pt-3 dark:border-slate-600">
 						<p className="leading-6">
 							Analysts have privately estimated that the economic cost of a
-							trade war will be <strong>-10</strong> for your country if no deal
-							is reached. This intelligence is classified and should not be
-							shared outside your delegation. The other team does not know
-							whether your cost estimate is higher or lower than theirs. Their
-							costs could range from <strong>-5</strong> to <strong>-20</strong>
-							.
+							trade war will be <strong>{TRADE_WAR_COST}</strong> for your
+							country if no deal is reached. This intelligence is classified
+							and should not be shared outside your delegation. The other team
+							does not know whether your cost estimate is higher or lower than
+							theirs. Their costs could range from <strong>-5</strong> to{" "}
+							<strong>-20</strong>.
 						</p>
 						<p className="mt-3 leading-6">
 							While keeping in mind the specific interests outlined in your

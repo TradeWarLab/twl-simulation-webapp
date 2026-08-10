@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveOutcome } from "@/lib/simulation/outcome";
+import { deriveOutcome, TRADE_WAR_COST } from "@/lib/simulation/outcome";
 import type { TeamScore } from "@/lib/types/domain";
 
 function makeScores(usa: number, china: number): TeamScore[] {
@@ -24,17 +24,23 @@ function makeScores(usa: number, china: number): TeamScore[] {
 }
 
 describe("deriveOutcome", () => {
-	it("reports no deal when there are no score rows", () => {
+	it("scores a failed negotiation at the trade-war cost for both sides", () => {
 		// finalize_ratified_package writes one row per team unconditionally, so
-		// zero rows means no deal was ever ratified.
-		expect(deriveOutcome([])).toEqual({ kind: "no-deal" });
+		// zero rows means no deal was ever ratified. The briefing tells students
+		// failure costs them TRADE_WAR_COST; the end screen must agree.
+		expect(deriveOutcome([])).toEqual({
+			kind: "no-deal",
+			usaPoints: TRADE_WAR_COST,
+			chinaPoints: TRADE_WAR_COST,
+			winner: null,
+			diff: 0,
+			interpretation: expect.stringContaining("no deal"),
+		});
 	});
 
-	it("distinguishes a negotiated 0-0 tie from a deadlock", () => {
-		// The whole point of the feature: both render 0 and 0, but only one of
-		// them is a stalemate the class actually negotiated their way into.
-		const outcome = deriveOutcome(makeScores(0, 0));
-		expect(outcome.kind).toBe("draw");
+	it("keeps no-deal distinct from a negotiated tie", () => {
+		expect(deriveOutcome([]).kind).toBe("no-deal");
+		expect(deriveOutcome(makeScores(0, 0)).kind).toBe("draw");
 	});
 
 	it("names the higher-scoring delegation as winner", () => {

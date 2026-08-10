@@ -30,19 +30,92 @@ describe("CreateClassForm Component", () => {
 		);
 	});
 
-	it("submits the form successfully", async () => {
-		const mockCreate = vi.mocked(createClass) as any;
-		mockCreate.mockResolvedValueOnce({ success: true });
+	it("disables submit until the questionnaire checkbox is ticked", () => {
+		render(<CreateClassForm />);
+		expect(
+			screen.getByRole("button", { name: "Create Class" }),
+		).toBeDisabled();
+
+		fireEvent.click(screen.getByLabelText(/completed the instructor questionnaire/i));
+
+		expect(screen.getByRole("button", { name: "Create Class" })).toBeEnabled();
+	});
+
+	it("does not call createClass while the questionnaire is unconfirmed", () => {
+		const mockCreate = vi.mocked(createClass) as unknown as ReturnType<
+			typeof vi.fn
+		>;
+		render(<CreateClassForm />);
+
+		const form = screen
+			.getByRole("button", { name: "Create Class" })
+			.closest("form");
+		if (form) fireEvent.submit(form);
+
+		expect(mockCreate).not.toHaveBeenCalled();
+	});
+
+	it("submits once the questionnaire is confirmed", () => {
+		const mockCreate = vi.mocked(createClass) as unknown as ReturnType<
+			typeof vi.fn
+		>;
+		mockCreate.mockResolvedValueOnce(undefined);
 
 		render(<CreateClassForm />);
 
-		const input = screen.getByLabelText(/Class Name/i);
-		const submitButton = screen.getByRole("button", { name: "Create Class" });
+		fireEvent.change(screen.getByLabelText(/Class Name/i), {
+			target: { value: "Advanced Econ" },
+		});
+		fireEvent.click(screen.getByLabelText(/completed the instructor questionnaire/i));
 
-		fireEvent.change(input, { target: { value: "Advanced Econ" } });
-		const form = submitButton.closest("form");
+		const form = screen
+			.getByRole("button", { name: "Create Class" })
+			.closest("form");
 		if (form) fireEvent.submit(form);
 
 		expect(mockCreate).toHaveBeenCalledTimes(1);
+	});
+
+	it("points the questionnaire link at the configured form", () => {
+		render(<CreateClassForm />);
+		const link = screen.getByRole("link", { name: /open questionnaire/i });
+		expect(link).toHaveAttribute(
+			"href",
+			expect.stringContaining("docs.google.com/forms"),
+		);
+		expect(link).toHaveAttribute("target", "_blank");
+		expect(link).toHaveAttribute("rel", "noopener noreferrer");
+	});
+});
+
+// Separate file-level mock: the shipped form URL is non-empty, so the
+// unconfigured branch is unreachable without replacing the module.
+describe("CreateClassForm with no questionnaire configured", () => {
+	beforeEach(() => {
+		vi.resetModules();
+		vi.clearAllMocks();
+	});
+
+	it("hides the block and leaves creation ungated", async () => {
+		vi.doMock("@/lib/intake-survey", () => ({
+			isIntakeSurveyConfigured: () => false,
+			buildIntakeSurveyUrl: () => "",
+		}));
+
+		const { CreateClassForm: Unconfigured } = await import(
+			"@/components/instructor/create-class-form"
+		);
+		render(<Unconfigured />);
+
+		expect(
+			screen.queryByRole("link", { name: /open questionnaire/i }),
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByText(/Instructor questionnaire/i),
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByLabelText(/completed the instructor questionnaire/i),
+		).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Create Class" })).toBeEnabled();
 	});
 });

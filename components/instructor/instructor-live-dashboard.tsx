@@ -27,6 +27,20 @@ type DashboardProps = {
 	roster: ClassRosterEntry[];
 	/** Empty when no deal ratified — SimulationResultsCard reads that as no-deal. */
 	scores: TeamScore[];
+	/**
+	 * Server-rendered `classes.current_period`, from the same request that
+	 * produced `scores`. Do not swap this for `classRecord.current_period`
+	 * (the reactive realtime store): `finalize_ratified_package` writes
+	 * `current_period = 3` and `team_scores` in one DB transaction, but the
+	 * realtime store applies the `classes` update synchronously while the
+	 * `router.refresh()` that re-fetches `scores` lands asynchronously
+	 * afterward (realtime-class-provider.tsx). For that one render, the store
+	 * would already read period 3 while `scores` is still stale/empty, and
+	 * `deriveOutcome([])` would flash a false "No deal reached" with two −10
+	 * tiles at the exact moment a deal succeeds. Keeping both values sourced
+	 * from the same server render makes that desync impossible.
+	 */
+	currentPeriod: number;
 };
 
 type TeamMetric = {
@@ -129,7 +143,11 @@ function RelativeLead({
 	);
 }
 
-export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
+export function InstructorLiveDashboard({
+	roster,
+	scores,
+	currentPeriod,
+}: DashboardProps) {
 	const store = useClassStore();
 	const classRecord = useClassRecord();
 	const tradeItems = useTradeItems();
@@ -224,7 +242,15 @@ export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
 	// the deal board card would otherwise fall back to its empty state at the
 	// exact moment the simulation finished. One condition covers both endings:
 	// a ratified deal and an instructor ending a deadlocked class.
-	const isComplete = classRecord.current_period === 3;
+	//
+	// MUST come from the `currentPeriod` server prop, not
+	// `classRecord.current_period` (the reactive realtime store). See the
+	// DashboardProps.currentPeriod doc comment: the store updates
+	// synchronously on the realtime `classes` event while `scores` only
+	// catches up after an async router.refresh(), so deriving isComplete from
+	// the store desyncs it from `scores` and flashes a false "No deal
+	// reached" at the moment of ratification. Do not "simplify" this back.
+	const isComplete = currentPeriod === 3;
 
 	return (
 		<div className="space-y-6">
@@ -237,79 +263,79 @@ export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
 						icon={<Handshake className="h-5 w-5 text-primary" />}
 					>
 						{board.rows.length === 0 ? (
-						<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-							No items on the deal board yet.
-						</div>
-					) : (
-						<div className="space-y-4">
-							<div className="grid gap-4 sm:grid-cols-2">
-								<BoardTotalCard
-									label="Team USA net"
-									total={board.usaTotal}
-									accent="usa"
-									called={calledCountries.has("USA")}
-								/>
-								<BoardTotalCard
-									label="Team PRC net"
-									total={board.chinaTotal}
-									accent="china"
-									called={calledCountries.has("China")}
-								/>
+							<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+								No items on the deal board yet.
 							</div>
-							<RelativeLead
-								usa={board.usaTotal}
-								china={board.chinaTotal}
-								prospective
-							/>
-							<div className="overflow-x-auto rounded-xl border">
-								<table className="w-full text-sm">
-									<thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-										<tr>
-											<th className="px-3 py-2 text-left font-semibold">
-												Item
-											</th>
-											<th className="px-3 py-2 text-left font-semibold">
-												Gives
-											</th>
-											<th className="px-3 py-2 text-right font-semibold">
-												USA value
-											</th>
-											<th className="px-3 py-2 text-right font-semibold">
-												PRC value
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										{board.rows.map((row) => (
-											<tr key={row.id} className="border-t">
-												<td className="px-3 py-2">{row.name}</td>
-												<td className="px-3 py-2 text-muted-foreground">
-													{row.givingCountry === "China" ? "PRC" : "USA"}
-												</td>
-												<td
-													className={cn(
-														"px-3 py-2 text-right font-mono tabular-nums",
-														signedTone(row.usaValue),
-													)}
-												>
-													{formatSigned(row.usaValue)}
-												</td>
-												<td
-													className={cn(
-														"px-3 py-2 text-right font-mono tabular-nums",
-														signedTone(row.chinaValue),
-													)}
-												>
-													{formatSigned(row.chinaValue)}
-												</td>
+						) : (
+							<div className="space-y-4">
+								<div className="grid gap-4 sm:grid-cols-2">
+									<BoardTotalCard
+										label="Team USA net"
+										total={board.usaTotal}
+										accent="usa"
+										called={calledCountries.has("USA")}
+									/>
+									<BoardTotalCard
+										label="Team PRC net"
+										total={board.chinaTotal}
+										accent="china"
+										called={calledCountries.has("China")}
+									/>
+								</div>
+								<RelativeLead
+									usa={board.usaTotal}
+									china={board.chinaTotal}
+									prospective
+								/>
+								<div className="overflow-x-auto rounded-xl border">
+									<table className="w-full text-sm">
+										<thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+											<tr>
+												<th className="px-3 py-2 text-left font-semibold">
+													Item
+												</th>
+												<th className="px-3 py-2 text-left font-semibold">
+													Gives
+												</th>
+												<th className="px-3 py-2 text-right font-semibold">
+													USA value
+												</th>
+												<th className="px-3 py-2 text-right font-semibold">
+													PRC value
+												</th>
 											</tr>
-										))}
-									</tbody>
-								</table>
+										</thead>
+										<tbody>
+											{board.rows.map((row) => (
+												<tr key={row.id} className="border-t">
+													<td className="px-3 py-2">{row.name}</td>
+													<td className="px-3 py-2 text-muted-foreground">
+														{row.givingCountry === "China" ? "PRC" : "USA"}
+													</td>
+													<td
+														className={cn(
+															"px-3 py-2 text-right font-mono tabular-nums",
+															signedTone(row.usaValue),
+														)}
+													>
+														{formatSigned(row.usaValue)}
+													</td>
+													<td
+														className={cn(
+															"px-3 py-2 text-right font-mono tabular-nums",
+															signedTone(row.chinaValue),
+														)}
+													>
+														{formatSigned(row.chinaValue)}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
 							</div>
-						</div>
-					)}
-				</SectionCard>
+						)}
+					</SectionCard>
 				)}
 			</div>
 

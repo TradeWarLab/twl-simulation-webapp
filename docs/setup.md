@@ -28,7 +28,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
 4. Run [`scripts/schema.sql`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/scripts/schema.sql:1) on a fresh Supabase instance.
-5. If the database was created before the class research-link change, run [`scripts/resources-migration.sql`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/scripts/resources-migration.sql:1).
+5. If the database predates a change in `scripts/migrations/`, run the migrations there in
+   date order. They are idempotent and safe to re-run.
 6. Start the app with `bun run dev`.
 
 ## Auth And Environment
@@ -83,9 +84,11 @@ Current phase labels come from [`lib/constants.ts`](/c:/Users/obijr/Downloads/co
 Operationally:
 
 - New classes start in phase `0`.
-- Students edit trade-item values before negotiation lock.
-- Bilateral negotiation and proposal voting happen in phase `3`.
-- Some older comments in the SQL still reference earlier phase names; treat the app constants and route behavior as the current source of truth.
+- Students set their trade-item values during phase `1`, and editing closes when the class
+  leaves it.
+- The shared deal board and the final ratification vote run in phase `2`.
+- Phase `3` reveals both delegations' valuations and posts final scores. A ratified deal
+  advances the class there automatically.
 
 ## Database Expectations
 
@@ -105,8 +108,11 @@ The Supabase schema currently includes:
 - `trade_proposals`
 - `votes`
 - `team_scores`
+- `deal_board_items`
+- `deal_ratification_calls`
 
-Realtime is enabled for messages, proposals, votes, scores, classes, trade items, negotiation actions, and negotiation bundles.
+Realtime is enabled for messages, proposals, votes, scores, classes, trade items, deal board
+items, and deal ratification calls.
 
 ## Important Flows
 
