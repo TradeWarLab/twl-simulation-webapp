@@ -540,6 +540,56 @@ export async function updateClassPeriod(classId: string, period: number) {
 	return { success: true };
 }
 
+/**
+ * Ends the bilateral round by hand when the external timer expires.
+ *
+ * Delegates to a SECURITY DEFINER RPC for two reasons: the cancel writes rows
+ * RLS hides from instructors (every relevant policy is gated on a
+ * students_classes row), and the cancel and the period advance must land in
+ * one transaction. See
+ * docs/superpowers/specs/2026-08-10-end-round-cancels-open-vote-design.md.
+ */
+export async function endBilateralRound(classId: string) {
+	const supabase = await createClient();
+
+	const { error } = await supabase.rpc("end_bilateral_round", {
+		p_class_id: classId,
+	});
+
+	if (error) return { error: error.message };
+	revalidatePath(`/instructor/classes/${classId}`);
+	revalidatePath("/instructor/dashboard");
+	return { success: true };
+}
+
+/**
+ * The instructor's advance button. At the bilateral period the action is
+ * terminal and goes through the RPC, which owns the period bump and the
+ * archive; every other period keeps the original two-step behaviour.
+ */
+export async function advanceClassPeriod(
+	classId: string,
+	currentPeriod: number,
+	periodCount: number,
+) {
+	const bilateralPeriod = periodCount - 2;
+
+	if (currentPeriod === bilateralPeriod) {
+		return endBilateralRound(classId);
+	}
+
+	if (currentPeriod < periodCount - 1) {
+		await updateClassPeriod(classId, currentPeriod + 1);
+	}
+	// `>=`, not `===`: ratification can reach the End period on its own
+	// (finalize_ratified_package), so archiving must not depend on having just
+	// advanced from the bilateral period.
+	if (currentPeriod >= bilateralPeriod) {
+		await endSimulation(classId);
+	}
+	return { success: true };
+}
+
 export async function endSimulation(classId: string) {
 	const supabase = await createClient();
 

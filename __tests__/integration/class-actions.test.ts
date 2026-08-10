@@ -1,6 +1,9 @@
+import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	advanceClassPeriod,
 	createClass,
+	endBilateralRound,
 	enrollStudentByCode,
 	getInstructorClasses,
 	getStudentClasses,
@@ -233,6 +236,79 @@ describe("Class Actions", () => {
 			expect(updateMock).toHaveBeenCalledWith({ current_period: 3 });
 			expect(eqMock).toHaveBeenCalledWith("id", "cls-1");
 			expect(result).toEqual({ success: true });
+		});
+	});
+
+	describe("endBilateralRound", () => {
+		it("calls the RPC and revalidates", async () => {
+			const rpcMock = vi.fn().mockResolvedValue({ error: null });
+			mockClient.rpc = rpcMock;
+
+			const result = await endBilateralRound("cls-1");
+
+			expect(rpcMock).toHaveBeenCalledWith("end_bilateral_round", {
+				p_class_id: "cls-1",
+			});
+			expect(result).toEqual({ success: true });
+			expect(revalidatePath).toHaveBeenCalledWith("/instructor/classes/cls-1");
+		});
+
+		it("surfaces an RPC error instead of reporting success", async () => {
+			mockClient.rpc = vi
+				.fn()
+				.mockResolvedValue({ error: { message: "Not authorized" } });
+
+			expect(await endBilateralRound("cls-1")).toEqual({
+				error: "Not authorized",
+			});
+		});
+	});
+
+	describe("advanceClassPeriod", () => {
+		it("ends the round through the RPC at the bilateral period", async () => {
+			const rpcMock = vi.fn().mockResolvedValue({ error: null });
+			mockClient.rpc = rpcMock;
+			const updateMock = vi.fn().mockReturnValue({
+				eq: vi.fn().mockResolvedValue({ error: null }),
+			});
+			mockClient.from.mockReturnValue({ update: updateMock } as never);
+
+			await advanceClassPeriod("cls-1", 2, 4);
+
+			expect(rpcMock).toHaveBeenCalledWith("end_bilateral_round", {
+				p_class_id: "cls-1",
+			});
+			// The RPC owns the period bump and the archive; the action must not
+			// also write them, or a stale click would bypass the RPC's no-op guard.
+			expect(updateMock).not.toHaveBeenCalled();
+		});
+
+		it("advances without archiving at earlier periods", async () => {
+			const rpcMock = vi.fn();
+			mockClient.rpc = rpcMock;
+			const eqMock = vi.fn().mockResolvedValue({ error: null });
+			const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+			mockClient.from.mockReturnValue({ update: updateMock } as never);
+
+			await advanceClassPeriod("cls-1", 1, 4);
+
+			expect(rpcMock).not.toHaveBeenCalled();
+			expect(updateMock).toHaveBeenCalledWith({ current_period: 2 });
+			expect(updateMock).not.toHaveBeenCalledWith({ status: "archived" });
+		});
+
+		it("archives without advancing at the final period", async () => {
+			const rpcMock = vi.fn();
+			mockClient.rpc = rpcMock;
+			const eqMock = vi.fn().mockResolvedValue({ error: null });
+			const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+			mockClient.from.mockReturnValue({ update: updateMock } as never);
+
+			await advanceClassPeriod("cls-1", 3, 4);
+
+			expect(rpcMock).not.toHaveBeenCalled();
+			expect(updateMock).toHaveBeenCalledWith({ status: "archived" });
+			expect(updateMock).not.toHaveBeenCalledWith({ current_period: 4 });
 		});
 	});
 
