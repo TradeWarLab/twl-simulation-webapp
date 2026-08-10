@@ -48,6 +48,7 @@ describe("submitVote: package proposals", () => {
 		// 2 members total; this vote is the 2nd and it is a reject.
 		const builders = mockTables({
 			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
+			classes: { data: { current_period: 2 }, error: null },
 			students_classes: {
 				data: [{ team_id: "team-usa" }, { team_id: "team-china" }],
 				error: null,
@@ -99,6 +100,7 @@ describe("submitVote: package proposals", () => {
 				data: { ...PACKAGE_PROPOSAL, is_package: false },
 				error: null,
 			},
+			classes: { data: { current_period: 2 }, error: null },
 			students_classes: {
 				data: [{ team_id: "team-usa" }],
 				error: null,
@@ -135,6 +137,7 @@ describe("submitVote: package proposals", () => {
 		// round with elevated privileges) rather than the rejection branch.
 		const builders = mockTables({
 			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
+			classes: { data: { current_period: 2 }, error: null },
 			students_classes: {
 				data: [{ team_id: "team-usa" }, { team_id: "team-china" }],
 				error: null,
@@ -183,6 +186,7 @@ describe("submitVote: package proposals", () => {
 		// it errors; the DB transaction rolls back, so nothing is wiped.
 		const builders = mockTables({
 			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
+			classes: { data: { current_period: 2 }, error: null },
 			students_classes: {
 				data: [{ team_id: "team-usa" }, { team_id: "team-china" }],
 				error: null,
@@ -222,5 +226,25 @@ describe("submitVote: package proposals", () => {
 		expect(
 			builders.get("deal_ratification_calls")?.delete,
 		).not.toHaveBeenCalled();
+	});
+
+	it("refuses a ballot once the round has ended", async () => {
+		// end_bilateral_round cancels the package, so this guard is a backstop
+		// for paths that leave a proposal pending: notably an instructor
+		// stepping the class back to period 1 mid-vote.
+		const builders = mockTables({
+			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
+			classes: { data: { current_period: 3 }, error: null },
+			students_classes: { data: [{ team_id: "team-usa" }], error: null },
+			votes: { data: [], error: null },
+		});
+		builders
+			.get("students_classes")!
+			.single.mockResolvedValue({ data: { team_id: "team-usa" }, error: null });
+
+		const result = await submitVote("pkg-1", "approve");
+
+		expect(result).toEqual({ error: "Voting has closed for this round" });
+		expect(builders.get("votes")?.upsert).not.toHaveBeenCalled();
 	});
 });

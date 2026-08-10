@@ -324,6 +324,24 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 		return { error: "This proposal has already been resolved" };
 	}
 
+	// Ballots are only valid during the bilateral phase. end_bilateral_round
+	// cancels any open package when the instructor ends the round, so this is a
+	// backstop for paths that leave a proposal pending some other way, notably
+	// an instructor stepping the class back to period 1 mid-vote.
+	//
+	// A server-action guard, not a security boundary: the votes INSERT policy is
+	// still `auth.uid() = user_id`. Tightening it belongs to the deferred
+	// anonymous-voting plan, which restructures those policies.
+	const { data: voteWindow } = await supabase
+		.from("classes")
+		.select("current_period")
+		.eq("id", proposal.class_id)
+		.maybeSingle();
+
+	if (!voteWindow || voteWindow.current_period !== 2) {
+		return { error: "Voting has closed for this round" };
+	}
+
 	// Verify user belongs to one of the two teams
 	const { data: enrollment } = await supabase
 		.from("students_classes")

@@ -170,7 +170,7 @@ export function InstructorGuide() {
 				subtitle={`${SIMULATION_PERIODS[3]} phase`}
 			>
 				<p>
-					Once a deal is ratified - or you end a deadlocked class - the
+					Once a deal is ratified, or you end a deadlocked class, the
 					simulation moves to {SIMULATION_PERIODS[3]}. Both delegations&apos;
 					valuations are revealed to students, and the final scores are posted.
 				</p>

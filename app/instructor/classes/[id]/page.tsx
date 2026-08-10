@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import {
-	endSimulation,
+	advanceClassPeriod,
 	getClassRoster,
 	updateClassPeriod,
 } from "@/app/actions/classes";
@@ -67,20 +67,13 @@ async function ClassDetailPageInner({
 	const scores = await getScoreboard(id);
 	const periods = SIMULATION_PERIODS;
 
-	// Server action wrapper for updating period
+	// Server action wrapper for updating period. The branching lives in
+	// advanceClassPeriod so it can be unit tested; at the bilateral period it
+	// routes through the end_bilateral_round RPC, which cancels any open
+	// ratification vote, clears the board, advances, and archives atomically.
 	async function advancePeriod() {
 		"use server";
-		if (classData.current_period < periods.length - 1) {
-			await updateClassPeriod(id, classData.current_period + 1);
-		}
-		// `>=`, not `===`: ratification can advance the class to the End period
-		// on its own (schema.sql:768-770), so archiving must not depend on having
-		// just advanced from the bilateral period. Without this, every class that
-		// successfully reached a deal stays `active` forever, with the button
-		// that would archive it disabled.
-		if (classData.current_period >= periods.length - 2) {
-			await endSimulation(id);
-		}
+		await advanceClassPeriod(id, classData.current_period, periods.length);
 	}
 
 	async function goBackPeriod() {
