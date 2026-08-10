@@ -90,6 +90,9 @@ export function SessionControlPanel({
 									Full Log
 								</Link>
 							</Button>
+							<Button variant="outline" className="justify-start" asChild>
+								<Link href={`/instructor/instructions`}>Instructions</Link>
+							</Button>
 						</div>
 					</div>
 

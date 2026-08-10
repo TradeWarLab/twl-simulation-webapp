@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getInstructorClasses } from "@/app/actions/classes";
 import { CreateClassForm } from "@/components/instructor/create-class-form";
 import { InstructorClassList } from "@/components/instructor/instructor-class-list";
+import { InstructorGuide } from "@/components/instructor/instructor-guide";
 import { ProfileMenu } from "@/components/shared/profile-menu";
 import { ThemeInitializer } from "@/components/shared/theme-initializer";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
@@ -51,6 +53,23 @@ async function InstructorDashboardInner() {
 				<CreateClassForm />
 				<InstructorClassList classes={classes} />
 			</div>
+
+			<section className="mt-10">
+				<div className="mb-4 flex items-baseline justify-between gap-4">
+					<h2 className="text-xl font-bold tracking-tight">
+						Running the simulation
+					</h2>
+					<Link
+						href="/instructor/instructions"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+					>
+						Open in new tab ↗
+					</Link>
+				</div>
+				<InstructorGuide />
+			</section>
 		</div>
 	);
 }
