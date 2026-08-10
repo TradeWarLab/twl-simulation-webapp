@@ -12,6 +12,8 @@
 -- Idempotent: safe to re-run.
 -- ──────────────────────────────────────────────
 
+begin;
+
 drop policy if exists "Teams can update their own trade items." on public.trade_items;
 
 create policy "Teams can update their own trade items."
@@ -25,3 +27,5 @@ create policy "Teams can update their own trade items."
       where id = trade_items.class_id and current_period = 1
     )
   );
+
+commit;
