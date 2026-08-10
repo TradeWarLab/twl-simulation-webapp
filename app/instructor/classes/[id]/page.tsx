@@ -123,7 +123,11 @@ async function ClassDetailPageInner({
 					snapshot={snapshot}
 					refetchSnapshot={getRealtimeSnapshot}
 				>
-					<InstructorLiveDashboard roster={roster} scores={scores} />
+					<InstructorLiveDashboard
+						roster={roster}
+						scores={scores}
+						currentPeriod={classData.current_period}
+					/>
 				</RealtimeClassProvider>
 			</div>
 		</div>

@@ -27,6 +27,20 @@ type DashboardProps = {
 	roster: ClassRosterEntry[];
 	/** Empty when no deal ratified — SimulationResultsCard reads that as no-deal. */
 	scores: TeamScore[];
+	/**
+	 * Server-rendered `classes.current_period`, from the same request that
+	 * produced `scores`. Do not swap this for `classRecord.current_period`
+	 * (the reactive realtime store): `finalize_ratified_package` writes
+	 * `current_period = 3` and `team_scores` in one DB transaction, but the
+	 * realtime store applies the `classes` update synchronously while the
+	 * `router.refresh()` that re-fetches `scores` lands asynchronously
+	 * afterward (realtime-class-provider.tsx). For that one render, the store
+	 * would already read period 3 while `scores` is still stale/empty, and
+	 * `deriveOutcome([])` would flash a false "No deal reached" with two −10
+	 * tiles at the exact moment a deal succeeds. Keeping both values sourced
+	 * from the same server render makes that desync impossible.
+	 */
+	currentPeriod: number;
 };
 
 type TeamMetric = {
@@ -129,7 +143,11 @@ function RelativeLead({
 	);
 }
 
-export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
+export function InstructorLiveDashboard({
+	roster,
+	scores,
+	currentPeriod,
+}: DashboardProps) {
 	const store = useClassStore();
 	const classRecord = useClassRecord();
 	const tradeItems = useTradeItems();
@@ -224,7 +242,15 @@ export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
 	// the deal board card would otherwise fall back to its empty state at the
 	// exact moment the simulation finished. One condition covers both endings:
 	// a ratified deal and an instructor ending a deadlocked class.
-	const isComplete = classRecord.current_period === 3;
+	//
+	// MUST come from the `currentPeriod` server prop, not
+	// `classRecord.current_period` (the reactive realtime store). See the
+	// DashboardProps.currentPeriod doc comment: the store updates
+	// synchronously on the realtime `classes` event while `scores` only
+	// catches up after an async router.refresh(), so deriving isComplete from
+	// the store desyncs it from `scores` and flashes a false "No deal
+	// reached" at the moment of ratification. Do not "simplify" this back.
+	const isComplete = currentPeriod === 3;
 
 	return (
 		<div className="space-y-6">

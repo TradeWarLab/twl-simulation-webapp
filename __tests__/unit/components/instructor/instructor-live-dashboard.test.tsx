@@ -58,11 +58,22 @@ function snapshot(currentPeriod: number): RealtimeSnapshot {
 	};
 }
 
-function renderDashboard(currentPeriod: number, scores: TeamScore[] = []) {
+function renderDashboard(
+	currentPeriod: number,
+	scores: TeamScore[] = [],
+	// Defaults to matching the snapshot's period, mirroring the real page
+	// where both come from the same server render. Tests that need to prove
+	// the desync bug is fixed pass a different value explicitly.
+	dashboardPeriod: number = currentPeriod,
+) {
 	const store = createClassStore(snapshot(currentPeriod));
 	return render(
 		<ClassStoreContext.Provider value={store}>
-			<InstructorLiveDashboard roster={[]} scores={scores} />
+			<InstructorLiveDashboard
+				roster={[]}
+				scores={scores}
+				currentPeriod={dashboardPeriod}
+			/>
 		</ClassStoreContext.Provider>,
 	);
 }
@@ -92,5 +103,22 @@ describe("InstructorLiveDashboard", () => {
 	it("shows the no-deal state when the simulation ended without scores", () => {
 		renderDashboard(3, []);
 		expect(screen.getByText(/no deal reached/i)).toBeInTheDocument();
+	});
+
+	it("does not flash the no-deal card mid-negotiation when scores are still empty", () => {
+		// Regression for the ratification-flash bug: the realtime store can
+		// report current_period === 3 for one render while `scores` is still
+		// the stale server-rendered []. isComplete must come from the server
+		// `currentPeriod` prop (still 2 here), not the reactive store, so the
+		// no-deal card must NOT appear even though the store's period is 3.
+		renderDashboard(3, [], 2);
+		expect(screen.queryByText(/no deal reached/i)).not.toBeInTheDocument();
+		expect(screen.getByText(/live deal board/i)).toBeInTheDocument();
+	});
+
+	it("shows results once the server-rendered period and scores agree", () => {
+		renderDashboard(3, SCORES, 3);
+		expect(screen.getByText(/simulation complete/i)).toBeInTheDocument();
+		expect(screen.queryByText(/no deal reached/i)).not.toBeInTheDocument();
 	});
 });
