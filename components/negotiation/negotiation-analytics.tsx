@@ -157,7 +157,7 @@ function AgreementView({
 				</div>
 			</div>
 
-			{/* Relative totals — the winner is whoever's total is higher. */}
+			{/* Relative totals: the winner is whoever's total is higher. */}
 			<div className="grid grid-cols-2 gap-4">
 				<div className="rounded-xl border-2 border-blue-500/20 bg-blue-500/5 p-4 text-center">
 					<div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">

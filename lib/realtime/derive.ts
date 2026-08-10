@@ -22,7 +22,7 @@ export function buildViewerValueMap(
 }
 
 export type EnrichOptions = {
-	/** Omit for viewers without a team (instructor) — item values pass through. */
+	/** Omit for viewers without a team (instructor): item values pass through. */
 	viewerValueMap?: Map<string, number>;
 	votes: Vote[];
 	totalMembers: number;

@@ -18,7 +18,7 @@ export function CreateClassForm() {
 	const [className, setClassName] = useState("");
 	const [questionnaireDone, setQuestionnaireDone] = useState(false);
 
-	// When no form is configured we do not gate creation — shipping a broken
+	// When no form is configured we do not gate creation: shipping a broken
 	// link and an unsatisfiable checkbox would lock instructors out entirely.
 	const gated = isIntakeSurveyConfigured();
 	const canSubmit = !gated || questionnaireDone;
@@ -42,7 +42,7 @@ export function CreateClassForm() {
 						<Input
 							id="class-name"
 							name="name"
-							placeholder="e.g. POLS 170 — Spring 2026"
+							placeholder="e.g. POLS 170 - Spring 2026"
 							value={className}
 							onChange={(event) => setClassName(event.target.value)}
 							required
@@ -72,8 +72,8 @@ export function CreateClassForm() {
 							<div>
 								<p className="text-sm font-medium">Instructor questionnaire</p>
 								<p className="mt-1 text-xs text-muted-foreground">
-									Required before each class. Three questions, about 30 seconds
-									— your students&apos; course level, your institution type, and
+									Required before each class. Three questions, about 30 seconds:
+									your students&apos; course level, your institution type, and
 									your region. It helps us understand who the simulation is
 									reaching.
 								</p>

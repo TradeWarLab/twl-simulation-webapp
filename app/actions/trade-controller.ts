@@ -370,7 +370,7 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 	const votesCast = votesList.length;
 
 	if (votesCast >= (totalMembers ?? 0) && (totalMembers ?? 0) > 0) {
-		// All votes are in — check for any rejections
+		// All votes are in: check for any rejections
 		const hasRejection = votesList.some((v) => v.vote === "reject");
 
 		if (hasRejection) {
@@ -396,7 +396,7 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 		} else {
 			// Unanimous approval → finalize via a SECURITY DEFINER RPC. It runs
 			// with elevated privileges so it can resolve BOTH teams' trade_items
-			// and score both sides — a student's own session only exposes their
+			// and score both sides: a student's own session only exposes their
 			// team's rows (RLS), which previously left the opponent unresolved
 			// and scored 0. The RPC also marks the proposal executed, clears the
 			// board, and advances the class to the End phase. On failure the whole

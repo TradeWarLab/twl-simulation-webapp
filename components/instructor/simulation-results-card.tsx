@@ -8,7 +8,7 @@ import { SectionCard } from "./section-card";
 
 /**
  * Post-simulation readout for the instructor. Occupies the slot the Live Deal
- * Board card uses during play — ratification deletes the board
+ * Board card uses during play: ratification deletes the board
  * (schema.sql:766), so that card would otherwise read "No items on the deal
  * board yet" at the exact moment the simulation finished.
  *

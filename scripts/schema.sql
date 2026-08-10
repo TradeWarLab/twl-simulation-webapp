@@ -1,5 +1,5 @@
 -- ╔══════════════════════════════════════════════════════════════════════╗
--- ║  TWL Simulation — Master Schema                                    ║
+-- ║  TWL Simulation: Master Schema                                     ║
 -- ║  Run this against a fresh Supabase project to recreate everything. ║
 -- ╚══════════════════════════════════════════════════════════════════════╝
 
@@ -558,7 +558,7 @@ create policy "Class members can manage ratification calls."
     )
   );
 
--- REPLICA IDENTITY FULL so realtime DELETE events carry the full old row —
+-- REPLICA IDENTITY FULL so realtime DELETE events carry the full old row:
 -- otherwise a class_id-filtered subscription drops deletes (removed board items
 -- / withdrawn ratification calls wouldn't propagate to other clients).
 alter table public.deal_board_items replica identity full;

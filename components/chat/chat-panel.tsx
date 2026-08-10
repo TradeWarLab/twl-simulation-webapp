@@ -295,7 +295,7 @@ export function ChatPanel({
 													onClick={() => retryMessage(msg as LocalMessage)}
 													className="text-[10px] text-destructive underline underline-offset-2"
 												>
-													Failed — retry
+													Failed - retry
 												</button>
 											)}
 										</div>

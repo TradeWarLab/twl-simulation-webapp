@@ -3,7 +3,7 @@ import type { TeamCountry, TeamScore } from "@/lib/types/domain";
 /**
  * What a trade war costs a country when no deal is ratified. Students are told
  * this number in their own briefing (trade-items-panel.tsx), and the run guide
- * states it as the score for a failed negotiation — so it lives in one place.
+ * states it as the score for a failed negotiation: so it lives in one place.
  */
 export const TRADE_WAR_COST = -10;
 
@@ -20,7 +20,7 @@ export type Outcome = {
 const STALEMATE =
 	"The negotiation reached a stalemate. Neither side was able to secure a numeric advantage, resulting in a maintenance of the current geopolitical status quo.";
 
-const NO_DEAL = `Negotiations ended in failure — no deal was ratified before time expired. Both delegations absorb the estimated cost of a continued trade war, scored at ${TRADE_WAR_COST} points each.`;
+const NO_DEAL = `Negotiations ended in failure: no deal was ratified before time expired. Both delegations absorb the estimated cost of a continued trade war, scored at ${TRADE_WAR_COST} points each.`;
 
 function interpret(winner: TeamCountry, diff: number): string {
 	if (diff <= 10)
@@ -34,7 +34,7 @@ function interpret(winner: TeamCountry, diff: number): string {
  * The single source of truth for who won. Both the student end screen and the
  * instructor results card derive from this, so they cannot disagree.
  *
- * An empty `scores` array means no deal was ratified — NOT a 0-0 draw.
+ * An empty `scores` array means no deal was ratified: NOT a 0-0 draw.
  * finalize_ratified_package inserts a row per team unconditionally
  * (schema.sql:754-763), so rows exist if and only if a package ratified.
  * Absent scores are the failure case, scored at TRADE_WAR_COST for both sides;

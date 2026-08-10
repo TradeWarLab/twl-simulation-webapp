@@ -173,7 +173,7 @@ export async function removeBoardItem(classId: string, boardItemId: string) {
 		return { error: error.message };
 	}
 
-	// Only void the handshake if a row actually disappeared — a stale
+	// Only void the handshake if a row actually disappeared: a stale
 	// double-click that deletes nothing shouldn't reset ratification calls.
 	if (deleted && deleted.length > 0) {
 		await clearRatificationCalls(supabase, classId);
@@ -236,7 +236,7 @@ export async function callForRatification(classId: string) {
 		return { success: true, voteOpened: false };
 	}
 
-	// Handshake complete — snapshot the board into a package proposal.
+	// Handshake complete: snapshot the board into a package proposal.
 	// Convention: proposing team = the team whose call completed the handshake.
 	const otherTeamId = [...teamsCalled].find((id) => id !== teamId);
 	if (!otherTeamId) return { error: "Opposing team not found" };
@@ -262,7 +262,7 @@ export async function callForRatification(classId: string) {
 		});
 	if (proposalError) {
 		// unique(one_pending_package_per_class): the other team's call won
-		// the race and already opened the vote — treat as success.
+		// the race and already opened the vote: treat as success.
 		if ((proposalError as { code?: string }).code === "23505") {
 			return { success: true, voteOpened: true };
 		}

@@ -51,7 +51,7 @@ async function InstructionsPageInner() {
 					The app generates a join code (formatted <code>TWL-XXXXXX</code>) and
 					seeds both teams, the full issue list for each team, and the six role
 					briefings automatically. The join code appears in Session Control on
-					the class page — students enter it either during signup or from their
+					the class page: students enter it either during signup or from their
 					dashboard.
 				</p>
 
@@ -59,7 +59,7 @@ async function InstructionsPageInner() {
 				<p>
 					From the class page, open Roster &amp; Teams. Inviting by email sends
 					an onboarding message and lets you pre-assign the student&apos;s
-					country and interest group <em>before</em> they create an account —
+					country and interest group <em>before</em> they create an account:
 					when they sign up with the class code, the assignment is already
 					waiting. Students who join by code without an invite arrive
 					unassigned, and see a &ldquo;Waiting for Assignment&rdquo; screen
@@ -76,7 +76,7 @@ async function InstructionsPageInner() {
 
 				<h2>Briefings</h2>
 				<p>
-					Six briefings are seeded per class — one per country per role. Each
+					Six briefings are seeded per class: one per country per role. Each
 					student sees only the briefings addressed to their country and their
 					interest group, plus anything addressed to everyone. Review them from
 					the Briefings page.
@@ -85,21 +85,21 @@ async function InstructionsPageInner() {
 				<h2>What students see in each phase</h2>
 				<ul>
 					<li>
-						<strong>Setup</strong> — a holding screen. Team chat is available;
+						<strong>Setup</strong>: a holding screen. Team chat is available;
 						global chat is not.
 					</li>
 					<li>
-						<strong>Domestic Negotiation</strong> — the issue list with the two
+						<strong>Domestic Negotiation</strong>: the issue list with the two
 						point budgets. Running totals turn green when asks sum to 100 and
 						concessions to -100. Global chat stays closed so teams cannot
 						coordinate early.
 					</li>
 					<li>
-						<strong>Bilateral Negotiation</strong> — the shared deal board, and
+						<strong>Bilateral Negotiation</strong>: the shared deal board, and
 						global chat opens.
 					</li>
 					<li>
-						<strong>End</strong> — final scores plus both delegations&apos;
+						<strong>End</strong>: final scores plus both delegations&apos;
 						revealed valuations.
 					</li>
 				</ul>
@@ -107,8 +107,8 @@ async function InstructionsPageInner() {
 				<h2>The deal board</h2>
 				<p>
 					One board, shared live by both teams. Any student can drag an issue
-					from their own inventory onto it, and any student can remove anything
-					— removal is part of negotiating. Cards are coloured by which country
+					from their own inventory onto it, and any student can remove anything:
+					removal is part of negotiating. Cards are coloured by which country
 					would give that item up, so both sides see the same board.
 				</p>
 				<p>
@@ -120,7 +120,7 @@ async function InstructionsPageInner() {
 				</p>
 				<p>
 					Once the vote opens the board freezes. Ratification is unanimous
-					across both teams — a single no wipes the board and negotiation
+					across both teams: a single no wipes the board and negotiation
 					restarts from blank. Votes are private: students see turnout while the
 					vote is open, and the tally only after it resolves.
 				</p>
@@ -137,7 +137,7 @@ async function InstructionsPageInner() {
 				<p>
 					Session Control advances the class one period at a time, and you can
 					step back if you advance early. A ratified deal moves the class to End
-					on its own — you do not need to advance it. The same button archives
+					on its own: you do not need to advance it. The same button archives
 					the class once it reaches End.
 				</p>
 

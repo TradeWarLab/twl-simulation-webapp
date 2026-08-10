@@ -36,7 +36,7 @@ export function UpdatePasswordForm({
 
 			// Route by role, the same way login() does. The old target was
 			// "/protected", a Supabase starter-template route that does not exist
-			// here — completing a reset landed the user on the 404 page.
+			// here: completing a reset landed the user on the 404 page.
 			const {
 				data: { user },
 			} = await supabase.auth.getUser();

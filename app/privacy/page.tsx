@@ -5,7 +5,7 @@ import {
 } from "@/components/legal/legal-shell";
 
 export const metadata: Metadata = {
-	title: "Privacy Policy — TWL Simulation",
+	title: "Privacy Policy: TWL Simulation",
 	description:
 		"How the Trade War Lab simulation platform collects and uses data.",
 };
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
 				<li>
 					<strong>Account information</strong> you provide when signing up: your
 					name and email address. Your password is handled by our authentication
-					provider and stored only in hashed form&mdash;we never see it.
+					provider and stored only in hashed form: we never see it.
 				</li>
 				<li>
 					<strong>Simulation activity</strong> you generate while using the
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
 
 			<h2>Changes to this policy</h2>
 			<p>
-				We may update this policy as the program evolves&mdash;for example, when
+				We may update this policy as the program evolves - for example, when
 				the Platform is adopted into university courses. Material changes will
 				be reflected by updating the &ldquo;Last updated&rdquo; date above.
 			</p>

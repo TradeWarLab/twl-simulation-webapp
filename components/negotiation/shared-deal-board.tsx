@@ -35,7 +35,7 @@ type SharedDealBoardProps = {
 	myTeamId: string;
 	myTeamCountry: string;
 	opponentTeamCountry: string;
-	/** True while the package vote is pending — board is read-only. */
+	/** True while the package vote is pending: board is read-only. */
 	frozen: boolean;
 	/** Reopens the voting panel when the board is frozen. */
 	onOpenVote?: () => void;
@@ -47,7 +47,7 @@ type SharedDealBoardProps = {
 // Disable dnd-kit's drop animation. By default a dropped card animates back to
 // its inventory slot before the optimistic board row replaces it, which reads
 // as a failed drop. The optimistic `pendingAdds` state does the visual move, so
-// the returning animation is pure noise — swap the Feedback plugin in the
+// the returning animation is pure noise: swap the Feedback plugin in the
 // default preset for one that skips it.
 const dndPlugins = defaultPreset.plugins.map((plugin) =>
 	plugin === Feedback ? Feedback.configure({ dropAnimation: null }) : plugin,
@@ -240,7 +240,7 @@ export function SharedDealBoard({
 	const [isPending, startTransition] = useTransition();
 	const [actionError, setActionError] = useState<string | null>(null);
 	const [detailItem, setDetailItem] = useState<TradeItem | null>(null);
-	// Items added locally but not yet confirmed by the realtime board — shown
+	// Items added locally but not yet confirmed by the realtime board: shown
 	// on the board immediately so a drop never appears to "snap back".
 	const [pendingAdds, setPendingAdds] = useState<TradeItem[]>([]);
 
@@ -324,7 +324,7 @@ export function SharedDealBoard({
 	);
 
 	// The board is read-only for adds/drags once the package vote is open
-	// (frozen) OR once my team has locked in its call for a vote — you must
+	// (frozen) OR once my team has locked in its call for a vote: you must
 	// withdraw before editing the deal again.
 	const inputsLocked = frozen || myTeamCalled;
 
@@ -362,7 +362,7 @@ export function SharedDealBoard({
 			{resetBannerVisible && (
 				<div className="flex items-center justify-between rounded-lg border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/40 px-3 py-2 text-xs text-red-800 dark:text-red-200">
 					<span>
-						The deal was rejected — the board has been reset. Start over.
+						The deal was rejected: the board has been reset. Start over.
 					</span>
 					<Button
 						variant="ghost"
@@ -377,7 +377,7 @@ export function SharedDealBoard({
 
 			{frozen && (
 				<div className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-					<span>Final vote in progress — the board is frozen.</span>
+					<span>Final vote in progress: the board is frozen.</span>
 					{onOpenVote && (
 						<Button
 							size="sm"
@@ -418,7 +418,7 @@ export function SharedDealBoard({
 					{/* Inventory rail */}
 					<div className="space-y-2 min-h-0 flex flex-col min-w-0">
 						<div className="text-xs font-medium text-muted-foreground px-1">
-							Team {myTeamCountry} — concessions &amp; asks
+							Team {myTeamCountry}: concessions &amp; asks
 						</div>
 						<div className="rounded-lg border bg-background overflow-hidden flex-1 min-h-0">
 							<ScrollArea className="h-full">
@@ -456,7 +456,7 @@ export function SharedDealBoard({
 						<BoardDropZone frozen={frozen}>
 							{boardEmpty ? (
 								<div className="flex items-center justify-center h-full p-3 text-xs text-muted-foreground italic text-center">
-									Drag items here or press add — both teams see this board live
+									Drag items here or press add: both teams see this board live
 								</div>
 							) : (
 								<ScrollArea className="h-full">
