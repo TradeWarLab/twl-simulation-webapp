@@ -236,7 +236,8 @@ export function LogClient({
 						return updated;
 					});
 				},
-			);
+			)
+			.subscribe();
 		return () => {
 			supabase.removeChannel(channel);
 		};
