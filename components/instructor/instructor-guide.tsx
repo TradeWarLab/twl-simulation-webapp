@@ -9,6 +9,10 @@ import {
  * /instructor/instructions. Period names come from SIMULATION_PERIODS rather
  * than being written out, so the guide cannot drift from the app the way
  * docs/setup.md did.
+ *
+ * Rendered as one continuous document rather than collapsible sections: an
+ * instructor reads this start to finish while setting a class up, and hiding
+ * the steps behind dropdowns made them easy to skip.
  */
 
 const ROLE_BLURBS: Record<string, string> = {
@@ -23,46 +27,33 @@ const ROLE_BLURBS: Record<string, string> = {
 function Section({
 	title,
 	subtitle,
-	defaultOpen = false,
 	children,
 }: {
 	title: string;
 	subtitle?: string;
-	defaultOpen?: boolean;
 	children: React.ReactNode;
 }) {
 	return (
-		<details
-			open={defaultOpen}
-			className="group overflow-hidden rounded-xl border bg-card"
-		>
-			<summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
-				<span>
-					<span className="text-sm font-semibold">{title}</span>
-					{subtitle && (
-						<span className="ml-2 text-xs text-muted-foreground">
-							{subtitle}
-						</span>
-					)}
-				</span>
-				<span
-					aria-hidden="true"
-					className="text-muted-foreground transition-transform group-open:rotate-90"
-				>
-					›
-				</span>
-			</summary>
-			<div className="space-y-3 border-t px-4 pb-4 pt-3 text-sm leading-6 text-muted-foreground">
+		<section className="border-b pb-6 last:border-b-0 last:pb-0">
+			<h3 className="text-sm font-semibold text-foreground">
+				{title}
+				{subtitle && (
+					<span className="ml-2 font-normal text-xs text-muted-foreground">
+						{subtitle}
+					</span>
+				)}
+			</h3>
+			<div className="mt-2 space-y-3 text-sm leading-6 text-muted-foreground">
 				{children}
 			</div>
-		</details>
+		</section>
 	);
 }
 
 export function InstructorGuide() {
 	return (
-		<div className="space-y-3">
-			<Section title="Welcome" defaultOpen>
+		<div className="space-y-6 rounded-xl border bg-card p-5 sm:p-6">
+			<Section title="Welcome">
 				<p>
 					Thank you for using our US–China Trade War Simulation. This guide
 					walks you through how the simulation is set up and how it runs.
