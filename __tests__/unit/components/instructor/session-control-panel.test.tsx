@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
 
@@ -96,7 +96,7 @@ describe("SessionControlPanel", () => {
 		);
 
 		expect(
-			screen.getByRole("button", { name: /end simulation/i }),
+			screen.getByRole("button", { name: /end round/i }),
 		).toBeInTheDocument();
 	});
 
@@ -119,6 +119,77 @@ describe("SessionControlPanel", () => {
 		const button = screen.getByRole("button", { name: /archive simulation/i });
 		expect(button).toBeInTheDocument();
 		expect(button).toBeEnabled();
+	});
+
+	it("confirms before ending the round, naming the consequence", () => {
+		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+		render(
+			<SessionControlPanel
+				classId="class-1"
+				classCode="TWL-123456"
+				currentPeriod={periods.length - 2}
+				status="active"
+				periods={periods}
+				advanceAction={vi.fn()}
+				goBackAction={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: /end round/i }));
+
+		expect(confirmSpy).toHaveBeenCalledWith(
+			expect.stringContaining("cancels any ratification vote in progress"),
+		);
+		confirmSpy.mockRestore();
+	});
+
+	it("confirms before archiving", () => {
+		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+
+		render(
+			<SessionControlPanel
+				classId="class-1"
+				classCode="TWL-123456"
+				currentPeriod={periods.length - 1}
+				status="active"
+				periods={periods}
+				advanceAction={vi.fn()}
+				goBackAction={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: /archive simulation/i }),
+		);
+
+		expect(confirmSpy).toHaveBeenCalledWith(
+			expect.stringContaining("Archive this simulation"),
+		);
+		confirmSpy.mockRestore();
+	});
+
+	it("does not confirm when advancing a mid-simulation period", () => {
+		const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+		render(
+			<SessionControlPanel
+				classId="class-1"
+				classCode="TWL-123456"
+				currentPeriod={1}
+				status="active"
+				periods={periods}
+				advanceAction={vi.fn()}
+				goBackAction={vi.fn()}
+			/>,
+		);
+
+		fireEvent.click(
+			screen.getByRole("button", { name: /advance to next period/i }),
+		);
+
+		expect(confirmSpy).not.toHaveBeenCalled();
+		confirmSpy.mockRestore();
 	});
 
 	it("disables the button only once the class is archived", () => {

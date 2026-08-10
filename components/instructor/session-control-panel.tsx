@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ClassCodeCopyButton } from "@/components/instructor/class-code-copy";
+import { ConfirmSubmitButton } from "@/components/instructor/confirm-submit-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -29,13 +30,25 @@ export function SessionControlPanel({
 	// "archive only" is emergent, not a separate code path. The final period is
 	// reachable without the instructor touching this button at all, because
 	// ratification advances the class there itself (schema.sql:768-770).
+	const isBilateralPeriod = !isFinalPeriod && currentPeriod >= periods.length - 2;
+
 	const advanceLabel = isArchived
 		? "Simulation Archived"
 		: isFinalPeriod
 			? "Archive Simulation"
-			: currentPeriod >= periods.length - 2
-				? "End Simulation"
+			: isBilateralPeriod
+				? "End Round"
 				: "Advance to Next Period →";
+
+	// Only the two terminal actions confirm. Advancing mid-simulation is
+	// reversible with Previous Period; ending and archiving are not. The copy
+	// names the consequence rather than asking "are you sure", because what an
+	// instructor cannot guess is that ending the round kills an open vote.
+	const confirmMessage = isFinalPeriod
+		? "Archive this simulation? Students keep access to the results, but you will not be able to advance it further."
+		: isBilateralPeriod
+			? "End the round now? This ends the simulation for everyone, cancels any ratification vote in progress, and clears the deal board. Students will see the final results immediately."
+			: null;
 
 	return (
 		<Card>
@@ -120,12 +133,21 @@ export function SessionControlPanel({
 						</Button>
 					</form>
 					<form action={advanceAction} className="ml-auto">
-						<Button
-							disabled={isArchived}
-							className="h-10 px-6 font-bold shadow-sm transition-all"
-						>
-							{advanceLabel}
-						</Button>
+						{confirmMessage && !isArchived ? (
+							<ConfirmSubmitButton
+								confirmMessage={confirmMessage}
+								className="h-10 px-6 font-bold shadow-sm transition-all"
+							>
+								{advanceLabel}
+							</ConfirmSubmitButton>
+						) : (
+							<Button
+								disabled={isArchived}
+								className="h-10 px-6 font-bold shadow-sm transition-all"
+							>
+								{advanceLabel}
+							</Button>
+						)}
 					</form>
 				</div>
 			</CardContent>
