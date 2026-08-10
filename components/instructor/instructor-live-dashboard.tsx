@@ -237,79 +237,79 @@ export function InstructorLiveDashboard({ roster, scores }: DashboardProps) {
 						icon={<Handshake className="h-5 w-5 text-primary" />}
 					>
 						{board.rows.length === 0 ? (
-						<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-							No items on the deal board yet.
-						</div>
-					) : (
-						<div className="space-y-4">
-							<div className="grid gap-4 sm:grid-cols-2">
-								<BoardTotalCard
-									label="Team USA net"
-									total={board.usaTotal}
-									accent="usa"
-									called={calledCountries.has("USA")}
-								/>
-								<BoardTotalCard
-									label="Team PRC net"
-									total={board.chinaTotal}
-									accent="china"
-									called={calledCountries.has("China")}
-								/>
+							<div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+								No items on the deal board yet.
 							</div>
-							<RelativeLead
-								usa={board.usaTotal}
-								china={board.chinaTotal}
-								prospective
-							/>
-							<div className="overflow-x-auto rounded-xl border">
-								<table className="w-full text-sm">
-									<thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-										<tr>
-											<th className="px-3 py-2 text-left font-semibold">
-												Item
-											</th>
-											<th className="px-3 py-2 text-left font-semibold">
-												Gives
-											</th>
-											<th className="px-3 py-2 text-right font-semibold">
-												USA value
-											</th>
-											<th className="px-3 py-2 text-right font-semibold">
-												PRC value
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										{board.rows.map((row) => (
-											<tr key={row.id} className="border-t">
-												<td className="px-3 py-2">{row.name}</td>
-												<td className="px-3 py-2 text-muted-foreground">
-													{row.givingCountry === "China" ? "PRC" : "USA"}
-												</td>
-												<td
-													className={cn(
-														"px-3 py-2 text-right font-mono tabular-nums",
-														signedTone(row.usaValue),
-													)}
-												>
-													{formatSigned(row.usaValue)}
-												</td>
-												<td
-													className={cn(
-														"px-3 py-2 text-right font-mono tabular-nums",
-														signedTone(row.chinaValue),
-													)}
-												>
-													{formatSigned(row.chinaValue)}
-												</td>
+						) : (
+							<div className="space-y-4">
+								<div className="grid gap-4 sm:grid-cols-2">
+									<BoardTotalCard
+										label="Team USA net"
+										total={board.usaTotal}
+										accent="usa"
+										called={calledCountries.has("USA")}
+									/>
+									<BoardTotalCard
+										label="Team PRC net"
+										total={board.chinaTotal}
+										accent="china"
+										called={calledCountries.has("China")}
+									/>
+								</div>
+								<RelativeLead
+									usa={board.usaTotal}
+									china={board.chinaTotal}
+									prospective
+								/>
+								<div className="overflow-x-auto rounded-xl border">
+									<table className="w-full text-sm">
+										<thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+											<tr>
+												<th className="px-3 py-2 text-left font-semibold">
+													Item
+												</th>
+												<th className="px-3 py-2 text-left font-semibold">
+													Gives
+												</th>
+												<th className="px-3 py-2 text-right font-semibold">
+													USA value
+												</th>
+												<th className="px-3 py-2 text-right font-semibold">
+													PRC value
+												</th>
 											</tr>
-										))}
-									</tbody>
-								</table>
+										</thead>
+										<tbody>
+											{board.rows.map((row) => (
+												<tr key={row.id} className="border-t">
+													<td className="px-3 py-2">{row.name}</td>
+													<td className="px-3 py-2 text-muted-foreground">
+														{row.givingCountry === "China" ? "PRC" : "USA"}
+													</td>
+													<td
+														className={cn(
+															"px-3 py-2 text-right font-mono tabular-nums",
+															signedTone(row.usaValue),
+														)}
+													>
+														{formatSigned(row.usaValue)}
+													</td>
+													<td
+														className={cn(
+															"px-3 py-2 text-right font-mono tabular-nums",
+															signedTone(row.chinaValue),
+														)}
+													>
+														{formatSigned(row.chinaValue)}
+													</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
 							</div>
-						</div>
-					)}
-				</SectionCard>
+						)}
+					</SectionCard>
 				)}
 			</div>
 

@@ -24,7 +24,9 @@ export function SectionCard({
 							{title}
 						</CardTitle>
 						{description && (
-							<p className="mt-1 text-sm text-muted-foreground">{description}</p>
+							<p className="mt-1 text-sm text-muted-foreground">
+								{description}
+							</p>
 						)}
 					</div>
 					{action}
