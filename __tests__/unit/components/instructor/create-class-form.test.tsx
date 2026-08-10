@@ -110,6 +110,12 @@ describe("CreateClassForm with no questionnaire configured", () => {
 		expect(
 			screen.queryByRole("link", { name: /open questionnaire/i }),
 		).not.toBeInTheDocument();
+		expect(
+			screen.queryByText(/Instructor questionnaire/i),
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByLabelText(/completed the instructor questionnaire/i),
+		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Create Class" })).toBeEnabled();
 	});
 });
