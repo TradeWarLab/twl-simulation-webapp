@@ -339,6 +339,11 @@ create policy "Trade items revealed after the simulation ends."
 -- 9. Negotiation Actions (individual asks/concessions)
 -- ──────────────────────────────────────────────
 
+-- NOTE: negotiation_actions and negotiation_bundles are no longer written or
+-- read by the application. The shared deal board (deal_board_items +
+-- deal_ratification_calls + is_package proposals) replaced this v1 flow. The
+-- tables are retained because live databases hold historical rows.
+
 create table public.negotiation_actions (
   id uuid default gen_random_uuid() primary key,
   class_id uuid references public.classes not null,
