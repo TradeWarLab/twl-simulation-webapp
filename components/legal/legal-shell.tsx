@@ -2,8 +2,8 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/shared/site-footer";
 
 // Single source of truth for the legal pages
-export const LEGAL_CONTACT_EMAIL = "raacke@ku.edu";
-export const LEGAL_LAST_UPDATED = "July 6, 2026";
+export const LEGAL_CONTACT_EMAIL = "tradewarlab@gmail.com";
+export const LEGAL_LAST_UPDATED = "October 26, 2026";
 
 /** Shared long-form prose styling. Also used by /instructor/instructions. */
 export const PROSE_CLASS =
