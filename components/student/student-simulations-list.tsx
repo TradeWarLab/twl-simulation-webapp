@@ -24,7 +24,7 @@ export function StudentSimulationsList({
 						</p>
 					</div>
 				) : (
-					<ScrollArea className="max-h-[400px]">
+					<ScrollArea className="[&>[data-slot=scroll-area-viewport]]:max-h-[400px]">
 						<div className="grid gap-4">
 							{enrolledClasses.map((cls) => (
 								<div

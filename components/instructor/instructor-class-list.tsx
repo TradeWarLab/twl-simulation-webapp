@@ -12,7 +12,7 @@ export function InstructorClassList({ classes }: { classes: any[] }) {
 				{classes.length === 0 ? (
 					<p className="text-muted-foreground">No classes created yet.</p>
 				) : (
-					<ScrollArea className="max-h-[400px]">
+					<ScrollArea className="[&>[data-slot=scroll-area-viewport]]:max-h-[400px]">
 						<ul className="space-y-2">
 							{classes.map((cls) => (
 								<li

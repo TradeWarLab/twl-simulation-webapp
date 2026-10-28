@@ -302,7 +302,7 @@ export function StudentRoster({
 						<div>Joined</div>
 						<div className="text-right">Action</div>
 					</div>
-					<ScrollArea className="max-h-[420px]">
+					<ScrollArea className="[&>[data-slot=scroll-area-viewport]]:max-h-[420px]">
 						<div className="divide-y divide-border/70 [&>*:last-child]:border-b [&>*:last-child]:border-border/70">
 							{filteredRoster.length === 0 ? (
 								<div className="p-8 text-center text-sm text-muted-foreground">
