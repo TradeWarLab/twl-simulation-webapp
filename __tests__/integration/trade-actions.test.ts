@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	getNoDealCosts,
 	getTeamTradeItems,
 	initializeTradeItems,
 	updateTradeItemValue,
@@ -10,6 +11,32 @@ import { mockClient } from "../helpers/supabase-mock";
 describe("Trade Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+	});
+
+	describe("getNoDealCosts", () => {
+		it("leaves a team the RPC withholds as null", async () => {
+			mockClient.rpc = vi.fn().mockResolvedValue({
+				data: [{ country: "China", cost: -20 }],
+				error: null,
+			});
+
+			const costs = await getNoDealCosts("class-1");
+			expect(mockClient.rpc).toHaveBeenCalledWith("get_no_deal_costs", {
+				p_class_id: "class-1",
+			});
+			expect(costs).toEqual({ USA: null, China: -20 });
+		});
+
+		it("returns both costs as null when the RPC fails", async () => {
+			mockClient.rpc = vi
+				.fn()
+				.mockResolvedValue({ data: null, error: { message: "boom" } });
+
+			expect(await getNoDealCosts("class-1")).toEqual({
+				USA: null,
+				China: null,
+			});
+		});
 	});
 
 	describe("getTeamTradeItems", () => {

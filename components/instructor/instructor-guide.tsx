@@ -160,8 +160,10 @@ export function InstructorGuide() {
 				</p>
 				<p>
 					If no deal is reached by the end of 50 minutes, negotiations end in
-					failure and both teams receive a score of{" "}
-					<strong className="text-foreground">-10</strong>.
+					failure and each team receives its own{" "}
+					<strong className="text-foreground">no-deal cost</strong>. The app
+					assigns each class a cost combination at random when Round 1 starts.
+					Each team sees only its own cost, and you cannot change it.
 				</p>
 			</Section>
 

@@ -7,7 +7,10 @@ import {
 	updateClassPeriod,
 } from "@/app/actions/classes";
 import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
-import { getScoreboard } from "@/app/actions/trade-controller";
+import {
+	getNoDealCosts,
+	getScoreboard,
+} from "@/app/actions/trade-controller";
 import { ClassDetailHeader } from "@/components/instructor/class-detail-header";
 import { InstructorLiveDashboard } from "@/components/instructor/instructor-live-dashboard";
 import { SessionControlPanel } from "@/components/instructor/session-control-panel";
@@ -65,6 +68,7 @@ async function ClassDetailPageInner({
 	// refresh on period change (realtime-class-provider.tsx:65-72), so this
 	// re-runs when ratification ends the simulation in a student's session.
 	const scores = await getScoreboard(id);
+	const noDealCosts = await getNoDealCosts(id);
 	const periods = SIMULATION_PERIODS;
 
 	// Server action wrapper for updating period. The branching lives in
@@ -119,6 +123,7 @@ async function ClassDetailPageInner({
 					<InstructorLiveDashboard
 						roster={roster}
 						scores={scores}
+						noDealCosts={noDealCosts}
 						currentPeriod={classData.current_period}
 					/>
 				</RealtimeClassProvider>

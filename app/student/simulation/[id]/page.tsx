@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
 import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
 import {
+	getNoDealCosts,
 	getScoreboard,
 	getSimulationAnalytics,
 } from "@/app/actions/trade-controller";
@@ -20,6 +21,7 @@ import { UnassignedState } from "@/components/student/unassigned-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SIMULATION_PERIODS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+import type { TeamCountry } from "@/lib/types/domain";
 
 export default function SimulationPage({
 	params,
@@ -104,6 +106,8 @@ async function SimulationPageInner({
 
 	// Fetch scoreboard for the results phase
 	const scores = await getScoreboard(id);
+	// Only this student's own team's cost: the RPC withholds the other team's.
+	const noDealCosts = await getNoDealCosts(id);
 
 	// Fetch full analytics (reveal) if in phase 3
 	let analyticsData = null;
@@ -138,7 +142,7 @@ async function SimulationPageInner({
 						<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto border-2">
 							<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
 								<div className="space-y-12 pb-12">
-									<FinalResults scores={scores} />
+									<FinalResults scores={scores} noDealCosts={noDealCosts} />
 									{analyticsData && (
 										<NegotiationAnalytics data={analyticsData} />
 									)}
@@ -172,6 +176,8 @@ async function SimulationPageInner({
 										<TradeItemsPanel
 											classId={id}
 											teamId={teamRecord.id}
+											country={teamRecord.country}
+											noDealCost={noDealCosts[teamRecord.country as TeamCountry]}
 											isLocked={isTradeLocked}
 										/>
 									)}

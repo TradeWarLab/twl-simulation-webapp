@@ -11,6 +11,7 @@ import {
 	useRatificationCalls,
 	useTradeItems,
 } from "@/lib/realtime/hooks";
+import type { NoDealCosts } from "@/lib/simulation/outcome";
 import type {
 	ClassRosterEntry,
 	TeamCountry,
@@ -27,6 +28,7 @@ type DashboardProps = {
 	roster: ClassRosterEntry[];
 	/** Empty when no deal ratified: SimulationResultsCard reads that as no-deal. */
 	scores: TeamScore[];
+	noDealCosts: NoDealCosts;
 	/**
 	 * Server-rendered `classes.current_period`, from the same request that
 	 * produced `scores`. Do not swap this for `classRecord.current_period`
@@ -36,8 +38,8 @@ type DashboardProps = {
 	 * `router.refresh()` that re-fetches `scores` lands asynchronously
 	 * afterward (realtime-class-provider.tsx). For that one render, the store
 	 * would already read period 3 while `scores` is still stale/empty, and
-	 * `deriveOutcome([])` would flash a false "No deal reached" with two −10
-	 * tiles at the exact moment a deal succeeds. Keeping both values sourced
+	 * `deriveOutcome([])` would flash a false "No deal reached" with the
+	 * no-deal cost tiles at the exact moment a deal succeeds. Keeping both values sourced
 	 * from the same server render makes that desync impossible.
 	 */
 	currentPeriod: number;
@@ -146,6 +148,7 @@ function RelativeLead({
 export function InstructorLiveDashboard({
 	roster,
 	scores,
+	noDealCosts,
 	currentPeriod,
 }: DashboardProps) {
 	const store = useClassStore();
@@ -256,7 +259,7 @@ export function InstructorLiveDashboard({
 		<div className="space-y-6">
 			<div className="grid gap-4">
 				{isComplete ? (
-					<SimulationResultsCard scores={scores} />
+					<SimulationResultsCard scores={scores} noDealCosts={noDealCosts} />
 				) : (
 					<SectionCard
 						title="Live Deal Board"

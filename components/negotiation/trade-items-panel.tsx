@@ -7,17 +7,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTradeItems } from "@/lib/realtime/hooks";
-import { TRADE_WAR_COST } from "@/lib/simulation/outcome";
+import type { TeamCountry } from "@/lib/types/domain";
+
+/** Research-team wording for each delegation's classified cost estimate. */
+const COST_BRIEFING: Record<
+	TeamCountry,
+	{ agency: string; country: string; opponent: string }
+> = {
+	USA: {
+		agency: "USTR",
+		country: "the United States",
+		opponent: "The Chinese team",
+	},
+	China: {
+		agency: "MOFCOM",
+		country: "China",
+		opponent: "The American team",
+	},
+};
 
 export function TradeItemsPanel({
 	classId,
 	teamId,
+	country,
+	noDealCost,
 	isLocked,
 }: {
 	classId: string;
 	teamId: string;
+	country: TeamCountry;
+	/** Null only if the cost could not be loaded. */
+	noDealCost: number | null;
 	isLocked: boolean;
 }) {
+	const briefing = COST_BRIEFING[country];
 	const storeItems = useTradeItems(teamId);
 	// Values the local user is editing. They win over incoming store values
 	// until the server echo catches up, so a teammate's update can't clobber
@@ -123,13 +146,14 @@ export function TradeItemsPanel({
 					</summary>
 					<div className="border-t border-slate-300 px-4 pb-4 pt-3 dark:border-slate-600">
 						<p className="leading-6">
-							Analysts have privately estimated that the economic cost of a
-							trade war will be <strong>{TRADE_WAR_COST}</strong> for your
-							country if no deal is reached. This intelligence is classified
-							and should not be shared outside your delegation. The other team
-							does not know whether your cost estimate is higher or lower than
-							theirs. Their costs could range from <strong>-5</strong> to{" "}
-							<strong>-20</strong>.
+							<strong>Top secret:</strong> &ldquo;{briefing.agency} analysts
+							have privately estimated that the economic cost of a trade war
+							will be <strong>{noDealCost ?? "unavailable"}</strong> for{" "}
+							{briefing.country} if no deal is reached. This intelligence is
+							classified and should not be shared outside your delegation.{" "}
+							{briefing.opponent} does NOT know whether your cost estimate is
+							higher or lower than theirs. Their costs could range from{" "}
+							<strong>-5</strong> to <strong>-20</strong>.&rdquo;
 						</p>
 						<p className="mt-3 leading-6">
 							While keeping in mind the specific interests outlined in your

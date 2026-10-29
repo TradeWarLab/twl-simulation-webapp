@@ -1,26 +1,36 @@
 import type { TeamCountry, TeamScore } from "@/lib/types/domain";
 
 /**
- * What a trade war costs a country when no deal is ratified. Students are told
- * this number in their own briefing (trade-items-panel.tsx), and the run guide
- * states it as the score for a failed negotiation: so it lives in one place.
+ * What a trade war costs each country when no deal is ratified. Assigned per
+ * class by the database (get_no_deal_costs). Null for a team whose cost the
+ * viewer may not see: a student sees only their own team's cost.
  */
-export const TRADE_WAR_COST = -10;
+export type NoDealCosts = Record<TeamCountry, number | null>;
 
-export type Outcome = {
-	kind: "no-deal" | "draw" | "decided";
-	usaPoints: number;
-	chinaPoints: number;
-	/** Null on a draw and on a no-deal. */
-	winner: TeamCountry | null;
-	diff: number;
-	interpretation: string;
-};
+export type Outcome =
+	| {
+			kind: "no-deal";
+			usaPoints: number | null;
+			chinaPoints: number | null;
+			winner: null;
+			diff: 0;
+			interpretation: string;
+	  }
+	| {
+			kind: "draw" | "decided";
+			usaPoints: number;
+			chinaPoints: number;
+			/** Null on a draw. */
+			winner: TeamCountry | null;
+			diff: number;
+			interpretation: string;
+	  };
 
 const STALEMATE =
 	"The negotiation reached a stalemate. Neither side was able to secure a numeric advantage, resulting in a maintenance of the current geopolitical status quo.";
 
-const NO_DEAL = `Negotiations ended in failure: no deal was ratified before time expired. Both delegations absorb the estimated cost of a continued trade war, scored at ${TRADE_WAR_COST} points each.`;
+const NO_DEAL =
+	"Negotiations ended in failure: no deal was ratified before time expired. Each delegation absorbs its own estimated cost of a continued trade war.";
 
 function interpret(winner: TeamCountry, diff: number): string {
 	if (diff <= 10)
@@ -37,16 +47,19 @@ function interpret(winner: TeamCountry, diff: number): string {
  * An empty `scores` array means no deal was ratified: NOT a 0-0 draw.
  * finalize_ratified_package inserts a row per team unconditionally
  * (schema.sql:754-763), so rows exist if and only if a package ratified.
- * Absent scores are the failure case, scored at TRADE_WAR_COST for both sides;
+ * Absent scores are the failure case, scored at each team's no-deal cost;
  * reading them as zeros is what made a deadlocked class report a stalemate it
  * never negotiated.
  */
-export function deriveOutcome(scores: TeamScore[]): Outcome {
+export function deriveOutcome(
+	scores: TeamScore[],
+	noDealCosts: NoDealCosts,
+): Outcome {
 	if (scores.length === 0) {
 		return {
 			kind: "no-deal",
-			usaPoints: TRADE_WAR_COST,
-			chinaPoints: TRADE_WAR_COST,
+			usaPoints: noDealCosts.USA,
+			chinaPoints: noDealCosts.China,
 			winner: null,
 			diff: 0,
 			interpretation: NO_DEAL,

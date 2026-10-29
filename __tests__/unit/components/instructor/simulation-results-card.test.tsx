@@ -24,9 +24,11 @@ function makeScores(usa: number, china: number): TeamScore[] {
 	];
 }
 
+const COSTS = { USA: -10, China: -10 };
+
 describe("SimulationResultsCard", () => {
 	it("announces the winner and the point advantage", () => {
-		render(<SimulationResultsCard scores={makeScores(42, 31)} />);
+		render(<SimulationResultsCard scores={makeScores(42, 31)} noDealCosts={COSTS} />);
 		expect(screen.getByText(/simulation complete/i)).toBeInTheDocument();
 		expect(screen.getByText("42")).toBeInTheDocument();
 		expect(screen.getByText("31")).toBeInTheDocument();
@@ -34,18 +36,21 @@ describe("SimulationResultsCard", () => {
 	});
 
 	it("labels the China delegation PRC, matching the rest of the dashboard", () => {
-		render(<SimulationResultsCard scores={makeScores(42, 31)} />);
+		render(<SimulationResultsCard scores={makeScores(42, 31)} noDealCosts={COSTS} />);
 		expect(screen.getByText(/team prc/i)).toBeInTheDocument();
 	});
 
 	it("reports a draw with no winner", () => {
-		render(<SimulationResultsCard scores={makeScores(20, 20)} />);
+		render(<SimulationResultsCard scores={makeScores(20, 20)} noDealCosts={COSTS} />);
 		expect(screen.getByText(/tied at 20/i)).toBeInTheDocument();
 	});
 
-	it("renders the no-deal state with the trade-war cost applied", () => {
-		render(<SimulationResultsCard scores={[]} />);
+	it("renders the no-deal state with each team's own cost", () => {
+		render(
+			<SimulationResultsCard scores={[]} noDealCosts={{ USA: 0, China: -10 }} />,
+		);
 		expect(screen.getByText(/no deal reached/i)).toBeInTheDocument();
-		expect(screen.getAllByText("-10")).toHaveLength(2);
+		expect(screen.getByText("0")).toBeInTheDocument();
+		expect(screen.getByText("-10")).toBeInTheDocument();
 	});
 });

@@ -72,6 +72,7 @@ function renderDashboard(
 			<InstructorLiveDashboard
 				roster={[]}
 				scores={scores}
+				noDealCosts={{ USA: -10, China: -10 }}
 				currentPeriod={dashboardPeriod}
 			/>
 		</ClassStoreContext.Provider>,

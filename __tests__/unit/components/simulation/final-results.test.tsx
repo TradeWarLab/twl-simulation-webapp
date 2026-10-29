@@ -24,26 +24,29 @@ function makeScores(usa: number, china: number): TeamScore[] {
 	];
 }
 
+const COSTS = { USA: -10, China: -10 };
+
 describe("FinalResults", () => {
 	it("reports no deal instead of a stalemate when no scores exist", () => {
-		render(<FinalResults scores={[]} />);
+		render(<FinalResults scores={[]} noDealCosts={COSTS} />);
 		expect(screen.getByText(/no deal reached/i)).toBeInTheDocument();
 		expect(screen.queryByText(/stalemate/i)).not.toBeInTheDocument();
 	});
 
-	it("shows the trade-war cost for both delegations on a no deal", () => {
-		render(<FinalResults scores={[]} />);
-		expect(screen.getAllByText("-10")).toHaveLength(2);
+	it("shows the student's own cost and hides the other team's on a no deal", () => {
+		render(<FinalResults scores={[]} noDealCosts={{ USA: -10, China: null }} />);
+		expect(screen.getAllByText("-10")).toHaveLength(1);
+		expect(screen.getByText("Classified")).toBeInTheDocument();
 		expect(screen.queryByText("Winner")).not.toBeInTheDocument();
 	});
 
 	it("still calls a genuine 0-0 result a stalemate", () => {
-		render(<FinalResults scores={makeScores(0, 0)} />);
+		render(<FinalResults scores={makeScores(0, 0)} noDealCosts={COSTS} />);
 		expect(screen.getByText(/stalemate/i)).toBeInTheDocument();
 	});
 
 	it("names the winner and the point advantage", () => {
-		render(<FinalResults scores={makeScores(42, 31)} />);
+		render(<FinalResults scores={makeScores(42, 31)} noDealCosts={COSTS} />);
 		expect(screen.getByText(/11-point advantage for USA/i)).toBeInTheDocument();
 		expect(screen.getByText("Winner")).toBeInTheDocument();
 	});

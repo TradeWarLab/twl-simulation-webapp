@@ -1,7 +1,7 @@
 "use client";
 
 import { Trophy } from "lucide-react";
-import { deriveOutcome } from "@/lib/simulation/outcome";
+import { deriveOutcome, type NoDealCosts } from "@/lib/simulation/outcome";
 import type { TeamScore } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "./section-card";
@@ -16,8 +16,14 @@ import { SectionCard } from "./section-card";
  * sitting above a working dashboard. Both derive from deriveOutcome, so they
  * cannot disagree about who won.
  */
-export function SimulationResultsCard({ scores }: { scores: TeamScore[] }) {
-	const outcome = deriveOutcome(scores);
+export function SimulationResultsCard({
+	scores,
+	noDealCosts,
+}: {
+	scores: TeamScore[];
+	noDealCosts: NoDealCosts;
+}) {
+	const outcome = deriveOutcome(scores, noDealCosts);
 
 	if (outcome.kind === "no-deal") {
 		return (
@@ -103,7 +109,8 @@ function ScoreTile({
 	isWinner,
 }: {
 	label: string;
-	points: number;
+	/** Null only if the no-deal cost could not be loaded. */
+	points: number | null;
 	accent: "usa" | "china";
 	isWinner: boolean;
 }) {
@@ -129,14 +136,14 @@ function ScoreTile({
 			<div
 				className={cn(
 					"text-3xl font-semibold tabular-nums",
-					points > 0
+					points !== null && points > 0
 						? "text-emerald-600 dark:text-emerald-400"
-						: points < 0
+						: points !== null && points < 0
 							? "text-red-600 dark:text-red-400"
 							: "text-muted-foreground",
 				)}
 			>
-				{points}
+				{points ?? "n/a"}
 			</div>
 		</div>
 	);

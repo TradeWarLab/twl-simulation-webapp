@@ -1,10 +1,11 @@
 "use client";
 
-import { deriveOutcome } from "@/lib/simulation/outcome";
+import { deriveOutcome, type NoDealCosts } from "@/lib/simulation/outcome";
 import type { TeamScore } from "@/lib/types/domain";
 
 type FinalResultsProps = {
 	scores: TeamScore[];
+	noDealCosts: NoDealCosts;
 };
 
 function ScoreCard({
@@ -14,10 +15,26 @@ function ScoreCard({
 	isLoser,
 }: {
 	team: string;
-	points: number;
+	/** Null when the viewer may not see this team's no-deal cost. */
+	points: number | null;
 	isWinner: boolean;
 	isLoser: boolean;
 }) {
+	if (points === null) {
+		return (
+			<div className="flex-1 rounded-xl border border-border p-8 text-center">
+				<div className="space-y-4">
+					<div className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+						{team}
+					</div>
+					<div className="text-2xl font-semibold text-muted-foreground">
+						Classified
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	const isNegative = points < 0;
 	return (
 		<div
@@ -58,8 +75,8 @@ function ScoreCard({
 	);
 }
 
-export function FinalResults({ scores }: FinalResultsProps) {
-	const outcome = deriveOutcome(scores);
+export function FinalResults({ scores, noDealCosts }: FinalResultsProps) {
+	const outcome = deriveOutcome(scores, noDealCosts);
 
 	if (outcome.kind === "no-deal") {
 		return (

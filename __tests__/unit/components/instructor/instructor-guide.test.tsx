@@ -32,14 +32,13 @@ describe("InstructorGuide", () => {
 		expect(screen.getByText(/-100 points/i)).toBeInTheDocument();
 	});
 
-	it("states the unanimity rule and the failure score", () => {
+	it("states the unanimity rule and the randomized failure cost", () => {
 		render(<InstructorGuide />);
 		expect(
 			screen.getByText(/every student on both teams must vote yes/i),
 		).toBeInTheDocument();
-		// Exact string, not /-10/: that regex also matches the "-100 points"
-		// budget in Round 1, and getByText throws on multiple matches.
-		expect(screen.getByText("-10")).toBeInTheDocument();
+		expect(screen.getByText("no-deal cost")).toBeInTheDocument();
+		expect(screen.getByText(/you cannot change it/i)).toBeInTheDocument();
 	});
 
 	it("hides the documentary link when no URL is configured", () => {

@@ -16,7 +16,7 @@ vi.mock("@/app/actions/trade-controller", () => ({
 	updateTradeItemValue: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-function setup() {
+function setup(country: "USA" | "China" = "USA", noDealCost = -10) {
 	const store = createClassStore(
 		makeSnapshot({
 			tradeItems: [
@@ -26,11 +26,34 @@ function setup() {
 	);
 	render(
 		<ClassStoreContext.Provider value={store}>
-			<TradeItemsPanel classId="class-1" teamId="team-usa" isLocked={false} />
+			<TradeItemsPanel
+				classId="class-1"
+				teamId="team-usa"
+				country={country}
+				noDealCost={noDealCost}
+				isLocked={false}
+			/>
 		</ClassStoreContext.Provider>,
 	);
 	return store;
 }
+
+describe("TradeItemsPanel cost briefing", () => {
+	it("gives the USA delegation the USTR wording and its own cost", () => {
+		setup("USA", 0);
+		expect(screen.getByText(/USTR analysts/)).toBeInTheDocument();
+		expect(screen.getByText(/The Chinese team/)).toBeInTheDocument();
+		expect(screen.getByText("0")).toBeInTheDocument();
+	});
+
+	it("gives the China delegation the MOFCOM wording and its own cost", () => {
+		// Not -20 or -5: the briefing's range sentence already shows those.
+		setup("China", -10);
+		expect(screen.getByText(/MOFCOM analysts/)).toBeInTheDocument();
+		expect(screen.getByText(/The American team/)).toBeInTheDocument();
+		expect(screen.getByText("-10")).toBeInTheDocument();
+	});
+});
 
 describe("TradeItemsPanel (store-driven)", () => {
 	it("renders items from the store and live-updates values", () => {

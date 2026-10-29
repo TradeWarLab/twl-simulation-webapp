@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { NoDealCosts } from "@/lib/simulation/outcome";
 import { createClient } from "@/lib/supabase/server";
 import type {
+	TeamCountry,
 	TeamScore,
 	TradeItem,
 	TradeProposal,
@@ -167,6 +169,30 @@ export async function getScoreboard(classId: string): Promise<TeamScore[]> {
 	}
 
 	return (data ?? []) as unknown as TeamScore[];
+}
+
+/**
+ * The no-deal costs the caller may see. The RPC returns both teams for the
+ * class instructor and only their own team for a student, so the other
+ * team's cost never reaches a student's browser.
+ */
+export async function getNoDealCosts(classId: string): Promise<NoDealCosts> {
+	const supabase = await createClient();
+	const costs: NoDealCosts = { USA: null, China: null };
+
+	const { data, error } = await supabase.rpc("get_no_deal_costs", {
+		p_class_id: classId,
+	});
+
+	if (error) {
+		console.error("Error fetching no-deal costs:", error);
+		return costs;
+	}
+
+	for (const row of (data ?? []) as { country: TeamCountry; cost: number }[]) {
+		costs[row.country] = row.cost;
+	}
+	return costs;
 }
 
 /**
