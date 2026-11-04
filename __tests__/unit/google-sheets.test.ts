@@ -11,7 +11,6 @@ function configure(key: string) {
 		"bot@project.iam.gserviceaccount.com",
 	);
 	vi.stubEnv("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY", key);
-	vi.stubEnv("POST_SURVEY_SHEET_ID", "sheet-123");
 }
 
 describe("appendSheetRow", () => {
@@ -27,9 +26,9 @@ describe("appendSheetRow", () => {
 	});
 
 	it("skips without calling Google when not configured", async () => {
-		vi.stubEnv("POST_SURVEY_SHEET_ID", "");
+		configure(PEM);
 		vi.spyOn(console, "warn").mockImplementation(() => {});
-		await appendSheetRow(["a"]);
+		await appendSheetRow(["a"], { id: undefined });
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
@@ -42,7 +41,7 @@ describe("appendSheetRow", () => {
 			)
 			.mockResolvedValueOnce(new Response("{}"));
 
-		await appendSheetRow(["2026-11-02", 4]);
+		await appendSheetRow(["2026-11-02", 4], { id: "sheet-123" });
 
 		const [tokenUrl, tokenInit] = fetchMock.mock.calls[0];
 		expect(tokenUrl).toBe("https://oauth2.googleapis.com/token");
@@ -56,6 +55,21 @@ describe("appendSheetRow", () => {
 		});
 	});
 
+	it("appends to the named tab when one is given", async () => {
+		configure(PEM);
+		fetchMock
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify({ access_token: "token-1" })),
+			)
+			.mockResolvedValueOnce(new Response("{}"));
+
+		await appendSheetRow(["a"], { id: "sheet-123", tab: "App responses" });
+
+		expect(fetchMock.mock.calls[1][0]).toContain(
+			`/values/${encodeURIComponent("'App responses'!A1")}:append`,
+		);
+	});
+
 	it("throws when Google rejects the append", async () => {
 		configure(PEM);
 		fetchMock
@@ -64,6 +78,6 @@ describe("appendSheetRow", () => {
 			)
 			.mockResolvedValueOnce(new Response("forbidden", { status: 403 }));
 
-		await expect(appendSheetRow(["a"])).rejects.toThrow(/403/);
+		await expect(appendSheetRow(["a"], { id: "sheet-123" })).rejects.toThrow(/403/);
 	});
 });

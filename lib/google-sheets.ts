@@ -47,28 +47,35 @@ async function getAccessToken(email: string, privateKey: string) {
 }
 
 /**
- * Appends one row below the last row of the first sheet. Skips with a warning
- * when not configured, the same way invite emails skip without Resend.
+ * Appends one row below the last row of a tab: the named tab, else the first.
+ * Skips with a warning when not configured, the same way invite emails skip
+ * without Resend.
  */
-export async function appendSheetRow(row: (string | number)[]): Promise<void> {
+export async function appendSheetRow(
+	row: (string | number)[],
+	sheet: { id: string | undefined; tab?: string },
+): Promise<void> {
 	const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 	// Env stores keep the PEM on one line with literal "\n" sequences.
 	const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
 		/\\n/g,
 		"\n",
 	);
-	const sheetId = process.env.POST_SURVEY_SHEET_ID;
 
-	if (!email || !privateKey || !sheetId) {
+	if (!email || !privateKey || !sheet.id) {
 		console.warn(
-			"Survey Sheet append skipped because GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY, or POST_SURVEY_SHEET_ID is not configured.",
+			"Survey Sheet append skipped because GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY, or the Sheet ID is not configured.",
 		);
 		return;
 	}
 
+	// A1 notation: quote the tab name, double any quote in it.
+	const range = sheet.tab
+		? `'${sheet.tab.replace(/'/g, "''")}'!A1`
+		: "A1";
 	const token = await getAccessToken(email, privateKey);
 	const response = await fetch(
-		`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+		`https://sheets.googleapis.com/v4/spreadsheets/${sheet.id}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
 		{
 			method: "POST",
 			headers: {

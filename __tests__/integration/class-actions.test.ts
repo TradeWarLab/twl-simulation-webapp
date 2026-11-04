@@ -10,7 +10,21 @@ import {
 	updateClassPeriod,
 } from "@/app/actions/classes";
 import { DEFAULT_BRIEFINGS } from "@/lib/constants";
+import { appendSheetRow } from "@/lib/google-sheets";
+import { STUDENT_LEVELS } from "@/lib/instructor-survey";
 import { mockClient } from "../helpers/supabase-mock";
+
+vi.mock("@/lib/google-sheets", () => ({ appendSheetRow: vi.fn() }));
+
+/** A Create Class form with valid intake survey answers. */
+function classForm(name: string): FormData {
+	const formData = new FormData();
+	formData.set("name", name);
+	formData.append("student_levels", STUDENT_LEVELS[0]);
+	formData.set("institution_type", "4-Year Public University");
+	formData.set("region", "Midwest");
+	return formData;
+}
 
 describe("Class Actions", () => {
 	beforeEach(() => {
@@ -50,6 +64,7 @@ describe("Class Actions", () => {
 			});
 			const tradeItemsInsertMock = vi.fn().mockResolvedValue({ error: null });
 			const briefingsInsertMock = vi.fn().mockResolvedValue({ error: null });
+			const surveyInsertMock = vi.fn().mockResolvedValue({ error: null });
 
 			mockClient.from.mockImplementation((table: string) => {
 				if (table === "classes") {
@@ -67,11 +82,13 @@ describe("Class Actions", () => {
 				if (table === "briefings") {
 					return { insert: briefingsInsertMock } as any;
 				}
+				if (table === "instructor_survey_responses") {
+					return { insert: surveyInsertMock } as any;
+				}
 				return {} as any;
 			});
 
-			const formData = new FormData();
-			formData.set("name", "History 101");
+			const formData = classForm("History 101");
 			formData.set("notebooklm_url", "https://notebooklm.google.com/example");
 
 			await createClass(formData);
@@ -127,6 +144,7 @@ describe("Class Actions", () => {
 			});
 			const tradeItemsInsertMock = vi.fn().mockResolvedValue({ error: null });
 			const briefingsInsertMock = vi.fn().mockResolvedValue({ error: null });
+			const surveyInsertMock = vi.fn().mockResolvedValue({ error: null });
 
 			mockClient.from.mockImplementation((table: string) => {
 				if (table === "classes") {
@@ -144,11 +162,13 @@ describe("Class Actions", () => {
 				if (table === "briefings") {
 					return { insert: briefingsInsertMock } as any;
 				}
+				if (table === "instructor_survey_responses") {
+					return { insert: surveyInsertMock } as any;
+				}
 				return {} as any;
 			});
 
-			const formData = new FormData();
-			formData.set("name", "History 101");
+			const formData = classForm("History 101");
 
 			await createClass(formData);
 
@@ -207,6 +227,68 @@ describe("Class Actions", () => {
 					),
 				),
 			);
+		});
+
+		it("saves the intake answers and appends them to the Sheet", async () => {
+			mockClient.auth.getUser.mockResolvedValueOnce({
+				data: { user: { id: "instructor-1", email: "prof@example.edu" } },
+			});
+			const surveyInsertMock = vi.fn().mockResolvedValue({ error: null });
+			mockClient.from.mockImplementation((table: string) => {
+				if (table === "classes") {
+					return {
+						insert: () => ({
+							select: () => ({
+								single: async () => ({ data: { id: "new-cls" }, error: null }),
+							}),
+						}),
+					} as any;
+				}
+				if (table === "instructor_survey_responses") {
+					return { insert: surveyInsertMock } as any;
+				}
+				// Seeding is covered above. Fail it here to keep this test short.
+				return {
+					insert: () => ({ select: async () => ({ data: null, error: {} }) }),
+				} as any;
+			});
+			vi.spyOn(console, "error").mockImplementation(() => {});
+
+			await createClass(classForm("History 101"));
+
+			expect(surveyInsertMock).toHaveBeenCalledWith({
+				class_id: "new-cls",
+				instructor_id: "instructor-1",
+				answers: {
+					student_levels: [STUDENT_LEVELS[0]],
+					institution_type: "4-Year Public University",
+					region: "Midwest",
+					region_other: "",
+					anything_else: "",
+				},
+			});
+			const [row] = vi.mocked(appendSheetRow).mock.calls[0];
+			expect(row.slice(1, 4)).toEqual([
+				"new-cls",
+				"History 101",
+				"prof@example.edu",
+			]);
+		});
+
+		it("creates no class when the intake survey is incomplete", async () => {
+			mockClient.auth.getUser.mockResolvedValueOnce({
+				data: { user: { id: "instructor-1" } },
+			});
+			const insertMock = vi.fn();
+			mockClient.from.mockReturnValue({ insert: insertMock } as any);
+			vi.spyOn(console, "error").mockImplementation(() => {});
+
+			const formData = classForm("History 101");
+			formData.delete("student_levels");
+			await createClass(formData);
+
+			expect(insertMock).not.toHaveBeenCalled();
+			expect(appendSheetRow).not.toHaveBeenCalled();
 		});
 
 		it("aborts if no user", async () => {

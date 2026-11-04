@@ -9,9 +9,13 @@ vi.mock("@/app/actions/post-survey", () => ({ submitPostSurvey: vi.fn() }));
 
 describe("PostSurveyForm", () => {
 	it("renders every question with required inputs", () => {
-		render(<PostSurveyForm classId="class-1" dealReached />);
-		expect(screen.getAllByRole("group")).toHaveLength(8);
-		for (const radio of screen.getAllByRole("radio")) {
+		// DOM queries, not role queries: role queries over ~45 radios are slow
+		// enough to time out on a busy machine.
+		const { container } = render(
+			<PostSurveyForm classId="class-1" dealReached />,
+		);
+		expect(container.querySelectorAll("fieldset")).toHaveLength(8);
+		for (const radio of container.querySelectorAll("input[type=radio]")) {
 			expect(radio).toBeRequired();
 		}
 	});

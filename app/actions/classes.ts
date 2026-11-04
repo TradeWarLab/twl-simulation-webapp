@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { DEFAULT_BRIEFINGS } from "@/lib/constants";
 import { sendStudentInviteEmail } from "@/lib/email/invite";
+import { appendSheetRow } from "@/lib/google-sheets";
+import {
+	buildInstructorSheetRow,
+	type InstructorSurveyAnswers,
+	parseInstructorSurvey,
+} from "@/lib/instructor-survey";
 import { createClient } from "@/lib/supabase/server";
 import type {
 	ClassRosterEntry,
@@ -77,6 +83,45 @@ async function ensureInstructorOwnsClass(
 	return !error && Boolean(data);
 }
 
+/**
+ * Saves the intake answers, then appends them to the research Sheet. A failure
+ * of either is logged and does not undo the class.
+ */
+async function saveIntakeSurvey(
+	supabase: Awaited<ReturnType<typeof createClient>>,
+	details: {
+		classId: string;
+		className: string;
+		instructorId: string;
+		instructorEmail: string;
+		answers: InstructorSurveyAnswers;
+	},
+): Promise<void> {
+	const { error } = await supabase.from("instructor_survey_responses").insert({
+		class_id: details.classId,
+		instructor_id: details.instructorId,
+		answers: details.answers,
+	});
+	if (error) {
+		console.error("Error saving intake survey response:", error);
+	}
+
+	try {
+		await appendSheetRow(
+			buildInstructorSheetRow({
+				submittedAt: new Date().toISOString(),
+				...details,
+			}),
+			{
+				id: process.env.INSTRUCTOR_SURVEY_SHEET_ID,
+				tab: process.env.INSTRUCTOR_SURVEY_SHEET_TAB,
+			},
+		);
+	} catch (sheetError) {
+		console.error("Intake survey Sheet append failed:", sheetError);
+	}
+}
+
 export async function createClass(formData: FormData): Promise<void> {
 	const supabase = await createClient();
 	const name = formData.get("name") as string;
@@ -86,6 +131,13 @@ export async function createClass(formData: FormData): Promise<void> {
 		data: { user },
 	} = await supabase.auth.getUser();
 	if (!user) {
+		return;
+	}
+
+	// The intake survey is part of this form. No valid answers, no class.
+	const survey = parseInstructorSurvey(formData);
+	if ("error" in survey) {
+		console.error("Intake survey rejected:", survey.error);
 		return;
 	}
 
@@ -107,6 +159,14 @@ export async function createClass(formData: FormData): Promise<void> {
 		console.error("Error creating class:", error);
 		return;
 	}
+
+	await saveIntakeSurvey(supabase, {
+		classId: classData.id,
+		className: name,
+		instructorId: user.id,
+		instructorEmail: user.email ?? "",
+		answers: survey.answers,
+	});
 
 	// Automatically create USA and China teams for the new class
 	const { data: teams, error: teamsError } = await supabase

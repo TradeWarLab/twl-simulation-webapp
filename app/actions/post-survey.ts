@@ -103,6 +103,10 @@ export async function submitPostSurvey(classId: string, formData: FormData) {
 					dealReached,
 					answers: parsed.answers,
 				}),
+				{
+					id: process.env.POST_SURVEY_SHEET_ID,
+					tab: process.env.POST_SURVEY_SHEET_TAB,
+				},
 			);
 		} catch (error) {
 			console.error(

@@ -177,13 +177,13 @@ Setup:
 1. In the Google Cloud console, create a project (or use one) and enable the **Google Sheets API**.
 2. Create a **service account** in that project. You do not need to give it any project roles.
 3. On the service account, add a **JSON key** and download it.
-4. Set `GOOGLE_SERVICE_ACCOUNT_EMAIL` to `client_email` and `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` to `private_key` from the JSON key. Keep the `
-` sequences as they are.
+4. Set `GOOGLE_SERVICE_ACCOUNT_EMAIL` to `client_email` and `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` to `private_key` from the JSON key. Keep the `\n` sequences as they are.
 5. With the shared Gmail account, create the Sheet. Share it with the service account email as **Editor**.
 6. Set `POST_SURVEY_SHEET_ID` to the ID in the Sheet URL: `docs.google.com/spreadsheets/d/<this part>/edit`.
-7. Put this header row in row 1 of the first tab. Rows are appended below it in this order:
+7. Optional: set `POST_SURVEY_SHEET_TAB` to a tab name. This lets the post-survey and the instructor intake survey share one spreadsheet on separate tabs. Without a tab name, rows go to the first tab.
+8. Put this header row in row 1 of that tab. Rows are appended below it in this order:
    `submitted_at, class_id, class_name, team, student_id, own_no_deal_cost, deal_reached, intention_accuracy, intention_understanding, predictability, trust, own_frustration, other_frustration, nonverbal_reliance, communication_mode`
-8. Add the same variables in Vercel for preview and production.
+9. Add the same variables in Vercel for preview and production.
 
 Notes:
 
@@ -191,6 +191,28 @@ Notes:
 - `own_no_deal_cost` is the respondent's own team's cost. To get the full condition of a class, pair its USA and PRC rows by `class_id`.
 - The `trust` question uses "would have carried out ... a joint statement" when `deal_reached` is `no`.
 - If you change the questions, change the header row to match `SHEET_COLUMNS` in `lib/post-survey.ts`.
+
+## Instructor Intake Survey Sheet
+
+Instructors answer the intake survey in the Create Class form. The questions are in `lib/instructor-survey.ts`. A class is not created until the required questions are answered. Each submit is saved to `instructor_survey_responses` in Supabase and is then appended as one row to a tab of a Google Sheet. It uses the same service account as the post-survey Sheet.
+
+If `INSTRUCTOR_SURVEY_SHEET_ID` is missing, the Sheet append is skipped with a warning. If the append fails, the error is logged and the class is still created. In both cases the answers stay in `instructor_survey_responses`.
+
+Setup:
+
+1. Use the spreadsheet that holds the former Google Form responses, or any other. Share it with the service account email as **Editor**.
+2. Add a new tab, for example `App responses`. Do not use the tab the Google Form writes to: Forms adds rows and columns there.
+3. Set `INSTRUCTOR_SURVEY_SHEET_ID` to the spreadsheet ID and `INSTRUCTOR_SURVEY_SHEET_TAB` to the tab name. Without a tab name, rows go to the first tab.
+4. Put this header row in row 1 of that tab:
+   `submitted_at, class_id, class_name, instructor_email, student_levels, institution_type, region, region_other, anything_else`
+5. Add the same variables in Vercel for preview and production.
+
+Notes:
+
+- `instructor_email` is the email of the instructor's account.
+- `student_levels` holds every selected level, separated by `; `.
+- For "Other", `institution_type` holds the text the instructor typed.
+- If you change the questions, change the header row to match `INSTRUCTOR_SHEET_COLUMNS` in `lib/instructor-survey.ts`.
 
 ## Fun things you can try if bored or need resume bullet points
 - Supabase is just a PostgresSQL wrapper, try migrating away from Supabase to AWS, could be a good resume bullet
