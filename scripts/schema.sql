@@ -957,6 +957,55 @@ grant execute on function public.get_no_deal_costs(uuid) to authenticated;
 
 
 -- ──────────────────────────────────────────────
+-- Post-simulation survey responses: one per student per class, submitted in
+-- the End period. A row unlocks the student's results screen.
+-- ──────────────────────────────────────────────
+
+create table if not exists public.survey_responses (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references public.classes not null,
+  student_id uuid references public.users not null,
+  team_id uuid references public.teams not null,
+  answers jsonb not null,
+  created_at timestamptz default now() not null,
+  unique(class_id, student_id)
+);
+
+alter table public.survey_responses enable row level security;
+
+drop policy if exists "Students can view their own survey responses."
+  on public.survey_responses;
+create policy "Students can view their own survey responses."
+  on public.survey_responses for select using (student_id = auth.uid());
+
+drop policy if exists "Instructors can view their classes' survey responses."
+  on public.survey_responses;
+create policy "Instructors can view their classes' survey responses."
+  on public.survey_responses for select using (
+    exists (
+      select 1 from public.classes
+      where id = survey_responses.class_id and instructor_id = auth.uid()
+    )
+  );
+
+-- Only for the student's own team, and only once the simulation has ended.
+drop policy if exists "Students can submit their own survey response."
+  on public.survey_responses;
+create policy "Students can submit their own survey response."
+  on public.survey_responses for insert with check (
+    student_id = auth.uid()
+    and exists (
+      select 1 from public.students_classes sc
+      join public.classes c on c.id = sc.class_id
+      where sc.class_id = survey_responses.class_id
+        and sc.student_id = auth.uid()
+        and sc.team_id = survey_responses.team_id
+        and c.current_period = 3
+    )
+  );
+
+
+-- ──────────────────────────────────────────────
 -- Trigger: fire handle_new_user on auth signup
 -- ──────────────────────────────────────────────
 

@@ -48,6 +48,9 @@ Optional:
 ```env
 INVITE_REPLY_TO_EMAIL=...
 NEXT_PUBLIC_APP_URL=...
+GOOGLE_SERVICE_ACCOUNT_EMAIL=...
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY=...
+POST_SURVEY_SHEET_ID=...
 ```
 
 - Signup and login are handled through Supabase Auth in [`app/actions/auth.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/app/actions/auth.ts:1).
@@ -162,6 +165,32 @@ Operational note:
 What the next developer should know:
 - If confirmation or reset emails fail, check the Supabase Auth email settings and Resend integration first.
 - Using the same Resend account for both flows is fine, but they are configured separately.
+
+## Post-Survey Google Sheet
+
+Students answer the post-simulation survey in the End period, before they see results. The questions are in `lib/post-survey.ts`. Each submit is saved to `survey_responses` in Supabase (this unlocks results) and is then appended as one row to a Google Sheet.
+
+If the three `GOOGLE_*` / `POST_SURVEY_SHEET_ID` variables are missing, the Sheet append is skipped with a warning. If the append fails, the error is logged and the student still sees results. In both cases the answers stay in `survey_responses`.
+
+Setup:
+
+1. In the Google Cloud console, create a project (or use one) and enable the **Google Sheets API**.
+2. Create a **service account** in that project. You do not need to give it any project roles.
+3. On the service account, add a **JSON key** and download it.
+4. Set `GOOGLE_SERVICE_ACCOUNT_EMAIL` to `client_email` and `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` to `private_key` from the JSON key. Keep the `
+` sequences as they are.
+5. With the shared Gmail account, create the Sheet. Share it with the service account email as **Editor**.
+6. Set `POST_SURVEY_SHEET_ID` to the ID in the Sheet URL: `docs.google.com/spreadsheets/d/<this part>/edit`.
+7. Put this header row in row 1 of the first tab. Rows are appended below it in this order:
+   `submitted_at, class_id, class_name, team, student_id, own_no_deal_cost, deal_reached, intention_accuracy, intention_understanding, predictability, trust, own_frustration, other_frustration, nonverbal_reliance, communication_mode`
+8. Add the same variables in Vercel for preview and production.
+
+Notes:
+
+- `student_id` is the Supabase user UUID, not a name or email.
+- `own_no_deal_cost` is the respondent's own team's cost. To get the full condition of a class, pair its USA and PRC rows by `class_id`.
+- The `trust` question uses "would have carried out ... a joint statement" when `deal_reached` is `no`.
+- If you change the questions, change the header row to match `SHEET_COLUMNS` in `lib/post-survey.ts`.
 
 ## Fun things you can try if bored or need resume bullet points
 - Supabase is just a PostgresSQL wrapper, try migrating away from Supabase to AWS, could be a good resume bullet

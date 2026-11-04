@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getStudentBriefings } from "@/app/actions/briefings";
+import { hasSubmittedPostSurvey } from "@/app/actions/post-survey";
 import { getRealtimeSnapshot } from "@/app/actions/realtime-snapshot";
 import {
 	getNoDealCosts,
@@ -14,6 +15,7 @@ import { TradeItemsPanel } from "@/components/negotiation/trade-items-panel";
 import { RealtimeClassProvider } from "@/components/realtime/realtime-class-provider";
 import { LoadingScreen } from "@/components/shared/loading-screen";
 import { FinalResults } from "@/components/simulation/final-results";
+import { PostSurveyForm } from "@/components/simulation/post-survey-form";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationLayout } from "@/components/simulation/simulation-layout";
 import { BriefingPanel } from "@/components/student/briefing-panel";
@@ -109,9 +111,14 @@ async function SimulationPageInner({
 	// Only this student's own team's cost: the RPC withholds the other team's.
 	const noDealCosts = await getNoDealCosts(id);
 
+	// The survey gates the End screen. Results and analytics are not fetched
+	// until it is submitted, so they never reach the browser before that.
+	const surveyDone =
+		classRecord.current_period === 3 && (await hasSubmittedPostSurvey(id));
+
 	// Fetch full analytics (reveal) if in phase 3
 	let analyticsData = null;
-	if (classRecord.current_period === 3) {
+	if (surveyDone) {
 		const result = await getSimulationAnalytics(id);
 		if (!("error" in result)) {
 			analyticsData = result;
@@ -141,12 +148,19 @@ async function SimulationPageInner({
 					<main className="flex-1 grid gap-4 min-h-0 grid-cols-1 max-w-4xl mx-auto w-full">
 						<Card className="flex flex-col min-h-0 h-[600px] lg:h-auto border-2">
 							<CardContent className="flex-1 overflow-y-auto p-3 flex flex-col min-h-0">
-								<div className="space-y-12 pb-12">
-									<FinalResults scores={scores} noDealCosts={noDealCosts} />
-									{analyticsData && (
-										<NegotiationAnalytics data={analyticsData} />
-									)}
-								</div>
+								{surveyDone ? (
+									<div className="space-y-12 pb-12">
+										<FinalResults scores={scores} noDealCosts={noDealCosts} />
+										{analyticsData && (
+											<NegotiationAnalytics data={analyticsData} />
+										)}
+									</div>
+								) : (
+									<PostSurveyForm
+										classId={id}
+										dealReached={scores.length > 0}
+									/>
+								)}
 							</CardContent>
 						</Card>
 					</main>
