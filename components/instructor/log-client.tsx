@@ -24,6 +24,9 @@ import type {
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 
+// Hidden: research data goes to the lab's Sheet, not to instructors.
+const SHOW_CSV_EXPORTS = false;
+
 type ValueUpdate = {
 	id: string;
 	itemId: string;
@@ -252,6 +255,7 @@ export function LogClient({
 						Monitor team chat, value changes, and formal trade proposals.
 					</p>
 				</div>
+				{SHOW_CSV_EXPORTS && (
 				<div className="flex items-center gap-2">
 					<Button
 						onClick={() =>
@@ -300,6 +304,7 @@ export function LogClient({
 						Values CSV
 					</Button>
 				</div>
+				)}
 			</div>
 
 			<Tabs defaultValue="chat" className="space-y-4">
