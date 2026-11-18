@@ -84,7 +84,7 @@ export function StudentRoster({
 		);
 
 		startTransition(async () => {
-			let res;
+			let res: { error?: string };
 			if (entry.status === "account_created" && entry.user_id) {
 				res = await updateStudentTeam(classId, entry.user_id, newAffiliation);
 			} else {
@@ -131,7 +131,7 @@ export function StudentRoster({
 		);
 
 		startTransition(async () => {
-			let res;
+			let res: { error?: string };
 			if (entry.status === "account_created" && entry.user_id) {
 				res = await updateStudentInterest(classId, entry.user_id, newInterest);
 			} else {
@@ -184,6 +184,7 @@ export function StudentRoster({
 			<CardHeader className="px-0 pt-0">
 				<CardTitle className="flex items-center gap-2">
 					<svg
+						aria-hidden="true"
 						xmlns="http://www.w3.org/2000/svg"
 						width="20"
 						height="20"

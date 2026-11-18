@@ -27,6 +27,7 @@ export function ProfileMenu({ email }: { email: string }) {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<button
+					type="button"
 					className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 					aria-label="Profile menu"
 				>
