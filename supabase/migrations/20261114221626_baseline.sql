@@ -2,8 +2,9 @@
 -- ║  TWL Simulation: baseline migration                                ║
 -- ╚══════════════════════════════════════════════════════════════════════╝
 --
--- Recreates the public schema of the TEST project (nknmkvjylmzxboflferw) as
--- it was on 2026-11-14. It records the live database, not scripts/schema.sql.
+-- Recreates the public schema of the PRODUCTION project as it was on
+-- 2026-11-18. Production is the source of truth. The test project had drifted
+-- and is brought in line by a later migration.
 -- Insecure items stay as they are. Fixes come in later migrations. Audit IDs
 -- refer to docs/architecture/2026-11-14-architecture-audit.md.
 --
@@ -18,27 +19,17 @@
 -- 0. Role Permissions
 -- ──────────────────────────────────────────────
 
--- A fresh project can grant more than the test project has (for example to
--- service_role, see auto_expose_new_tables in config.toml). Revoke first, then
--- grant only what the test project has. The app does not use service_role.
-revoke all on schema public from public, service_role;
-grant usage on schema public to anon, authenticated;
+-- Production uses the Supabase defaults. Set them explicitly so that the
+-- result does not depend on how a fresh project exposes new objects.
+-- Audit S1: anon gets all privileges on every table. Fix in a later migration.
+grant usage on schema public to public, anon, authenticated, service_role;
 
 alter default privileges for role postgres in schema public
-  revoke all on tables from postgres, anon, authenticated, service_role;
+  grant all on tables to postgres, anon, authenticated, service_role;
 alter default privileges for role postgres in schema public
-  revoke all on sequences from postgres, anon, authenticated, service_role;
+  grant all on sequences to postgres, anon, authenticated, service_role;
 alter default privileges for role postgres in schema public
-  revoke all on functions from postgres, anon, authenticated, service_role;
-
--- Future tables, sequences and functions automatically get these grants.
--- Audit S1: anon gets read and write on every table. Fix in a later migration.
-alter default privileges for role postgres in schema public
-  grant select, insert, update, delete on tables to anon, authenticated;
-alter default privileges for role postgres in schema public
-  grant usage, select on sequences to anon, authenticated;
-alter default privileges for role postgres in schema public
-  grant execute on functions to anon, authenticated;
+  grant execute on functions to postgres, anon, authenticated, service_role;
 
 
 -- ──────────────────────────────────────────────
@@ -50,7 +41,7 @@ create table public.users (
   full_name text,
   email text,
   role text default 'student'::text,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
+  created_at timestamp with time zone not null default now(),
   constraint users_pkey PRIMARY KEY (id),
   constraint users_role_check CHECK ((role = ANY (ARRAY['instructor'::text, 'student'::text]))),
   constraint users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
@@ -81,12 +72,12 @@ create table public.classes (
   id uuid not null default gen_random_uuid(),
   instructor_id uuid not null,
   name text not null,
-  status text default 'active'::text,
-  current_period integer default 0,  -- 0=Setup, 1=Domestic Negotiation, 2=Bilateral Negotiation, 3=End
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
   normalized_name text not null,
   class_code text not null,
+  status text default 'active'::text,
+  current_period integer default 0,  -- 0=Setup, 1=Domestic Negotiation, 2=Bilateral Negotiation, 3=End
   notebooklm_url text,  -- Predefined link to NotebookLM resource
+  created_at timestamp with time zone not null default now(),
   constraint classes_pkey PRIMARY KEY (id),
   constraint classes_class_code_key UNIQUE (class_code),
   constraint classes_status_check CHECK ((status = ANY (ARRAY['active'::text, 'archived'::text]))),
@@ -117,7 +108,7 @@ create table public.teams (
   id uuid not null default gen_random_uuid(),
   class_id uuid not null,
   country text not null,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
+  created_at timestamp with time zone not null default now(),
   constraint teams_pkey PRIMARY KEY (id),
   constraint teams_class_id_country_key UNIQUE (class_id, country),
   constraint teams_country_check CHECK ((country = ANY (ARRAY['USA'::text, 'China'::text]))),
@@ -150,7 +141,7 @@ create table public.students_classes (
   class_id uuid not null,
   team_id uuid,
   interest_block text,  -- 'Economy', 'National Security', 'Technology', 'Environment', 'Nationalism'
-  joined_at timestamp with time zone not null default timezone('utc'::text, now()),
+  joined_at timestamp with time zone not null default now(),
   constraint students_classes_pkey PRIMARY KEY (id),
   constraint students_classes_student_id_class_id_key UNIQUE (student_id, class_id),
   constraint students_classes_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
@@ -165,8 +156,10 @@ create policy "Enrollments are viewable by everyone in the class."
   on public.students_classes for select
   using (true);
 
--- schema.sql also has "Students can insert their own enrollment." The test
--- project does not. Students enroll through enroll_student().
+create policy "Students can insert their own enrollment."
+  on public.students_classes for insert
+  with check ((auth.uid() = student_id));
+
 create policy "Instructors can manage enrollments."
   on public.students_classes for all
   using ((EXISTS ( SELECT 1
@@ -186,7 +179,7 @@ create table public.class_invites (
   affiliation text not null,
   interest_block text,
   status text default 'pending'::text,
-  invited_at timestamp with time zone not null default timezone('utc'::text, now()),
+  invited_at timestamp with time zone not null default now(),
   constraint class_invites_pkey PRIMARY KEY (id),
   constraint class_invites_class_id_email_key UNIQUE (class_id, email),
   constraint class_invites_affiliation_check CHECK ((affiliation = ANY (ARRAY['USA'::text, 'China'::text]))),
@@ -219,10 +212,10 @@ create table public.briefings (
   class_id uuid not null,
   title text not null,
   content text,  -- Optional notes / markdown / URL
-  target_role text,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
-  interest_group text,  -- e.g. 'Economy', 'National Security', 'Nationalism'
   file_url text,  -- Path to uploaded PDF
+  target_role text,
+  interest_group text,  -- e.g. 'Economy', 'National Security', 'Nationalism'
+  created_at timestamp with time zone not null default now(),
   constraint briefings_pkey PRIMARY KEY (id),
   constraint briefings_target_role_check CHECK ((target_role = ANY (ARRAY['USA'::text, 'China'::text, 'All'::text]))),
   constraint briefings_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id)
@@ -251,15 +244,14 @@ create table public.messages (
   sender_id uuid not null,
   channel text not null,  -- 'global', 'team_usa', 'team_china'
   content text not null,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
   client_message_id text,
+  created_at timestamp with time zone not null default now(),
   constraint messages_pkey PRIMARY KEY (id),
   constraint messages_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
   constraint messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id)
 );
 
-CREATE INDEX messages_class_channel_created_idx ON public.messages USING btree (class_id, channel, created_at);
-CREATE INDEX messages_client_message_id_idx ON public.messages USING btree (client_message_id);
+CREATE INDEX messages_class_channel_created_idx ON public.messages USING btree (class_id, channel, created_at DESC);
 CREATE UNIQUE INDEX messages_client_message_id_unique ON public.messages USING btree (sender_id, client_message_id);
 
 alter table public.messages enable row level security;
@@ -328,12 +320,12 @@ create table public.trade_items (
   id uuid not null default gen_random_uuid(),
   class_id uuid not null,
   team_id uuid not null,
+  issue_id uuid,
   name text not null,
   value numeric not null default 0,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
-  issue_id uuid,
   role text,
   is_resolved boolean not null default false,
+  created_at timestamp with time zone not null default now(),
   constraint trade_items_pkey PRIMARY KEY (id),
   constraint trade_items_class_id_team_id_name_key UNIQUE (class_id, team_id, name),
   constraint trade_items_role_check CHECK ((role = ANY (ARRAY['ask'::text, 'concession'::text]))),
@@ -344,11 +336,13 @@ create table public.trade_items (
 
 alter table public.trade_items enable row level security;
 
--- Audit S2: every team's valuations are open to all callers. schema.sql has an
--- own-team policy here ("Trade items viewable by own team or instructor.").
-create policy "Trade items viewable by class."
+create policy "Trade items viewable by own team or instructor."
   on public.trade_items for select
-  using (true);
+  using (((EXISTS ( SELECT 1
+   FROM public.students_classes
+  WHERE ((students_classes.student_id = auth.uid()) AND (students_classes.team_id = trade_items.team_id)))) OR (EXISTS ( SELECT 1
+   FROM public.classes
+  WHERE ((classes.id = trade_items.class_id) AND (classes.instructor_id = auth.uid()))))));
 
 -- Editing is open only during Domestic Negotiation (period 1). The run guide
 -- states rankings freeze when Round 1 ends; a wider window let students
@@ -361,13 +355,6 @@ create policy "Teams can update their own trade items."
   WHERE ((students_classes.student_id = auth.uid()) AND (students_classes.team_id = trade_items.team_id)))) AND (EXISTS ( SELECT 1
    FROM public.classes
   WHERE ((classes.id = trade_items.class_id) AND (classes.current_period = 1))))));
-
--- Not in schema.sql. Same test as the next policy, without with check.
-create policy "Instructors can insert trade items."
-  on public.trade_items for all
-  using ((EXISTS ( SELECT 1
-   FROM public.classes
-  WHERE ((classes.id = trade_items.class_id) AND (classes.instructor_id = auth.uid())))));
 
 create policy "Instructors can manage trade items."
   on public.trade_items for all
@@ -403,8 +390,8 @@ create table public.negotiation_actions (
   type text not null,
   status text default 'draft'::text,
   details jsonb,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
   bundle_id uuid,
+  created_at timestamp with time zone not null default now(),
   constraint negotiation_actions_pkey PRIMARY KEY (id),
   constraint negotiation_actions_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'draft'::text]))),
   constraint negotiation_actions_type_check CHECK ((type = ANY (ARRAY['ask'::text, 'concession'::text, 'official_request'::text]))),
@@ -434,7 +421,7 @@ create table public.negotiation_bundles (
   class_id uuid not null,
   proposing_team_id uuid not null,
   status text default 'proposed'::text,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
+  created_at timestamp with time zone not null default now(),
   constraint negotiation_bundles_pkey PRIMARY KEY (id),
   constraint negotiation_bundles_status_check CHECK ((status = ANY (ARRAY['proposed'::text, 'accepted'::text, 'declined'::text]))),
   constraint negotiation_bundles_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
@@ -462,7 +449,7 @@ create table public.trade_proposals (
   requested_items jsonb not null,  -- [{item_id, name, value}]
   status text default 'pending'::text,
   created_by uuid not null,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
+  created_at timestamp with time zone not null default now(),
   is_package boolean not null default false,  -- true = final-deal ratification package (shared deal board)
   constraint trade_proposals_pkey PRIMARY KEY (id),
   constraint trade_proposals_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'executed'::text]))),
@@ -487,8 +474,7 @@ create policy "Team members can create proposals."
   WHERE ((students_classes.student_id = auth.uid()) AND (students_classes.team_id = trade_proposals.proposing_team_id)))));
 
 -- Audit S3: any class member can update any column of any proposal.
--- schema.sql names this policy "Class members can update proposal status."
-create policy "System can update proposal status."
+create policy "Class members can update proposal status."
   on public.trade_proposals for update
   using ((EXISTS ( SELECT 1
    FROM public.students_classes
@@ -505,7 +491,7 @@ create table public.votes (
   user_id uuid not null,
   team_id uuid not null,
   vote text not null,
-  created_at timestamp with time zone not null default timezone('utc'::text, now()),
+  created_at timestamp with time zone not null default now(),
   constraint votes_pkey PRIMARY KEY (id),
   constraint votes_proposal_id_user_id_key UNIQUE (proposal_id, user_id),
   constraint votes_vote_check CHECK ((vote = ANY (ARRAY['approve'::text, 'reject'::text]))),
@@ -539,7 +525,7 @@ create table public.team_scores (
   class_id uuid not null,
   team_id uuid not null,
   score numeric not null default 0,
-  updated_at timestamp with time zone not null default timezone('utc'::text, now()),
+  updated_at timestamp with time zone not null default now(),
   constraint team_scores_pkey PRIMARY KEY (id),
   constraint team_scores_class_id_team_id_key UNIQUE (class_id, team_id),
   constraint team_scores_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
@@ -553,8 +539,7 @@ create policy "Scores viewable by everyone."
   using (true);
 
 -- Audit S3: any class member can insert, update and delete scores.
--- schema.sql names this policy "Class members can manage scores."
-create policy "System can manage scores."
+create policy "Class members can manage scores."
   on public.team_scores for all
   using ((EXISTS ( SELECT 1
    FROM public.students_classes
@@ -667,20 +652,47 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 AS $function$
 declare
   v_class_id uuid;
+  v_target_team_id uuid;
+  v_target_country text;
+  v_target_interest text;
 begin
+  -- Create the public.users row
   insert into public.users (id, full_name, role, email)
-  values (new.id, new.raw_user_meta_data->>'full_name', coalesce(new.raw_user_meta_data->>'role', 'student'), new.email);
-  
+  values (
+    new.id,
+    new.raw_user_meta_data->>'full_name',
+    coalesce(new.raw_user_meta_data->>'role', 'student'),
+    new.email
+  );
+
+  -- If a class_code was passed at signup, auto-enroll
   if new.raw_user_meta_data->>'class_code' is not null then
-    select id into v_class_id from public.classes where upper(class_code) = upper(trim(new.raw_user_meta_data->>'class_code'));
+    select id into v_class_id
+    from public.classes
+    where upper(class_code) = upper(trim(new.raw_user_meta_data->>'class_code'));
+
     if v_class_id is not null then
-      insert into public.students_classes (student_id, class_id)
-      values (new.id, v_class_id)
+      -- Check for a matching invite to inherit team/interest
+      select affiliation, interest_block
+      into v_target_country, v_target_interest
+      from public.class_invites
+      where class_id = v_class_id and lower(email) = lower(new.email)
+      order by invited_at desc
+      limit 1;
+
+      if v_target_country is not null then
+        select id into v_target_team_id
+        from public.teams
+        where class_id = v_class_id and country = v_target_country
+        limit 1;
+      end if;
+
+      insert into public.students_classes (student_id, class_id, team_id, interest_block)
+      values (new.id, v_class_id, v_target_team_id, v_target_interest)
       on conflict do nothing;
 
-      -- Update any pending invite
-      update public.class_invites 
-      set status = 'account_created' 
+      update public.class_invites
+      set status = 'account_created'
       where class_id = v_class_id and lower(email) = lower(new.email);
     end if;
   end if;
@@ -713,33 +725,41 @@ begin
   if v_student_id is null then
     raise exception 'Not authenticated';
   end if;
-  select id into v_class_id from public.classes 
+
+  select id into v_class_id
+  from public.classes
   where upper(class_code) = upper(trim(p_class_code));
+
   if v_class_id is null then
     raise exception 'Invalid class code';
   end if;
-  -- Verify user isn't already enrolled
+
   if exists (select 1 from public.students_classes where student_id = v_student_id and class_id = v_class_id) then
     raise exception 'You are already enrolled in this class';
   end if;
+
   select email into v_user_email from public.users where id = v_student_id;
-  -- See if there was a previous invite to get their pre-assigned affiliation and interest block
-  select affiliation, interest_block 
+
+  -- Check for a matching invite to inherit team/interest
+  select affiliation, interest_block
   into v_target_country, v_target_interest
-  from public.class_invites 
+  from public.class_invites
   where class_id = v_class_id and lower(email) = lower(v_user_email)
-  order by invited_at desc 
+  order by invited_at desc
   limit 1;
-  -- Find the team ID corresponding to the target country (if any)
+
   if v_target_country is not null then
-    select id into v_target_team_id from public.teams 
+    select id into v_target_team_id
+    from public.teams
     where class_id = v_class_id and country = v_target_country
     limit 1;
   end if;
+
   insert into public.students_classes (student_id, class_id, team_id, interest_block)
   values (v_student_id, v_class_id, v_target_team_id, v_target_interest);
-  update public.class_invites 
-  set status = 'account_created' 
+
+  update public.class_invites
+  set status = 'account_created'
   where class_id = v_class_id and lower(email) = lower(v_user_email);
 end;
 $function$
@@ -1125,11 +1145,9 @@ CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXEC
 -- explicitly so the result does not depend on how a fresh project exposes new
 -- objects.
 
-revoke all on all tables in schema public from anon, authenticated, service_role;
-grant select, insert, update, delete on all tables in schema public to anon, authenticated;
-revoke all on all sequences in schema public from anon, authenticated, service_role;
-grant usage, select on all sequences in schema public to anon, authenticated;
-revoke all on all functions in schema public from service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant execute on all functions in schema public to service_role;
 
 
 -- ══════════════════════════════════════════════

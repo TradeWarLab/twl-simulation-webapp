@@ -216,7 +216,7 @@ update public.classes set current_period = 1
 
 select tests.act_as('usa_a');
 
-select todo_start('Audit S3: "System can manage scores." lets any class member write team_scores');
+select todo_start('Audit S3: "Class members can manage scores." lets any class member write team_scores');
 select ok(tests.denied($$insert into public.team_scores (class_id, team_id, score) values (tests.id('class_a'), tests.id('team_china_a'), 99)$$), 'S3: a student cannot insert team_scores');
 select ok(tests.denied($$update public.team_scores set score = 99 where class_id = tests.id('class_a')$$), 'S3: a student cannot update team_scores');
 select ok(tests.denied($$delete from public.team_scores where class_id = tests.id('class_a')$$), 'S3: a student cannot delete team_scores');
@@ -229,7 +229,7 @@ select ok(tests.denied($$update public.team_scores set score = 99 where class_id
 -- S3. trade_proposals: no direct status or item changes
 -- ──────────────────────────────────────────────
 
-select todo_start('Audit S3: "System can update proposal status." lets any class member update any column');
+select todo_start('Audit S3: "Class members can update proposal status." lets any class member update any column');
 select tests.act_as('usa_a');
 select ok(tests.denied($$update public.trade_proposals set status = 'executed' where id = tests.id('proposal_a')$$), 'S3: a student cannot set trade_proposals status');
 select tests.act_as('china_a');
@@ -370,7 +370,9 @@ select ok(tests.denied($$update public.students_classes set team_id = tests.id('
 select ok(tests.denied($$update public.classes set current_period = 2 where id = tests.id('class_a')$$), 'a student cannot change the class period');
 
 select tests.act_as('outsider');
-select ok(tests.denied($$insert into public.students_classes (student_id, class_id, team_id) values (auth.uid(), tests.id('class_a'), tests.id('team_usa_a'))$$), 'S4: a user cannot enroll directly with a chosen team');
+select todo_start('Audit S9: "Students can insert their own enrollment." checks only student_id');
+select ok(tests.denied($$insert into public.students_classes (student_id, class_id, team_id) values (auth.uid(), tests.id('class_a'), tests.id('team_usa_a'))$$), 'S9: a user cannot enroll directly with a chosen team');
+select todo_end();
 
 reset role;
 select * from finish();

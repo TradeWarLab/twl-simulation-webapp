@@ -225,8 +225,8 @@ select ok(tests.denied($$select 1 from public.teams$$), 'S1: anon cannot read te
 select ok(tests.denied($$select 1 from public.briefings$$), 'S1: anon cannot read briefings');
 select ok(tests.denied($$select 1 from public.deal_board_items$$), 'S1: anon cannot read deal_board_items');
 select ok(tests.denied($$select 1 from public.deal_ratification_calls$$), 'S1: anon cannot read deal_ratification_calls');
-select ok(tests.denied($$select 1 from public.trade_items$$), 'S1: anon cannot read trade_items');
 select todo_end();
+select ok(tests.denied($$select 1 from public.trade_items$$), 'anon cannot read trade_items');
 
 -- Already closed today. Keep them closed.
 select ok(tests.denied($$select 1 from public.survey_responses$$), 'anon cannot read survey_responses');
@@ -252,8 +252,8 @@ select ok(tests.denied($$select 1 from public.teams where class_id = tests.id('c
 select ok(tests.denied($$select 1 from public.briefings where class_id = tests.id('class_a')$$), 'S1: outsider cannot read class A briefings');
 select ok(tests.denied($$select 1 from public.deal_board_items where class_id = tests.id('class_a')$$), 'S1: outsider cannot read class A deal_board_items');
 select ok(tests.denied($$select 1 from public.deal_ratification_calls where class_id = tests.id('class_a')$$), 'S1: outsider cannot read class A deal_ratification_calls');
-select ok(tests.denied($$select 1 from public.trade_items where class_id = tests.id('class_a')$$), 'S1: outsider cannot read class A trade_items');
 select todo_end();
+select ok(tests.denied($$select 1 from public.trade_items where class_id = tests.id('class_a')$$), 'outsider cannot read class A trade_items');
 
 select ok(tests.denied($$select 1 from public.class_invites where class_id = tests.id('class_a')$$), 'outsider cannot read class A class_invites');
 select ok(tests.denied($$select 1 from public.survey_responses where class_id = tests.id('class_a')$$), 'outsider cannot read class A survey_responses');
@@ -276,8 +276,8 @@ select ok(tests.denied($$select 1 from public.teams where class_id = tests.id('c
 select ok(tests.denied($$select 1 from public.briefings where class_id = tests.id('class_a')$$), 'S1: instructor B cannot read class A briefings');
 select ok(tests.denied($$select 1 from public.deal_board_items where class_id = tests.id('class_a')$$), 'S1: instructor B cannot read class A deal_board_items');
 select ok(tests.denied($$select 1 from public.deal_ratification_calls where class_id = tests.id('class_a')$$), 'S1: instructor B cannot read class A deal_ratification_calls');
-select ok(tests.denied($$select 1 from public.trade_items where class_id = tests.id('class_a')$$), 'S1: instructor B cannot read class A trade_items');
 select todo_end();
+select ok(tests.denied($$select 1 from public.trade_items where class_id = tests.id('class_a')$$), 'instructor B cannot read class A trade_items');
 
 -- ──────────────────────────────────────────────
 -- S1. Email addresses: students see names only, instructors see their roster
@@ -296,16 +296,19 @@ select is(tests.attempt($$select 1 from public.users where id in (tests.id('usa_
 -- S2. Team confidentiality before the End period (class A in period 1)
 -- ──────────────────────────────────────────────
 
-select todo_start('Audit S2: messages and trade_items select are using (true)');
+select todo_start('Audit S2: messages select is using (true)');
 select tests.act_as('usa_a');
 select ok(tests.denied($$select 1 from public.messages where class_id = tests.id('class_a') and channel = 'team_china'$$), 'S2: USA student cannot read the team_china channel');
-select ok(tests.denied($$select 1 from public.trade_items where team_id = tests.id('team_china_a')$$), 'S2: USA student cannot read China trade_items before period 3');
 select tests.act_as('china_a');
 select ok(tests.denied($$select 1 from public.messages where class_id = tests.id('class_a') and channel = 'team_usa'$$), 'S2: China student cannot read the team_usa channel');
-select ok(tests.denied($$select 1 from public.trade_items where team_id = tests.id('team_usa_a')$$), 'S2: China student cannot read USA trade_items before period 3');
-select tests.act_as('unassigned_a');
-select ok(tests.denied($$select 1 from public.trade_items where class_id = tests.id('class_a')$$), 'S2: a student with no team cannot read trade_items before period 3');
 select todo_end();
+
+select tests.act_as('usa_a');
+select ok(tests.denied($$select 1 from public.trade_items where team_id = tests.id('team_china_a')$$), 'USA student cannot read China trade_items before period 3');
+select tests.act_as('china_a');
+select ok(tests.denied($$select 1 from public.trade_items where team_id = tests.id('team_usa_a')$$), 'China student cannot read USA trade_items before period 3');
+select tests.act_as('unassigned_a');
+select ok(tests.denied($$select 1 from public.trade_items where class_id = tests.id('class_a')$$), 'a student with no team cannot read trade_items before period 3');
 
 select tests.act_as('usa_a');
 select is(tests.attempt($$select 1 from public.messages where class_id = tests.id('class_a') and channel = 'team_usa'$$), 'rows=1', 'USA student can read the team_usa channel');

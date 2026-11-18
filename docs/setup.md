@@ -140,7 +140,7 @@ npx supabase@latest db push --remote
 
 `db push` and `migration repair` act on the local database unless you give `--remote`.
 
-The first migration, `20261114221626_baseline.sql`, is a copy of the test project schema. Do not run it on a project that already has the schema. Mark it as applied there, one time per project:
+The first migration, `20261114221626_baseline.sql`, is a copy of the production schema on 2026-11-18. Production is the source of truth. Do not run it on a project that already has the schema. Mark it as applied there, one time per project:
 
 ```bash
 npx supabase@latest migration repair --status applied 20261114221626 --remote
