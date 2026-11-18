@@ -125,7 +125,8 @@ items(kind, name, def) as (
   where a.attacl is not null
 
   union all
-  -- Schema grants.
+  -- Schema grants. Skip the owner, pg_database_owner, and postgres: the
+  -- platform sets these, and they differ between hosted and local stacks.
   select 'grant', 'schema public to ' || g.grantee, g.privs
   from pg_namespace n
   cross join lateral (
@@ -133,6 +134,8 @@ items(kind, name, def) as (
            string_agg(e.privilege_type || case when e.is_grantable then '*' else '' end,
                       ',' order by e.privilege_type) privs
     from aclexplode(coalesce(n.nspacl, acldefault('n', n.nspowner))) e
+    where e.grantee <> n.nspowner
+      and pg_get_userbyid(e.grantee) not in ('pg_database_owner', 'postgres')
     group by 1
   ) g
   where n.nspname = 'public'

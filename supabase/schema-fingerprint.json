@@ -590,7 +590,6 @@
 	"grant public.votes to postgres": "DELETE,INSERT,MAINTAIN,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE",
 	"grant schema public to anon": "USAGE",
 	"grant schema public to authenticated": "USAGE",
-	"grant schema public to postgres": "CREATE,USAGE",
 	"index public.briefings.briefings_pkey": "CREATE UNIQUE INDEX briefings_pkey ON public.briefings USING btree (id)",
 	"index public.class_invites.class_invites_class_id_email_key": "CREATE UNIQUE INDEX class_invites_class_id_email_key ON public.class_invites USING btree (class_id, email)",
 	"index public.class_invites.class_invites_pkey": "CREATE UNIQUE INDEX class_invites_pkey ON public.class_invites USING btree (id)",
