@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { type Mock, vi } from "vitest";
 
 // ─── Chainable Query Builder Mock ───────────────────────────
 //
@@ -9,15 +9,18 @@ import { vi } from "vitest";
 // The terminal methods (single, maybeSingle, or the last chain call)
 // resolve to the configured response.
 
-type MockResponse = {
+export type MockResponse = {
 	data: unknown;
-	error: null | { message: string };
+	error: null | { message: string; code?: string };
 };
+
+// Every builder member is a mock, so tests can assert on and patch it.
+export type ChainableBuilder = Record<string, Mock<(...args: never[]) => unknown>>;
 
 export function createChainableBuilder(
 	response: MockResponse = { data: null, error: null },
 ) {
-	const builder: Record<string, unknown> = {};
+	const builder: ChainableBuilder = {};
 
 	const chainMethods = [
 		"select",
@@ -54,8 +57,8 @@ export function createChainableBuilder(
 	builder.maybeSingle = vi.fn().mockResolvedValue(response);
 
 	// Make the builder itself thenable (for queries without single/maybeSingle)
-	builder.then = vi.fn((resolve: (value: MockResponse) => void) => {
-		resolve(response);
+	builder.then = vi.fn((resolve) => {
+		(resolve as (value: MockResponse) => void)(response);
 		return Promise.resolve(response);
 	});
 
@@ -65,7 +68,7 @@ export function createChainableBuilder(
 // ─── Mock Supabase Client Factory ───────────────────────────
 
 export type MockSupabaseClient = {
-	from: ReturnType<typeof vi.fn>;
+	from: Mock<(table: string) => ChainableBuilder>;
 	rpc: ReturnType<typeof vi.fn>;
 	auth: {
 		getUser: ReturnType<typeof vi.fn>;
