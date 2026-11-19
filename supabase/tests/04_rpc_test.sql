@@ -261,10 +261,11 @@ select throws_ok(
 
 reset role;
 
-select todo_start('Audit S6: client RPCs are executable by anon; no function sets search_path');
-select ok(not has_function_privilege('anon', 'public.enroll_student(text)', 'execute'), 'S6: anon cannot execute enroll_student');
 select ok(not has_function_privilege('anon', 'public.finalize_ratified_package(uuid)', 'execute'), 'S6: anon cannot execute finalize_ratified_package');
 select ok(not has_function_privilege('anon', 'public.end_bilateral_round(uuid)', 'execute'), 'S6: anon cannot execute end_bilateral_round');
+
+select todo_start('Audit S6: client RPCs are executable by anon; no function sets search_path');
+select ok(not has_function_privilege('anon', 'public.enroll_student(text)', 'execute'), 'S6: anon cannot execute enroll_student');
 select ok(not has_function_privilege('anon', 'public.get_no_deal_costs(uuid)', 'execute'), 'S6: anon cannot execute get_no_deal_costs');
 select is_empty(
   $$select p.proname from pg_proc p
@@ -274,13 +275,11 @@ select is_empty(
   'S6: every SECURITY DEFINER function in public sets search_path');
 select todo_end();
 
--- end_bilateral_round compares instructor_id <> auth.uid(). For anon
--- auth.uid() is null, the test is null, and the owner check is skipped.
+-- Audit S8 (regression lock): with no session auth.uid() is null. The old
+-- `instructor_id <> auth.uid()` check was then null and did not refuse.
 update public.classes set current_period = 2 where id = tests.id('class_a');
 select tests.act_as_anon();
-select todo_start('New finding (S6): end_bilateral_round owner check is skipped when auth.uid() is null');
-select ok(tests.denied($$select public.end_bilateral_round(tests.id('class_a'))$$), 'S6: anon cannot end the class A round');
-select todo_end();
+select ok(tests.denied($$select public.end_bilateral_round(tests.id('class_a'))$$), 'S8: anon cannot end the class A round');
 
 -- ──────────────────────────────────────────────
 -- finalize_ratified_package (class A in period 2, proposal_a pending,

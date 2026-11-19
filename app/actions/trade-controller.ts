@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { type ClassOutcome, exportClassOutcome } from "@/lib/class-outcome";
 import type { NoDealCosts } from "@/lib/simulation/outcome";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -418,25 +419,13 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 		const hasRejection = votesList.some((v) => v.vote === "reject");
 
 		if (hasRejection) {
-			// Mark as rejected
+			// Mark as rejected. For a package, the handle_package_change trigger
+			// clears the shared board and the calls (blank-slate reset) in the
+			// same transaction and logs why.
 			await supabase
 				.from("trade_proposals")
 				.update({ status: "rejected" })
 				.eq("id", proposalId);
-
-			if (proposal.is_package) {
-				// All-or-nothing ratification: rejection erases the shared board
-				// (blank-slate reset). These deletes are allowed for any class
-				// member under RLS, so they can run in the voter's session.
-				await supabase
-					.from("deal_board_items")
-					.delete()
-					.eq("class_id", proposal.class_id);
-				await supabase
-					.from("deal_ratification_calls")
-					.delete()
-					.eq("class_id", proposal.class_id);
-			}
 		} else {
 			// Unanimous approval → finalize via a SECURITY DEFINER RPC. It runs
 			// with elevated privileges so it can resolve BOTH teams' trade_items
@@ -447,7 +436,7 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 			// transaction rolls back and the proposal stays pending. Return an error
 			// so that the voting panel shows a retry. A retry sends the same vote
 			// again, which runs this tally and the RPC again.
-			const { error: finalizeError } = await supabase.rpc(
+			const { data: outcome, error: finalizeError } = await supabase.rpc(
 				"finalize_ratified_package",
 				{ p_proposal_id: proposalId },
 			);
@@ -462,11 +451,46 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 						"Your vote was saved, but the deal could not be finalized. Try again.",
 				};
 			}
+			// Server side only: the outcome never goes back to the voter.
+			await exportClassOutcome(outcome as ClassOutcome | null);
 		}
 	}
 
 	revalidatePath(`/student/simulation/${proposal.class_id}`);
 	return { success: true };
+}
+
+/**
+ * For a student who left. The class instructor approves the open package for
+ * every member who has not voted. A reject already cast still fails the deal.
+ * force_accept_votes checks the caller and records cast_by on each forced vote.
+ */
+export async function forceAcceptVotes(classId: string, proposalId: string) {
+	const supabase = await createClient();
+
+	const { data, error } = await supabase.rpc("force_accept_votes", {
+		p_proposal_id: proposalId,
+	});
+
+	if (error) {
+		console.error("Error force-accepting votes:", error);
+		return { error: error.message };
+	}
+
+	const result = data as {
+		result: "executed" | "rejected";
+		votes_added: number;
+		outcome?: ClassOutcome | null;
+	};
+	await exportClassOutcome(result.outcome);
+
+	revalidatePath(`/instructor/classes/${classId}`);
+	revalidatePath(`/student/simulation/${classId}`);
+	return {
+		success: true,
+		result: result.result,
+		votesAdded: result.votes_added,
+	};
 }
 
 // ─── Trade Item Management ─────────────────────────────

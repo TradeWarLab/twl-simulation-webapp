@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { submitVote } from "@/app/actions/trade-controller";
+import { forceAcceptVotes, submitVote } from "@/app/actions/trade-controller";
+import { exportClassOutcome } from "@/lib/class-outcome";
 import { createChainableBuilder, mockClient } from "../helpers/supabase-mock";
+
+vi.mock("@/lib/class-outcome", () => ({ exportClassOutcome: vi.fn() }));
 
 const PACKAGE_PROPOSAL = {
 	id: "pkg-1",
@@ -44,7 +47,7 @@ describe("submitVote: package proposals", () => {
 		vi.clearAllMocks();
 	});
 
-	it("wipes the board and calls when the final vote is rejected", async () => {
+	it("rejects the package and leaves the board wipe to the database", async () => {
 		// 2 members total; this vote is the 2nd and it is a reject.
 		const builders = mockTables({
 			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
@@ -81,17 +84,12 @@ describe("submitVote: package proposals", () => {
 		expect(builders.get("trade_proposals")!.update).toHaveBeenCalledWith({
 			status: "rejected",
 		});
-		// The blank-slate reset:
-		expect(builders.get("deal_board_items")!.delete).toHaveBeenCalled();
-		expect(builders.get("deal_board_items")!.eq).toHaveBeenCalledWith(
-			"class_id",
-			"class-1",
-		);
-		expect(builders.get("deal_ratification_calls")!.delete).toHaveBeenCalled();
-		expect(builders.get("deal_ratification_calls")!.eq).toHaveBeenCalledWith(
-			"class_id",
-			"class-1",
-		);
+		// The handle_package_change trigger does the blank-slate reset in the
+		// same transaction as the status change.
+		expect(builders.get("deal_board_items")?.delete).not.toHaveBeenCalled();
+		expect(
+			builders.get("deal_ratification_calls")?.delete,
+		).not.toHaveBeenCalled();
 	});
 
 	it("does not touch the board when a legacy (non-package) proposal is rejected", async () => {
@@ -249,5 +247,86 @@ describe("submitVote: package proposals", () => {
 
 		expect(result).toEqual({ error: "Voting has closed for this round" });
 		expect(builders.get("votes")?.upsert).not.toHaveBeenCalled();
+	});
+
+	it("exports the outcome that the finalize RPC returns", async () => {
+		const builders = mockTables({
+			trade_proposals: { data: PACKAGE_PROPOSAL, error: null },
+			classes: { data: { current_period: 2 }, error: null },
+			students_classes: { data: [{ team_id: "team-usa" }], error: null },
+			votes: { data: [{ vote: "approve" }], error: null },
+		});
+		builders
+			.get("students_classes")!
+			.single.mockResolvedValue({ data: { team_id: "team-usa" }, error: null });
+		builders.get("students_classes")!.then = vi.fn(
+			(resolve: (v: unknown) => void) => {
+				const value = { data: null, error: null, count: 1 };
+				resolve(value);
+				return Promise.resolve(value);
+			},
+		);
+		const outcome = { id: 1, outcome: "deal" };
+		mockClient.rpc.mockResolvedValue({ data: outcome, error: null });
+
+		const result = await submitVote("pkg-1", "approve");
+
+		expect(result).toEqual({ success: true });
+		expect(exportClassOutcome).toHaveBeenCalledWith(outcome);
+	});
+});
+
+describe("forceAcceptVotes", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("calls the RPC, exports the outcome and reports the result", async () => {
+		const outcome = { id: 2, outcome: "deal" };
+		mockClient.rpc.mockResolvedValue({
+			data: { result: "executed", votes_added: 2, outcome },
+			error: null,
+		});
+
+		const result = await forceAcceptVotes("class-1", "pkg-1");
+
+		expect(mockClient.rpc).toHaveBeenCalledWith("force_accept_votes", {
+			p_proposal_id: "pkg-1",
+		});
+		expect(exportClassOutcome).toHaveBeenCalledWith(outcome);
+		expect(result).toEqual({
+			success: true,
+			result: "executed",
+			votesAdded: 2,
+		});
+	});
+
+	it("reports a failed deal without an outcome", async () => {
+		mockClient.rpc.mockResolvedValue({
+			data: { result: "rejected", votes_added: 1 },
+			error: null,
+		});
+
+		const result = await forceAcceptVotes("class-1", "pkg-1");
+
+		expect(exportClassOutcome).toHaveBeenCalledWith(undefined);
+		expect(result).toEqual({
+			success: true,
+			result: "rejected",
+			votesAdded: 1,
+		});
+	});
+
+	it("surfaces an RPC error", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		mockClient.rpc.mockResolvedValue({
+			data: null,
+			error: { message: "Not authorized to force-accept votes" },
+		});
+
+		expect(await forceAcceptVotes("class-1", "pkg-1")).toEqual({
+			error: "Not authorized to force-accept votes",
+		});
+		expect(exportClassOutcome).not.toHaveBeenCalled();
 	});
 });

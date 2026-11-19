@@ -14,6 +14,8 @@ export type LiveClassRecord = {
 	class_code: string | null;
 	current_period: number;
 	status: string;
+	/** Set by the database each time the class enters period 2. */
+	round2_started_at?: string | null;
 };
 
 export type RealtimeSnapshot = {

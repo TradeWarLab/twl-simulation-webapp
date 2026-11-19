@@ -11,6 +11,7 @@ export function SimulationHeader({
 	interestGroup,
 	periods,
 	userEmail,
+	timer,
 }: {
 	className?: string;
 	classRecord: { name: string; current_period: number };
@@ -18,6 +19,8 @@ export function SimulationHeader({
 	interestGroup?: string | null;
 	periods: string[];
 	userEmail: string;
+	/** Shown under the phase, for example the Round 2 countdown. */
+	timer?: React.ReactNode;
 }) {
 	return (
 		<header className={`mb-4 pb-4 border-b ${className ?? ""}`}>
@@ -51,6 +54,7 @@ export function SimulationHeader({
 					<div className="font-bold text-lg">
 						{periods[classRecord.current_period]}
 					</div>
+					{timer && <div className="mt-1">{timer}</div>}
 				</div>
 
 				<div className="flex items-center gap-1 sm:gap-2 border border-border rounded-full px-2 sm:px-3 py-1.5 shrink-0">
@@ -72,6 +76,7 @@ export function SimulationHeader({
 					Current Phase
 				</span>
 				<span className="font-bold">{periods[classRecord.current_period]}</span>
+				{timer && <span className="ml-auto">{timer}</span>}
 			</div>
 		</header>
 	);

@@ -47,7 +47,7 @@ tests) so the fix stays fixed. Everything else can wait.
 | S1 | Critical | Anonymous callers can read names, emails, chats, class codes, votes, scores |
 | S2 | Critical | Team confidentiality is not enforced (chat; valuations on test only) |
 | S3 | Critical | Students can write outcome data directly (scores, proposals, votes, items) |
-| S8 | Critical | Anonymous callers can end any class's round (added after the tests were written) |
+| S8 | Critical | Anonymous callers can end any class's round (added after the tests were written). Fixed in migration `20261119050605`; live on prod until that migration is applied |
 | A1 | High | Schema drift, no migration history |
 | S4 | High | Identity fields used for authorization are user-editable |
 | S9 | High | Any signed-in user can enroll in any class and pick a team (production) |
@@ -245,6 +245,10 @@ cleared, and the class is archived.
 Direction: compare with `is distinct from`, reject a null `auth.uid()` first,
 and revoke EXECUTE from `anon` and `public`. Apply the same null check to every
 definer function. Test `04_rpc_test.sql` holds a TODO for this.
+
+Status (2026-11-18): fixed in `20261119050605_research_data_capture.sql`, as
+in the direction above. `04_rpc_test.sql` and `05_research_data_test.sql` lock
+it. The other definer functions still need the null check (S6).
 
 ### Corrections and additions from the database tests (2026-11-14)
 
