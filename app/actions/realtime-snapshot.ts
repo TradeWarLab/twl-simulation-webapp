@@ -31,7 +31,7 @@ export async function getRealtimeSnapshot(
 
 	const { data: classRecord } = await supabase
 		.from("classes")
-		.select("id, name, class_code, current_period, status")
+		.select("id, name, class_code, current_period, status, round2_started_at")
 		.eq("id", classId)
 		.single();
 	if (!classRecord) return null;

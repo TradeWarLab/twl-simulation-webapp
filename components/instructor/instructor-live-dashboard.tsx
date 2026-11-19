@@ -2,6 +2,7 @@
 
 import { Handshake } from "lucide-react";
 import { useMemo } from "react";
+import { RoundTimer } from "@/components/simulation/round-timer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { buildViewerValueMap } from "@/lib/realtime/derive";
 import {
@@ -20,6 +21,7 @@ import type {
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
 import { ManageItemsClient } from "./manage-items-client";
+import { OpenVoteCard } from "./open-vote-card";
 import { SectionCard } from "./section-card";
 import { SimulationResultsCard } from "./simulation-results-card";
 import { StudentRoster } from "./student-roster";
@@ -257,6 +259,12 @@ export function InstructorLiveDashboard({
 
 	return (
 		<div className="space-y-6">
+			{!isComplete && (
+				<>
+					<RoundTimer audience="instructor" />
+					<OpenVoteCard classId={classRecord.id} />
+				</>
+			)}
 			<div className="grid gap-4">
 				{isComplete ? (
 					<SimulationResultsCard scores={scores} noDealCosts={noDealCosts} />

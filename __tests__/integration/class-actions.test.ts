@@ -344,6 +344,30 @@ describe("Class Actions", () => {
 				error: "Not authorized",
 			});
 		});
+
+		it("appends the returned outcome to the lab Sheet", async () => {
+			vi.stubEnv("CLASS_OUTCOME_SHEET_ID", "sheet-1");
+			mockClient.rpc = vi.fn().mockResolvedValue({
+				data: { id: 3, class_id: "cls-1", outcome: "no_deal" },
+				error: null,
+			});
+
+			await endBilateralRound("cls-1");
+
+			expect(appendSheetRow).toHaveBeenCalledWith(
+				expect.arrayContaining(["cls-1", "no_deal"]),
+				expect.objectContaining({ id: "sheet-1" }),
+			);
+			vi.unstubAllEnvs();
+		});
+
+		it("appends nothing when the round was already over", async () => {
+			mockClient.rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+
+			await endBilateralRound("cls-1");
+
+			expect(appendSheetRow).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("advanceClassPeriod", () => {

@@ -10,6 +10,12 @@ export const SIMULATION_PERIODS = [
 export const TEAM_COUNTRIES = ["USA", "China"] as const;
 
 /**
+ * Length of Round 2 (Bilateral Negotiation). The countdown only informs: the
+ * instructor still ends the round.
+ */
+export const ROUND_TWO_MINUTES = 50;
+
+/**
  * Interest-group roles. `value` is what is persisted to
  * students_classes.interest_block, class_invites.interest_block, and
  * briefings.interest_group: getStudentBriefings matches on it by string

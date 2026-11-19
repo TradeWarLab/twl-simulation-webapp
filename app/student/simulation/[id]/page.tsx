@@ -16,6 +16,7 @@ import { RealtimeClassProvider } from "@/components/realtime/realtime-class-prov
 import { LoadingScreen } from "@/components/shared/loading-screen";
 import { FinalResults } from "@/components/simulation/final-results";
 import { PostSurveyForm } from "@/components/simulation/post-survey-form";
+import { RoundTimer } from "@/components/simulation/round-timer";
 import { SimulationHeader } from "@/components/simulation/simulation-header";
 import { SimulationLayout } from "@/components/simulation/simulation-layout";
 import { BriefingPanel } from "@/components/student/briefing-panel";
@@ -139,6 +140,7 @@ async function SimulationPageInner({
 						interestGroup={enrollment.interest_block}
 						periods={periods}
 						userEmail={user.email ?? ""}
+						timer={<RoundTimer audience="student" />}
 					/>
 				</div>
 

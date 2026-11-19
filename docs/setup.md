@@ -272,6 +272,34 @@ Notes:
 - For "Other", `institution_type` holds the text the instructor typed.
 - If you change the questions, change the header row to match `INSTRUCTOR_SHEET_COLUMNS` in `lib/instructor-survey.ts`.
 
+## Research Data
+
+The database keeps two lab-only tables. anon and authenticated have no access, so read them in the SQL editor or with `npx supabase@latest db query --remote=<ref> --read-only`.
+
+- `simulation_events`: one row for each board add or remove, ratification call, vote opened or closed, vote cast, item value change and period change. Database triggers write it, so the app cannot skip it. `actor_name` and `actor_team` are copied at the time of the event. `details.reason` tells a student action apart from a board clear (`vote_rejected`, `deal_ratified`, `round_end`).
+- `class_outcomes`: one row each time Round 2 ends. `board_*` is the board when the round ended. `package_*` is the last package that went to a vote. Both are scored as if every member approved, with the `finalize_ratified_package` rule. `package_status = 'pending'` means the vote was still open when the round ended. `package_forced_approvals` counts votes an instructor forced. Students see only "No Deal" and their own no-deal cost.
+
+### Class Outcome Sheet
+
+When Round 2 ends (deal, instructor end or force-accept), the server appends the `class_outcomes` row to a Google Sheet tab. It uses the same service account as the survey Sheets. If `CLASS_OUTCOME_SHEET_ID` is missing, the append is skipped with a warning. If it fails, the error is logged. In both cases the row stays in `class_outcomes`.
+
+Setup:
+
+1. Add a tab, for example `Outcomes`, to a spreadsheet that is shared with the service account email as **Editor**.
+2. Set `CLASS_OUTCOME_SHEET_ID` to the spreadsheet ID and `CLASS_OUTCOME_SHEET_TAB` to the tab name.
+3. Put this header row in row 1 of that tab:
+   `ended_at, class_id, class_name, outcome, ended_by, round2_started_at, usa_members, china_members, usa_no_deal_cost, china_no_deal_cost, board_usa_score, board_china_score, package_status, package_approvals, package_rejections, package_forced_approvals, package_usa_score, package_china_score, board_items, package_items, package_id, id`
+4. Add the same variables in Vercel for preview and production.
+
+Notes:
+
+- `board_items` and `package_items` are JSON. Each item has `name` and `giving_team`.
+- If you change the columns, change the header row to match `OUTCOME_SHEET_COLUMNS` in `lib/class-outcome.ts`.
+
+### Round 2 Timer
+
+`classes.round2_started_at` is set each time a class enters period 2. Students and the instructor see a 50-minute countdown (`ROUND_TWO_MINUTES` in `lib/constants.ts`). The countdown does not end the round: the instructor clicks **End Round**.
+
 ## Fun things you can try if bored or need resume bullet points
 - Supabase is just a PostgresSQL wrapper, try migrating away from Supabase to AWS, could be a good resume bullet
   - NextAuth/Clerk for Auth?

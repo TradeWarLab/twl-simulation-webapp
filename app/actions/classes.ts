@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { type ClassOutcome, exportClassOutcome } from "@/lib/class-outcome";
 import { DEFAULT_BRIEFINGS } from "@/lib/constants";
 import { sendStudentInviteEmail } from "@/lib/email/invite";
 import { appendSheetRow } from "@/lib/google-sheets";
@@ -612,11 +613,13 @@ export async function updateClassPeriod(classId: string, period: number) {
 export async function endBilateralRound(classId: string) {
 	const supabase = await createClient();
 
-	const { error } = await supabase.rpc("end_bilateral_round", {
+	// Returns the class_outcomes row, or null when the round was already over.
+	const { data, error } = await supabase.rpc("end_bilateral_round", {
 		p_class_id: classId,
 	});
 
 	if (error) return { error: error.message };
+	await exportClassOutcome(data as ClassOutcome | null);
 	revalidatePath(`/instructor/classes/${classId}`);
 	revalidatePath("/instructor/dashboard");
 	return { success: true };
