@@ -444,7 +444,9 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 			// team's rows (RLS), which previously left the opponent unresolved
 			// and scored 0. The RPC also marks the proposal executed, clears the
 			// board, and advances the class to the End phase. On failure the whole
-			// transaction rolls back, leaving the board intact for a retry.
+			// transaction rolls back and the proposal stays pending. Return an error
+			// so that the voting panel shows a retry. A retry sends the same vote
+			// again, which runs this tally and the RPC again.
 			const { error: finalizeError } = await supabase.rpc(
 				"finalize_ratified_package",
 				{ p_proposal_id: proposalId },
@@ -454,6 +456,11 @@ export async function submitVote(proposalId: string, vote: VoteChoice) {
 					"Error finalizing ratified deal, leaving board intact for retry:",
 					finalizeError,
 				);
+				revalidatePath(`/student/simulation/${proposal.class_id}`);
+				return {
+					error:
+						"Your vote was saved, but the deal could not be finalized. Try again.",
+				};
 			}
 		}
 	}

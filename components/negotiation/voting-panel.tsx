@@ -35,6 +35,7 @@ export function VotingPanel({
 	const votes = useVotes(proposal.id);
 	const [isPending, startTransition] = useTransition();
 	const [optimisticVote, setOptimisticVote] = useState<VoteChoice | null>(null);
+	const [voteError, setVoteError] = useState<string | null>(null);
 
 	const myVote =
 		votes.find((vote) => vote.user_id === currentUserId)?.vote ??
@@ -44,6 +45,7 @@ export function VotingPanel({
 	const handleVote = (vote: VoteChoice) => {
 		startTransition(async () => {
 			const result = await submitVote(proposal.id, vote);
+			setVoteError(result.error ?? null);
 			if (!result.error) setOptimisticVote(vote);
 		});
 	};
@@ -54,6 +56,10 @@ export function VotingPanel({
 	const rejections = votes.filter((v) => v.vote === "reject").length;
 	const totalMembers = proposal.vote_summary?.total_members ?? 0;
 	const votesCast = votes.length;
+	// All ballots are in but the deal is still pending: finalization failed.
+	// Any voter can retry, so the class does not stall on the last voter.
+	const isStalled =
+		!isResolved && totalMembers > 0 && votesCast >= totalMembers;
 
 	const netImpact = (proposal.offered_items ?? [])
 		.concat(proposal.requested_items ?? [])
@@ -261,9 +267,21 @@ export function VotingPanel({
 									{myVote}
 								</span>
 							</p>
-							<p className="text-[10px] text-muted-foreground mt-0.5">
-								Waiting for other members…
-							</p>
+							{isStalled && myVote ? (
+								<Button
+									onClick={() => handleVote(myVote)}
+									disabled={isPending}
+									size="sm"
+									variant="outline"
+									className="mt-2"
+								>
+									Retry finalizing deal
+								</Button>
+							) : (
+								<p className="text-[10px] text-muted-foreground mt-0.5">
+									Waiting for other members…
+								</p>
+							)}
 						</div>
 					) : (
 						<div className="flex gap-2">
@@ -283,6 +301,11 @@ export function VotingPanel({
 								✗ Reject
 							</Button>
 						</div>
+					)}
+					{voteError && (
+						<p role="alert" className="text-xs text-destructive text-center mt-2">
+							{voteError}
+						</p>
 					)}
 				</div>
 			)}

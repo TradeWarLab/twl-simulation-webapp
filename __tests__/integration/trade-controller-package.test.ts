@@ -216,8 +216,11 @@ describe("submitVote: package proposals", () => {
 
 		const result = await submitVote("pkg-1", "approve");
 
-		// The vote is still recorded; the failed finalization rolls back in the DB.
-		expect(result).toEqual({ success: true });
+		// The vote is recorded, the RPC rolls back, and the caller is told so it
+		// can retry.
+		expect(result).toEqual({
+			error: "Your vote was saved, but the deal could not be finalized. Try again.",
+		});
 		expect(mockClient.rpc).toHaveBeenCalledWith("finalize_ratified_package", {
 			p_proposal_id: "pkg-1",
 		});
