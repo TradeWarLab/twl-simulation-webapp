@@ -53,7 +53,7 @@ describe("LogClient", () => {
 		expect(mockClient.removeChannel).toHaveBeenCalled();
 	});
 
-	it("renders the export buttons", () => {
+	it("hides the CSV export buttons", () => {
 		render(
 			<LogClient
 				classId="class-1"
@@ -61,8 +61,8 @@ describe("LogClient", () => {
 				initialSnapshot={SNAPSHOT}
 			/>,
 		);
-		expect(screen.getByRole("button", { name: /chats csv/i })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /trades csv/i })).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: /values csv/i })).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: /chats csv/i })).not.toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: /trades csv/i })).not.toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: /values csv/i })).not.toBeInTheDocument();
 	});
 });

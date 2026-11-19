@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push cancels the older run on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+
+      - run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bunx biome lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      # No Supabase secrets are set. The healthcheck test skips without them.
+      - name: Unit tests
+        run: bun run test
+
+  # Builds a fresh local database from supabase/migrations, compares it with
+  # the schema fingerprint, then runs the pgTAP tests in supabase/tests.
+  # Needs no secrets. A known gap is a test inside todo_start/todo_end.
+  db-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.1.0
+
+      # Start only Postgres and Auth. The Postgres image makes the auth schema
+      # and the supabase_realtime publication; Auth migrates auth.users to its
+      # current form. The migrations apply on start, so no db reset is needed.
+      - name: Start local database
+        run: >-
+          supabase start
+          -x realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Schema drift check
+        run: node scripts/db/check-drift.mjs --local
+        env:
+          SUPABASE_CLI: supabase
+
+      - name: Database tests
+        run: supabase test db

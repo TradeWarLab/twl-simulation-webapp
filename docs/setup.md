@@ -27,10 +27,9 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-4. Run [`scripts/schema.sql`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/scripts/schema.sql:1) on a fresh Supabase instance.
-5. If the database predates a change in `scripts/migrations/`, run the migrations there in
-   date order. They are idempotent and safe to re-run.
-6. Start the app with `bun run dev`.
+4. Apply the migrations in `supabase/migrations/` to a fresh Supabase instance (see
+   [Database Migrations](#database-migrations)).
+5. Start the app with `bun run dev`.
 
 ## Auth And Environment
 
@@ -116,6 +115,65 @@ The Supabase schema currently includes:
 
 Realtime is enabled for messages, proposals, votes, scores, classes, trade items, deal board
 items, and deal ratification calls.
+
+## Database Migrations
+
+The schema is in `supabase/migrations/` and is managed by the Supabase CLI. Run the CLI with `npx supabase@latest`. `scripts/schema.sql` and `scripts/migrations/` are old and kept for history only.
+
+Add a migration:
+
+```bash
+npx supabase@latest migration new <name>
+```
+
+Write the SQL in the new file. Do not edit a migration that a database already has. Add a new one.
+
+Apply migrations to a hosted project (test or production):
+
+```bash
+npx supabase@latest login
+npx supabase@latest link --project-ref <ref>
+npx supabase@latest migration list --remote
+npx supabase@latest db push --remote --dry-run
+npx supabase@latest db push --remote
+```
+
+`db push` and `migration repair` act on the local database unless you give `--remote`.
+
+The first migration, `20261114221626_baseline.sql`, is a copy of the production schema on 2026-11-18. Production is the source of truth. Do not run it on a project that already has the schema. Mark it as applied there, one time per project:
+
+```bash
+npx supabase@latest migration repair --status applied 20261114221626 --remote
+```
+
+Run the drift check on the project before the repair. Later migrations assume the baseline state, so decide what to do with each difference first.
+
+Check a project for drift (read-only):
+
+```bash
+node scripts/db/check-drift.mjs --ref <project-ref>
+```
+
+It compares the `public` schema (tables, columns, constraints, indexes, RLS policies, functions, triggers, grants, realtime tables, `global_issues` rows) with `supabase/schema-fingerprint.json`. It prints each difference and exits with code 1 on drift. Other targets: `--db-url <postgres-url>` and `--local`. After you apply a new migration to the test project, update the expected file and commit it with the migration:
+
+```bash
+node scripts/db/check-drift.mjs --ref <test-project-ref> --update
+```
+
+### Database Tests
+
+`supabase/tests/` holds pgTAP tests of the access rules: RLS policies, grants, and RPC functions. Each file makes its own users and classes, acts as each caller (anonymous, outsider, student of each team, instructor of the class, instructor of another class), and rolls back at the end.
+
+CI runs them on every pull request (`db-tests` job): it builds a fresh local database from the migrations, runs the drift check against it, then runs the tests. To run them locally you need Docker:
+
+```bash
+npx supabase@latest start
+bun run db:test
+```
+
+Some tests are wrapped in `todo_start(...)` / `todo_end()`. A TODO test states a rule the database does not meet yet. Its reason names the audit finding (`docs/architecture/2026-11-14-architecture-audit.md`). It can fail without failing CI. When it passes, the output shows it as an unexpected pass.
+
+To fix a security gap: write the migration. The matching TODO test starts to pass. Remove its TODO wrapper in the same pull request, so the test now fails CI if the gap comes back.
 
 ## Important Flows
 

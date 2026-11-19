@@ -29,6 +29,7 @@ const ThemeSwitcher = () => {
 
 	return (
 		<button
+			type="button"
 			onClick={toggle}
 			aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
 			className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground border border-border transition-colors hover:text-foreground hover:bg-muted"

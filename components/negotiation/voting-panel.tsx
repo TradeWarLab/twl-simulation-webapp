@@ -106,9 +106,9 @@ export function VotingPanel({
 								Concessions ({proposal.proposing_team?.country})
 							</p>
 							<div className="space-y-1">
-								{(proposal.offered_items ?? []).map((item, i) => (
+								{(proposal.offered_items ?? []).map((item) => (
 									<div
-										key={i}
+										key={item.item_id}
 										className="text-xs px-3 py-2 rounded-md bg-card border flex items-center justify-between"
 									>
 										<span className="font-medium">{item.name}</span>
@@ -129,9 +129,9 @@ export function VotingPanel({
 								Asks ({proposal.receiving_team?.country})
 							</p>
 							<div className="space-y-1">
-								{(proposal.requested_items ?? []).map((item, i) => (
+								{(proposal.requested_items ?? []).map((item) => (
 									<div
-										key={i}
+										key={item.item_id}
 										className="text-xs px-3 py-2 rounded-md bg-card border flex items-center justify-between"
 									>
 										<span className="font-medium">{item.name}</span>
@@ -213,6 +213,7 @@ export function VotingPanel({
 								<div className="flex gap-1" aria-hidden="true">
 									{Array.from({ length: totalMembers }, (_, i) => (
 										<div
+											// biome-ignore lint/suspicious/noArrayIndexKey: fixed slots, order does not change
 											key={i}
 											className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
 												i < votesCast ? "bg-primary" : "bg-border"

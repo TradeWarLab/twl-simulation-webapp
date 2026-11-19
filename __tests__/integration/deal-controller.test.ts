@@ -6,7 +6,11 @@ import {
 	removeBoardItem,
 	withdrawRatificationCall,
 } from "@/app/actions/deal-controller";
-import { createChainableBuilder, mockClient } from "../helpers/supabase-mock";
+import {
+	createChainableBuilder,
+	type MockResponse,
+	mockClient,
+} from "../helpers/supabase-mock";
 
 // Route table names to per-table builders; returns builders for assertions.
 function mockTables(
@@ -40,7 +44,7 @@ const ITEM = {
 };
 
 // Baseline: enrolled on team-usa, phase 2, no pending package vote.
-function baselineResponses() {
+function baselineResponses(): Record<string, MockResponse> {
 	return {
 		students_classes: { data: { team_id: "team-usa" }, error: null },
 		classes: { data: { current_period: 2 }, error: null },

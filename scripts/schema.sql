@@ -1,3 +1,7 @@
+-- SUPERSEDED by supabase/migrations/. Kept for history only. Do not run.
+-- This file does not match the live databases. See
+-- supabase/migrations/20261114221626_baseline.sql and docs/setup.md.
+
 -- ╔══════════════════════════════════════════════════════════════════════╗
 -- ║  TWL Simulation: Master Schema                                     ║
 -- ║  Run this against a fresh Supabase project to recreate everything. ║

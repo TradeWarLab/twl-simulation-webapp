@@ -66,6 +66,7 @@ function TabButton({
 }) {
 	return (
 		<button
+			type="button"
 			onClick={onClick}
 			className={`flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${
 				active
@@ -212,12 +213,12 @@ function RevealView({
 						</tr>
 					</thead>
 					<tbody className="divide-y text-xs">
-						{Object.values(issues).map((issue, idx) => {
+						{Object.entries(issues).map(([key, issue]) => {
 							const usaVal = issue.values.USA ?? 0;
 							const chinaVal = issue.values.China ?? 0;
 
 							return (
-								<tr key={idx} className="hover:bg-muted/30 transition-colors">
+								<tr key={key} className="hover:bg-muted/30 transition-colors">
 									<td className="px-4 py-3 font-bold">{issue.name}</td>
 									<td
 										className={`px-4 py-3 text-center tabular-nums font-black ${signedColor(usaVal)}`}

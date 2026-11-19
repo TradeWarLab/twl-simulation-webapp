@@ -36,7 +36,7 @@ export function ManageTeamsClient({
 
 		// Submit via server action
 		startTransition(async () => {
-			let res;
+			let res: { error?: string };
 			if (entry.status === "account_created" && entry.user_id) {
 				res = await updateStudentTeam(classId, entry.user_id, newAffiliation);
 			} else {
@@ -71,7 +71,7 @@ export function ManageTeamsClient({
 
 		// Submit via server action
 		startTransition(async () => {
-			let res;
+			let res: { error?: string };
 			if (entry.status === "account_created" && entry.user_id) {
 				const { updateStudentInterest } = await import("@/app/actions/teams");
 				res = await updateStudentInterest(classId, entry.user_id, newInterest);
