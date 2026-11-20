@@ -56,6 +56,7 @@ POST_SURVEY_SHEET_ID=...
 - Email verification lands on [`app/auth/confirm/route.ts`](/c:/Users/obijr/Downloads/code/projects/web/twl-simulation-webapp/app/auth/confirm/route.ts:1).
 - New users are mirrored into `public.users` by the `handle_new_user()` database trigger.
 - Student signup can include a `class_code`; if present, the trigger auto-enrolls the student and applies any matching invite metadata.
+- When a user's email is confirmed, the `enroll_from_invites()` trigger enrolls them in each class with a pending invite for that email, on the invited team. With email confirmation off, this happens at signup.
 - `RESEND_API_KEY` is used by the app server for custom invite emails only. Do not expose it to the client.
 - Production and preview deployments need the same server-side variables configured in Vercel.
 
