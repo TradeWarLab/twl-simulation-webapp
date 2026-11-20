@@ -25,6 +25,7 @@ import { OpenVoteCard } from "./open-vote-card";
 import { SectionCard } from "./section-card";
 import { SimulationResultsCard } from "./simulation-results-card";
 import { StudentRoster } from "./student-roster";
+import { TeamValueTotals } from "./team-value-totals";
 
 type DashboardProps = {
 	roster: ClassRosterEntry[];
@@ -362,6 +363,18 @@ export function InstructorLiveDashboard({
 					value="Trade Breakdown"
 					className="rounded-2xl border border-border/70 bg-card p-5"
 				>
+					<div className="grid gap-4 sm:grid-cols-2">
+						{(["USA", "China"] as const).map((country) => (
+							<div key={country} className="space-y-2">
+								<div className="text-sm font-semibold">
+									Team {country === "China" ? "PRC" : "USA"}
+								</div>
+								<TeamValueTotals
+									items={teamMetricsByCountry.get(country)?.tradeItems ?? []}
+								/>
+							</div>
+						))}
+					</div>
 					<div className="pt-2">
 						<ManageItemsClient
 							classId={classRecord.id}

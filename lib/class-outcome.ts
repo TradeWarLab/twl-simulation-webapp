@@ -57,10 +57,22 @@ export const OUTCOME_SHEET_COLUMNS = [
 	"id",
 ] as const satisfies readonly (keyof ClassOutcome)[];
 
+const TIME_COLUMNS = new Set<string>(["ended_at", "round2_started_at"]);
+
+/** Gives "YYYY-MM-DD HH:MM" in UTC. class_outcomes keeps full precision. */
+function formatMinuteUtc(timestamp: string): string {
+	const date = new Date(timestamp);
+	if (Number.isNaN(date.getTime())) return timestamp;
+	return date.toISOString().slice(0, 16).replace("T", " ");
+}
+
 export function buildOutcomeRow(outcome: ClassOutcome): (string | number)[] {
 	return OUTCOME_SHEET_COLUMNS.map((column) => {
 		const value = outcome[column];
 		if (value === null || value === undefined) return "";
+		if (TIME_COLUMNS.has(column) && typeof value === "string") {
+			return formatMinuteUtc(value);
+		}
 		if (typeof value === "object") return JSON.stringify(value);
 		return value;
 	});
