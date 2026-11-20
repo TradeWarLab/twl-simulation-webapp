@@ -1,12 +1,12 @@
 -- Database access tests: RPC functions.
 -- get_no_deal_costs, assign_no_deal_cost, finalize_ratified_package,
--- end_bilateral_round, enroll_student, and S6 hardening.
+-- end_bilateral_round, enroll_student, enroll_from_invites, and S6 hardening.
 -- Tests wrapped in todo_start/todo_end state a rule the baseline does not meet
 -- yet. Remove the wrapper in the pull request that fixes the rule.
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(46);
+select plan(52);
 
 -- ──────────────────────────────────────────────
 -- Helpers and fixtures. Keep this block the same in every test file.
@@ -445,6 +445,56 @@ select ok(
                  and team_id is not null),
   'S4: a student cannot take another invite by changing their email');
 select todo_end();
+
+-- ──────────────────────────────────────────────
+-- enroll_from_invites: invited student signs up without a class code
+-- ──────────────────────────────────────────────
+
+reset role;
+
+select ok(not has_function_privilege('authenticated', 'public.enroll_from_invites()', 'execute'),
+  'authenticated cannot execute enroll_from_invites');
+
+insert into public.class_invites (class_id, invited_by, email, affiliation, interest_block) values
+  (tests.id('class_a'), tests.id('inst_a'), 'late@test.local', 'USA', 'Economy');
+
+-- Sign-up with email confirmation on: email_confirmed_at is null.
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('90000000-0000-0000-0000-000000000001', 'late@test.local', '{"full_name": "Late Student"}');
+select ok(
+  not exists (select 1 from public.students_classes
+               where student_id = '90000000-0000-0000-0000-000000000001'),
+  'an unconfirmed invitee is not enrolled');
+select is(
+  (select status from public.class_invites where class_id = tests.id('class_a') and email = 'late@test.local'),
+  'pending',
+  'an unconfirmed invitee keeps a pending invite');
+
+-- The student clicks the confirmation link.
+update auth.users set email_confirmed_at = now()
+where id = '90000000-0000-0000-0000-000000000001';
+select ok(
+  exists (select 1 from public.students_classes
+           where student_id = '90000000-0000-0000-0000-000000000001'
+             and class_id = tests.id('class_a')
+             and team_id = tests.id('team_usa_a')
+             and interest_block = 'Economy'),
+  'confirming the email enrolls the invitee on the invited team and interest block');
+select is(
+  (select status from public.class_invites where class_id = tests.id('class_a') and email = 'late@test.local'),
+  'account_created',
+  'confirming the email marks the invite used');
+
+-- Sign-up with email confirmation off: Auth sets email_confirmed_at at insert.
+-- The email case differs from the invite.
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values
+  ('90000000-0000-0000-0000-000000000002', 'Someone@Test.local', now(), '{"full_name": "Someone"}');
+select ok(
+  exists (select 1 from public.students_classes
+           where student_id = '90000000-0000-0000-0000-000000000002'
+             and class_id = tests.id('class_b')
+             and team_id = tests.id('team_usa_b')),
+  'a confirmed sign-up enrolls the invitee, email case ignored');
 
 reset role;
 select * from finish();
