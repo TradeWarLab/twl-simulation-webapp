@@ -41,7 +41,7 @@ describe("buildOutcomeRow", () => {
 
 		expect(row).toHaveLength(OUTCOME_SHEET_COLUMNS.length);
 		expect(row.slice(0, 4)).toEqual([
-			"2026-11-18T20:00:00Z",
+			"2026-11-18 20:00",
 			"class-1",
 			"POLS 170",
 			"no_deal",
@@ -54,6 +54,7 @@ describe("buildOutcomeRow", () => {
 			row[OUTCOME_SHEET_COLUMNS.indexOf(column)];
 
 		expect(cell("package_usa_score")).toBe("");
+		expect(cell("round2_started_at")).toBe("2026-11-18 19:10");
 		expect(cell("board_usa_score")).toBe(12);
 		expect(cell("board_items")).toBe(
 			'[{"name":"Tariffs","giving_team":"USA"}]',

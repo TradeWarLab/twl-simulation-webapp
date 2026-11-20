@@ -293,6 +293,7 @@ Setup:
 
 Notes:
 
+- `ended_at` and `round2_started_at` are UTC, to the minute (`2026-11-19 23:26`). `class_outcomes` keeps the full timestamp.
 - `board_items` and `package_items` are JSON. Each item has `name` and `giving_team`.
 - If you change the columns, change the header row to match `OUTCOME_SHEET_COLUMNS` in `lib/class-outcome.ts`.
 
