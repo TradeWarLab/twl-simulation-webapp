@@ -23,6 +23,7 @@ import type {
 	Vote,
 } from "@/lib/types/domain";
 import { cn } from "@/lib/utils";
+import { TeamValueTotals } from "./team-value-totals";
 
 // Hidden: research data goes to the lab's Sheet, not to instructors.
 const SHOW_CSV_EXPORTS = false;
@@ -425,7 +426,10 @@ function ValueMonitor({
 						<CardHeader className="pb-3">
 							<CardTitle className="text-base">Team {team.country}</CardTitle>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="space-y-3">
+							<TeamValueTotals
+								items={tradeItems.filter((item) => item.team_id === team.id)}
+							/>
 							<div className="space-y-2">
 								{tradeItems.filter((item) => item.team_id === team.id)
 									.length === 0 ? (
@@ -464,15 +468,16 @@ function ValueMonitor({
 				))}
 			</div>
 
-			<Card>
+			{/* On wide screens the feed fills the height of the team columns. */}
+			<Card className="flex flex-col">
 				<CardHeader className="pb-3">
 					<CardTitle className="text-base">Live Changes</CardTitle>
 					<p className="text-xs text-muted-foreground">
 						Shows updates received while this page is open.
 					</p>
 				</CardHeader>
-				<CardContent>
-					<ScrollArea className="h-[500px] pr-3">
+				<CardContent className="relative min-h-0 flex-1 lg:min-h-[300px]">
+					<ScrollArea className="h-[500px] pr-3 lg:absolute lg:inset-x-6 lg:top-0 lg:bottom-6 lg:h-auto">
 						<div className="space-y-2">
 							{valueUpdates.length === 0 ? (
 								<div className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
